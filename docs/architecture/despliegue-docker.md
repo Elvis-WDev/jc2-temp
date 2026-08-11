@@ -88,9 +88,34 @@ Lo que el contenido inicial **no** lleva:
 - **Los identificadores.** Todo se relaciona por clave natural, para que cada instalacion
   genere sus propios UUID.
 - **Los archivos subidos.** `media_assets` guarda una ruta en disco y el binario no cabe
-  en un fichero de codigo. Retratos, portadas y PDF se suben desde el panel.
+  en un fichero de codigo. Ver el apartado siguiente.
 - **`publicBaseUrl`.** Es propia de cada instalacion: la fija `PUBLIC_BASE_URL`. Copiarla
   dejaria el sitemap apuntando a la maquina de desarrollo.
+
+## Los archivos, despues del primer despliegue
+
+El seeder deja el sitio **sin imagenes ni PDF**: el retrato, los logotipos, las portadas,
+los documentos de las publicaciones y los materiales de curso son ficheros, y los
+ficheros no viajan en el repositorio —estan en `.gitignore`— ni en el seeder.
+
+Se llevan con el mismo script que los importo, apuntando a produccion:
+
+```bash
+ADMIN_EMAIL=... ADMIN_PASSWORD=... \
+  python3 api/scripts/importar-media.py \
+    --sitio https://tu-dominio \
+    --origen /ruta/a/media
+```
+
+Sube cada fichero por la API —con su verificacion de tipo y su checksum— y lo engancha a
+su registro cruzando por slug. Es **idempotente**: si algo ya estaba, lo dice y sigue.
+Anade `--dry-run` para ver que haria sin escribir nada.
+
+Hay que ejecutarlo **despues** de que el seeder haya creado el contenido: el script busca
+la publicacion o el curso al que enganchar cada archivo.
+
+Los ficheros acaban en el volumen `jc2-storage`, no en la imagen, asi que sobreviven al
+redespliegue.
 
 ## Las credenciales
 

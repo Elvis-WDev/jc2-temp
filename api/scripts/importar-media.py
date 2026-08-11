@@ -17,12 +17,21 @@ al almacenamiento dejaria ficheros que la plataforma no conoce.
 enganchar mira si el destino ya lo tiene.
 
 Uso:
-    python3 scripts/importar-media.py            # importa
-    python3 scripts/importar-media.py --dry-run  # solo dice que haria
+
+    # En local, contra el sitio de desarrollo
+    python3 scripts/importar-media.py --origen /ruta/a/media
+
+    # Contra produccion, con las credenciales por entorno
+    ADMIN_EMAIL=... ADMIN_PASSWORD=... \
+      python3 scripts/importar-media.py --sitio https://jc2.ejemplo.edu --origen ./media
+
+    # Sin escribir nada, solo para ver que haria
+    python3 scripts/importar-media.py --dry-run --origen ./media
 """
 
 import json
 import mimetypes
+import os
 import re
 import sys
 import time
@@ -32,8 +41,17 @@ import uuid
 from pathlib import Path
 from http.cookiejar import CookieJar
 
-SITIO = "http://localhost:3000"
-ORIGEN = Path("/media/elvis/disco2/Outliers-solutions/jc2-v2/media")
+def argumento(nombre: str, defecto: str | None = None) -> str | None:
+    """`--nombre valor`, o la variable de entorno en mayusculas, o el defecto."""
+    if f"--{nombre}" in sys.argv:
+        return sys.argv[sys.argv.index(f"--{nombre}") + 1]
+    return os.environ.get(nombre.upper().replace("-", "_"), defecto)
+
+
+# Donde se importa. En produccion se pasa la direccion real:
+#
+#   python3 scripts/importar-media.py --sitio https://jc2.ejemplo.edu --origen ./media
+SITIO = (argumento("sitio", "http://localhost:3000") or "").rstrip("/")
 SECO = "--dry-run" in sys.argv
 
 resumen: dict[str, int] = {}
@@ -44,11 +62,25 @@ def anotar(que: str) -> None:
     resumen[que] = resumen.get(que, 0) + 1
 
 
+# Las credenciales salen del entorno; si no estan, del .env local. En produccion se
+# pasan por entorno para no dejarlas en ningun fichero:
+#
+#   ADMIN_EMAIL=... ADMIN_PASSWORD=... python3 scripts/importar-media.py --sitio ...
 valores = {}
-for linea in open("/home/elvis/jc2-v2/.env"):
-    if "=" in linea and not linea.strip().startswith("#"):
-        clave, _, valor = linea.partition("=")
-        valores[clave.strip()] = valor.strip()
+try:
+    for linea in open(Path(__file__).resolve().parents[2] / ".env"):
+        if "=" in linea and not linea.strip().startswith("#"):
+            clave, _, valor = linea.partition("=")
+            valores[clave.strip()] = valor.strip()
+except FileNotFoundError:
+    pass
+for clave in ("ADMIN_EMAIL", "ADMIN_PASSWORD"):
+    if os.environ.get(clave):
+        valores[clave] = os.environ[clave]
+
+ORIGEN = Path(
+    argumento("origen") or Path(__file__).resolve().parents[2] / "media"
+).expanduser()
 
 tarro = CookieJar()
 nav = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(tarro))
@@ -143,8 +175,16 @@ def limpiar(texto: str) -> str:
 def main() -> None:
     print(f"Importando los archivos de Strapi{' (SIMULACION)' if SECO else ''}\n")
 
+    print(f"  sitio:  {SITIO}")
+    print(f"  origen: {ORIGEN}\n")
+
     if not ORIGEN.is_dir():
-        print(f"No existe {ORIGEN}")
+        print(f"No existe la carpeta de origen: {ORIGEN}")
+        print("Pasala con --origen /ruta/a/media")
+        sys.exit(1)
+
+    if not valores.get("ADMIN_EMAIL") or not valores.get("ADMIN_PASSWORD"):
+        print("Faltan ADMIN_EMAIL y ADMIN_PASSWORD. Pasalas por entorno.")
         sys.exit(1)
 
     estado, _ = pedir(
