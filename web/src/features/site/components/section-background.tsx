@@ -15,6 +15,12 @@ import { useSectionBackground } from '../use-section-background'
  * texto alternativo. Describir un fondo a quien usa un lector de pantalla solo anade
  * ruido entre el titular y el contenido.
  *
+ * Debajo de la imagen va un color solido. Hace falta para las imagenes con
+ * transparencia —una cenefa recortada, un logotipo sobre nada—: sin base, lo que se ve
+ * por los huecos es el fondo claro de la pagina, y el texto de la banda, que con imagen
+ * pasa a ser claro, deja de leerse. Con base, la parte transparente queda oscura y el
+ * contraste se sostiene sea cual sea la imagen.
+ *
  * No envuelve al contenido: se pone al lado, en posicion absoluta, para que quien la usa
  * no tenga que reordenar su maquetacion. El contenido necesita su propio `relative` o
  * `z-10`, igual que ya hacia con la textura que habia antes.
@@ -24,7 +30,7 @@ export function SectionBackground({ clave }: { clave: string }) {
   if (fondo === null) return null
 
   return (
-    <div aria-hidden className='pointer-events-none absolute inset-0 z-0'>
+    <div aria-hidden className='pointer-events-none absolute inset-0 z-0 bg-site-primary'>
       <div
         className='size-full bg-cover bg-center'
         style={{ backgroundImage: `url(${fondo.url})` }}

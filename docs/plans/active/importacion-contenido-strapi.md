@@ -62,12 +62,11 @@ Lo que el volcado no decia y hubo que decidir. Todo esto se cambia desde el pane
 
 ## Lo que no se importa
 
-- **Las imagenes y los PDF.** El volcado solo lista nombres de fichero
-  (`unnamed (5).jpg`, `intermediate-microeconomics.jpg`, `blob.png`); los ficheros no
-  venian. Sin ellos no hay retrato, ni logotipos, ni portadas de evento, ni PDF
-  descargables. Las tarjetas de evento pintan una banda con el motivo en su lugar.
-- **`image_cite`,** el credito de cada fotografia: sin la fotografia no hay nada que
-  acreditar.
+- **Las imagenes y los PDF.** El volcado solo listaba nombres de fichero
+  (`unnamed (5).jpg`, `blob.png`), no los ficheros. **Llegaron despues**: ver "Los
+  archivos" al final de este documento.
+- **`image_cite`,** el credito de cada fotografia. Se puede rellenar desde el panel, en
+  el campo "Credit" de cada archivo.
 - **`documentId`,** el identificador interno de Strapi. Aqui cada entidad tiene el suyo.
 
 ## Verification
@@ -98,3 +97,38 @@ Lo que el volcado no decia y hubo que decidir. Todo esto se cambia desde el pane
 - **`localStorage` en las pruebas del navegador.** `auth-store.test.ts` exigia un
   `localStorage` vacio y la propia interfaz de Vitest guarda ahi sus preferencias. Ahora
   compara antes contra despues, que es lo que la prueba queria decir.
+
+## Los archivos (11 ago 2026)
+
+El volcado de Strapi solo listaba nombres de fichero. Cuando aparecieron los archivos
+—`media/`, 47 ficheros, 21 MB, organizados por `coleccion/registro/campo`— se importaron
+con `api/scripts/importar-media.py`.
+
+Todo entra por `POST /api/admin/media/upload`, no por el disco: asi cada archivo recibe
+su verificacion de tipo real, su checksum y su fila en `media_assets`. Copiarlos a mano
+al almacenamiento dejaria ficheros que la plataforma no conoce.
+
+**43 de 47 dentro.** Repartidos asi:
+
+| Origen | Destino |
+|---|---|
+| `people/*/photo` | Retrato del titular |
+| `institutions/*/logo` (2) | Logotipo de la institucion |
+| `courses/*/cover` (3) | Portada del curso |
+| `course-instances/2019/documents` (2) | Materiales de la edicion 2019 |
+| `events/*/image` (2) | Imagen del evento |
+| `publications/*/cover` (5) | Portada de la publicacion |
+| `publications/*/document` (11) | PDF descargable de la ficha |
+| `hero-profile`, `hero-research`, `hero-teaching` | Fondo de `home.hero`, `research.header`, `teaching.header` |
+| `home`, `footer`, `_sin-referencia` | Biblioteca, sin asignar |
+
+**Los 4 SVG se rechazaron**, y esta bien: un SVG puede llevar script dentro y la politica
+de subida no lo acepta (`MEDIA_TYPE_NOT_RECOGNISED`). Eran los iconos de dos redes
+sociales; el sitio ya los dibuja con su propio juego de iconos.
+
+`_sin-referencia/` son 12 ficheros que Strapi tenia sin usar, dos de ellos duplicados
+exactos de otros ya asignados. Se suben a la biblioteca pero no se enganchan a nada.
+
+El cruce de slugs es por prefijo —Strapi los truncaba a 58 caracteres— y quitando el
+articulo inicial, porque la institucion estaba como `the-university-of-queensland` y aqui
+es `university-of-queensland`.

@@ -56,6 +56,17 @@ claro y sobre oscuro no llega a contraste.
 Las tarjetas opacas —publicaciones destacadas, rejilla de eventos— no cambian: siguen
 siendo blancas y su texto se lee igual sobre cualquier foto.
 
+## Imagenes con transparencia
+
+Debajo de la imagen se pinta un color solido antes de la capa oscura. Hace falta para
+las imagenes recortadas —una cenefa, un logotipo sobre nada—: sin base, por los huecos se
+ve el fondo claro de la pagina, y el texto de la banda, que con imagen pasa a ser claro,
+deja de leerse. Con base, la parte transparente queda oscura y el contraste se sostiene
+sea cual sea la imagen.
+
+Es lo que permite usar las cenefas Moche del sitio anterior, que son PNG con
+transparencia, como fondo de las cabeceras.
+
 ## Como viaja el dato
 
 ```
