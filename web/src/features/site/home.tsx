@@ -73,13 +73,13 @@ export function SiteHome() {
           franja blanca que parecia un hueco. Las demas paginas si lo llevan, porque
           alli separa bandas claras. */}
       {seVe('hero') && <Hero home={home} />}
+      {seVe('research_areas') && <Dominios home={home} />}
       {seVe('carousel') && (
         <WorkCarousel
           works={home.carouselWorks}
           ownerName={home.profile.fullName}
         />
       )}
-      {seVe('research_areas') && <Dominios home={home} />}
       {seVe('featured_works') && <TrabajosDestacados home={home} />}
       {seVe('featured_courses') && <Docencia home={home} />}
       {seVe('events') && (

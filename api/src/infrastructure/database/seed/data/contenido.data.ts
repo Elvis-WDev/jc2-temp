@@ -2139,14 +2139,14 @@ export const CONTENIDO = {
     },
     {
       pageKey: 'home',
-      sectionKey: 'carousel',
+      sectionKey: 'research_areas',
       isVisible: true,
       backgroundOverlay: 45,
       sortOrder: 1,
     },
     {
       pageKey: 'home',
-      sectionKey: 'research_areas',
+      sectionKey: 'carousel',
       isVisible: true,
       backgroundOverlay: 45,
       sortOrder: 2,
