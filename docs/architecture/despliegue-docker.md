@@ -41,7 +41,8 @@ Asi una migracion rota no deja en pie una version incompatible con la base.
 
 **Hace falta HTTPS.** La cookie de sesion es `Secure` y no viaja por HTTP: sin TLS se
 puede ver el sitio publico, pero **no se puede entrar al panel**. Delante va un proxy que
-termine TLS (Caddy, Traefik, el nginx del anfitrion) apuntando a `127.0.0.1:8080`.
+termine TLS —Traefik en Dokploy, o Caddy por tu cuenta— apuntando a `web:80` dentro de
+`dokploy-network`.
 
 `PUBLIC_BASE_URL` tiene que ser la direccion real por la que llega el navegador, con
 `https` y sin barra final. De ahi salen el origen de CORS, el de la cookie, el sitemap,
