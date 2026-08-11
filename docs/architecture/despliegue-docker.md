@@ -170,6 +170,51 @@ comm -23 <(find api/src web/src -type f \( -name '*.ts' -o -name '*.tsx' \) \
 Vacio significa que el repositorio tiene todo el codigo. Conviene mirarlo despues de
 cualquier cambio en un `.gitignore`.
 
+## Cuando `migrate` falla
+
+El log dice donde se paro, y el sitio exacto importa:
+
+| Lo que se ve | Que pasa |
+|---|---|
+| No llega a listar las migraciones. `P1001: Can't reach database server` | La base no es alcanzable desde el contenedor. Recuerda que `localhost` es el propio contenedor. |
+| Lista las 16 y falla con `permission denied for schema public` | Conecta, pero el usuario no puede crear objetos. Ver abajo. |
+| `P3009: migrate found failed migrations` | Un intento anterior dejo una migracion a medias. Hay que resolverla antes de reintentar. |
+
+**Prisma no lista las migraciones hasta despues de conectar.** Si en el log aparecen las
+16 con su `migration.sql`, la conexion funciona y el problema es otro.
+
+### Permisos en la base
+
+Desde PostgreSQL 15 el esquema `public` ya no concede `CREATE` a todo el mundo, asi que
+un usuario recien creado conecta pero no puede crear tablas. Lo mas simple es que sea
+dueño de la base:
+
+```sql
+ALTER DATABASE mibase OWNER TO miusuario;
+```
+
+O, si prefieres no darle la propiedad:
+
+```sql
+GRANT ALL ON SCHEMA public TO miusuario;
+```
+
+Cuidado: con `GRANT` sobre el esquema pero sin ser dueño de la base, la primera migracion
+avanza y luego falla con `P3018 / permission denied for database`. Comprobado.
+
+### Migraciones a medias
+
+`P3009` aparece cuando un intento anterior dejo una migracion marcada como fallida. La
+base guarda ese registro y no deja seguir. Se marca como revertida y se reintenta:
+
+```bash
+docker compose run --rm --entrypoint sh migrate -c \
+  "node node_modules/prisma/build/index.js migrate resolve --rolled-back NOMBRE_DE_LA_MIGRACION"
+```
+
+Si la base estaba vacia y no llego a crearse nada, lo mas limpio es vaciarla y volver a
+empezar.
+
 ## Comprobar un despliegue
 
 ### En Dokploy
