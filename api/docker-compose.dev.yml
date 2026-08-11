@@ -1,3 +1,14 @@
+# Postgres para DESARROLLO LOCAL. No es el despliegue.
+#
+# El de produccion es `docker-compose.yml` en la raiz, con los tres servicios de la
+# aplicacion y sin base de datos. Este solo levanta un Postgres para trabajar en local:
+#
+#   docker compose -f api/docker-compose.dev.yml up -d
+#
+# Se llamaba `docker-compose.yml` y se presto a confusion: al configurar el despliegue
+# se eligio este por su nombre y fallo con "service web does not exist in the compose",
+# porque aqui solo hay una base de datos.
+
 services:
   db:
     image: postgres:17-alpine

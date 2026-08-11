@@ -1,8 +1,8 @@
 # Despliegue de produccion: solo la aplicacion.
 #
 # **La base de datos no esta aqui.** Se conecta a una externa a traves de DATABASE_URL.
-# Si algun dia hiciera falta una local para pruebas, esta `api/docker-compose.yml`, que
-# levanta un Postgres suelto y no forma parte de este despliegue.
+# Si algun dia hiciera falta una local para pruebas, esta `api/docker-compose.dev.yml`,
+# que levanta un Postgres suelto y no forma parte de este despliegue.
 #
 #   cp .env.production.example .env.production   # y se rellena
 #   docker compose --env-file .env.production up -d --build

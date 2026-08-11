@@ -131,6 +131,11 @@ ser alcanzable desde la web publica. Piden por esas rutas y les responde la SPA 
 
 ### En Dokploy
 
+En **General → Compose Path**: `./docker-compose.yml`, el de la raiz. El otro fichero,
+`api/docker-compose.dev.yml`, es un Postgres para trabajar en local y no tiene los
+servicios de la aplicacion: elegirlo falla con *"service web does not exist in the
+compose"*.
+
 En **Domains**: servicio `web`, **Container Port 80** (no 3000: nginx escucha en el 80) y
 **HTTPS encendido**. Sin certificado se ve el sitio publico pero no se entra al panel,
 porque la cookie de sesion es `Secure`.
