@@ -252,4 +252,6 @@ curl -s  https://tu-dominio/sitemap.xml | grep -c '<url>'        # el contenido 
 docker compose logs migrate | tail -20                           # migro y sembro
 ```
 
-Y entrar al panel en `/admin/sign-in` con las credenciales del `.env`.
+Y entrar al panel en **`/sign-in`** con las credenciales del `.env`. El panel vive bajo
+`/admin`, pero la pantalla de acceso no: esta fuera del guard, porque un guard que
+protege su propia puerta no deja entrar a nadie.

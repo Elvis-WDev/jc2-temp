@@ -131,6 +131,17 @@ describe('UserAuthForm', () => {
       .toBeInTheDocument()
   })
 
+  it('un destino que apunta al propio acceso se descarta', async () => {
+    // Pasa al escribir `/admin/sign-in`: el guard rebota a `/sign-in` guardando esa
+    // direccion, y al volver ya identificado no hay ninguna ruta ahi.
+    const screen = await renderForm('/admin/sign-in')
+    await rellenarYEnviar(screen)
+
+    await vi.waitFor(() => {
+      expect(navigate).toHaveBeenCalledWith({ to: '/admin', replace: true })
+    })
+  })
+
   it('no envia nada si el email es invalido', async () => {
     const screen = await renderForm()
     await rellenarYEnviar(screen, 'no-es-un-email')

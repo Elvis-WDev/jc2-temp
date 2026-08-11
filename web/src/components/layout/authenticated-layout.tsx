@@ -3,6 +3,8 @@ import { getCookie } from '@/lib/cookies'
 import { cn } from '@/lib/utils'
 import { LayoutProvider } from '@/context/layout-provider'
 import { SearchProvider } from '@/context/search-provider'
+import { useSiteIcon } from '@/hooks/use-site-icon'
+import { useSiteIdentity } from '@/hooks/use-site-identity'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { SkipToMain } from '@/components/skip-to-main'
@@ -12,6 +14,9 @@ type AuthenticatedLayoutProps = {
 }
 
 export function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
+  // El panel lleva el mismo icono de pestaña que el sitio: son la misma casa.
+  useSiteIcon(useSiteIdentity().logoUrl)
+
   const defaultOpen = getCookie('sidebar_state') !== 'false'
   return (
     <SearchProvider>

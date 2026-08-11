@@ -2,9 +2,9 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet } from '@tanstack/react-router'
 import { FileText } from 'lucide-react'
 import { queryKeys } from '@/lib/api/query-keys'
+import { useSiteIcon } from '@/hooks/use-site-icon'
 import { getSite, type PublicSite } from './api'
 import { SiteFrieze } from './components/site-frieze'
-import { useSiteIcon } from './use-site-meta'
 
 /**
  * Envoltura del sitio publico: cabecera, contenido y pie.

@@ -107,7 +107,18 @@ export function UserAuthForm({
       queryClient.setQueryData(queryKeys.session, user)
       // Sin destino guardado se entra al panel, no a la raiz: la raiz es el sitio
       // publico y quien acaba de identificarse venia a administrar.
-      await navigate({ to: redirectTo || '/admin', replace: true })
+      //
+      // Un destino que apunta a la propia pantalla de acceso se descarta. Pasa al
+      // escribir `/admin/sign-in`: el guard rebota a `/sign-in` guardando esa
+      // direccion, y al volver ya identificado no existe ninguna ruta ahi, asi que
+      // salia "Not Found" justo despues de entrar bien.
+      const destino =
+        redirectTo === undefined ||
+        redirectTo === '' ||
+        redirectTo.includes('sign-in')
+          ? '/admin'
+          : redirectTo
+      await navigate({ to: destino, replace: true })
     },
     onError: (error) => {
       if (applyApiFieldErrors(form, error)) return

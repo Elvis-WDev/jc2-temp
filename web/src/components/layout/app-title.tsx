@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useSiteIdentity } from '@/hooks/use-site-identity'
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -11,6 +12,8 @@ import { Button } from '../ui/button'
 
 export function AppTitle() {
   const { setOpenMobile } = useSidebar()
+  const { nombre, logoUrl } = useSiteIdentity()
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -23,10 +26,21 @@ export function AppTitle() {
             <Link
               to='/admin'
               onClick={() => setOpenMobile(false)}
-              className='grid flex-1 text-start text-sm leading-tight'
+              className='flex flex-1 items-center gap-2 text-start text-sm leading-tight'
             >
-              <span className='truncate font-bold'>Academic panel</span>
-              <span className='truncate text-xs'>Site administration</span>
+              {logoUrl !== null && (
+                <img
+                  alt=''
+                  src={logoUrl}
+                  className='h-7 w-auto shrink-0 object-contain'
+                />
+              )}
+              <span className='grid min-w-0 flex-1'>
+                <span className='truncate font-bold'>
+                  {nombre ?? 'Academic panel'}
+                </span>
+                <span className='truncate text-xs'>Site administration</span>
+              </span>
             </Link>
             <ToggleSidebar />
           </div>
