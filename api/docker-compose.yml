@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: jc2-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: jc2
+      POSTGRES_PASSWORD: jc2
+      POSTGRES_DB: jc2
+    ports:
+      - '5432:5432'
+    volumes:
+      # Volumen con nombre: los datos sobreviven al redespliegue (deployment.md:63-66).
+      - jc2-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U jc2 -d jc2']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  jc2-postgres-data:

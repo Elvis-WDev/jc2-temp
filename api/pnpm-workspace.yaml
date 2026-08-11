@@ -1,0 +1,22 @@
+# Prisma necesita su postinstall para descargar los engines, y esbuild (via vitest)
+# para instalar su binario. @scarf/scarf queda en false: es telemetria, no hace falta.
+allowBuilds:
+  '@prisma/engines': true
+  '@scarf/scarf': false
+  esbuild: true
+  prisma: true
+minimumReleaseAgeExclude:
+  - '@aws-sdk/client-s3@3.1107.0'
+  - '@aws-sdk/s3-request-presigner@3.1107.0'
+  - '@typescript-eslint/eslint-plugin@8.67.0'
+  - '@typescript-eslint/parser@8.67.0'
+  - '@typescript-eslint/project-service@8.67.0'
+  - '@typescript-eslint/scope-manager@8.67.0'
+  - '@typescript-eslint/tsconfig-utils@8.67.0'
+  - '@typescript-eslint/type-utils@8.67.0'
+  - '@typescript-eslint/types@8.67.0'
+  - '@typescript-eslint/typescript-estree@8.67.0'
+  - '@typescript-eslint/utils@8.67.0'
+  - '@typescript-eslint/visitor-keys@8.67.0'
+  - tsx@4.23.12
+  - typescript-eslint@8.67.0

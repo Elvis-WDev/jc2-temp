@@ -1,0 +1,12 @@
+node_modules
+dist
+coverage
+playwright-report
+test-results
+.env
+.env.*
+!.env.example
+*.log
+.git
+# Capturas de las pruebas de navegador: pesan y no se compilan.
+**/__screenshots__

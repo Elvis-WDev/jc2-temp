@@ -1,0 +1,184 @@
+/*
+ * Sistema de diseno del sitio publico.
+ *
+ * Copiado de `docs/design/plantillas-webprincipal/`, que es la fuente de verdad. Se
+ * copia entero y no solo lo que hoy se usa: una paleta a medias invita a que la
+ * siguiente pantalla invente un tono parecido y el conjunto se deshilache.
+ *
+ * TODO va prefijado con `site-`. El panel ya define `--color-primary`,
+ * `--color-background` y compania; repetir esos nombres aqui repintaria el panel
+ * entero. Asi conviven los dos temas en la misma aplicacion sin tocarse:
+ * el panel usa `bg-primary`, el sitio usa `bg-site-primary`.
+ */
+
+@theme {
+  /* --- Color -------------------------------------------------------------- */
+  --color-site-primary: #020d24;
+  --color-site-on-primary: #ffffff;
+  --color-site-primary-container: #18233b;
+  --color-site-on-primary-container: #808aa7;
+  --color-site-primary-fixed: #d9e2ff;
+  --color-site-primary-fixed-dim: #bbc6e5;
+  --color-site-on-primary-fixed: #101b33;
+  --color-site-on-primary-fixed-variant: #3c4660;
+  --color-site-inverse-primary: #bbc6e5;
+
+  --color-site-secondary: #505e7e;
+  --color-site-on-secondary: #ffffff;
+  --color-site-secondary-container: #ccdaff;
+  --color-site-on-secondary-container: #515f7e;
+  --color-site-secondary-fixed: #d8e2ff;
+  --color-site-secondary-fixed-dim: #b8c6eb;
+  --color-site-on-secondary-fixed: #0c1b37;
+  --color-site-on-secondary-fixed-variant: #394665;
+
+  /* El unico acento calido: enlaces al pasar y subrayado del menu activo. */
+  --color-site-tertiary: #1f0600;
+  --color-site-on-tertiary: #ffffff;
+  --color-site-tertiary-container: #421500;
+  --color-site-on-tertiary-container: #c37754;
+  --color-site-tertiary-fixed: #ffdbcc;
+  --color-site-tertiary-fixed-dim: #ffb695;
+  --color-site-on-tertiary-fixed: #351000;
+  --color-site-on-tertiary-fixed-variant: #713618;
+
+  --color-site-background: #f7fafd;
+  --color-site-on-background: #181c1e;
+  --color-site-surface: #f7fafd;
+  --color-site-surface-bright: #f7fafd;
+  --color-site-surface-dim: #d7dadd;
+  --color-site-on-surface: #181c1e;
+  --color-site-on-surface-variant: #45464d;
+  --color-site-surface-variant: #e0e3e6;
+  --color-site-surface-container-lowest: #ffffff;
+  --color-site-surface-container-low: #f1f4f7;
+  --color-site-surface-container: #ebeef1;
+  --color-site-surface-container-high: #e5e8eb;
+  --color-site-surface-container-highest: #e0e3e6;
+  --color-site-surface-tint: #535e79;
+  --color-site-inverse-surface: #2d3133;
+  --color-site-inverse-on-surface: #eef1f4;
+
+  --color-site-outline: #75777e;
+  --color-site-outline-variant: #c6c6ce;
+
+  --color-site-error: #ba1a1a;
+  --color-site-on-error: #ffffff;
+  --color-site-error-container: #ffdad6;
+  --color-site-on-error-container: #93000a;
+
+  /* --- Tipografia --------------------------------------------------------- */
+  /* Serifa para los titulos, palo seco para el resto. Inter ya la cargaba el panel. */
+  --font-site-display: 'Playfair Display', Georgia, serif;
+  --font-site-body: 'Inter', system-ui, sans-serif;
+
+  --text-site-display-lg: 48px;
+  --text-site-display-lg--line-height: 56px;
+  --text-site-display-lg--letter-spacing: -0.02em;
+  --text-site-display-lg--font-weight: 700;
+
+  --text-site-display-sm: 32px;
+  --text-site-display-sm--line-height: 40px;
+  --text-site-display-sm--font-weight: 700;
+
+  --text-site-headline-md: 32px;
+  --text-site-headline-md--line-height: 40px;
+  --text-site-headline-md--font-weight: 600;
+
+  --text-site-headline-sm: 24px;
+  --text-site-headline-sm--line-height: 32px;
+  --text-site-headline-sm--font-weight: 600;
+
+  --text-site-body-lg: 18px;
+  --text-site-body-lg--line-height: 28px;
+  --text-site-body-lg--font-weight: 400;
+
+  --text-site-body-md: 16px;
+  --text-site-body-md--line-height: 24px;
+  --text-site-body-md--font-weight: 400;
+
+  /* Etiquetas en mayusculas: secciones, tipos, estados. */
+  --text-site-label: 12px;
+  --text-site-label--line-height: 16px;
+  --text-site-label--letter-spacing: 0.05em;
+  --text-site-label--font-weight: 600;
+
+  /* Metadatos: anos, codigos, revistas. */
+  --text-site-meta: 13px;
+  --text-site-meta--line-height: 18px;
+  --text-site-meta--font-weight: 500;
+
+  /* --- Medidas ------------------------------------------------------------ */
+  --container-site: 1120px;
+
+  --spacing-site-unit: 8px;
+  --spacing-site-margin: 16px;
+  --spacing-site-gutter: 24px;
+  --spacing-site-section: 80px;
+
+  /* Casi rectas, muy lejos de los 10px del panel: es parte del caracter. */
+  --radius-site: 0.125rem;
+  --radius-site-lg: 0.25rem;
+  --radius-site-xl: 0.5rem;
+}
+
+/*
+ * El sitio es siempre claro.
+ *
+ * Sus colores son literales, asi que el interruptor de tema del panel no los cambia.
+ * Lo que si cambiaria son los controles nativos y la barra de desplazamiento, que
+ * siguen a `color-scheme`. Con esto, entrar al panel en oscuro y volver al sitio no
+ * deja campos de formulario negros sobre fondo claro.
+ */
+@layer base {
+  [data-site] {
+    color-scheme: light;
+  }
+}
+
+/*
+ * Friso Moche: el motivo en zigzag que separa las secciones y remata el pie.
+ *
+ * Va incrustado como SVG en la propia hoja de estilos. Las plantillas lo traian dos
+ * veces: asi, y tambien como imagen alojada en un servidor de Google que caducara.
+ * Se queda solo esta forma: no hay peticion de red ni enlace que pueda romperse.
+ */
+@utility site-frieze {
+  background-image: url("data:image/svg+xml,%3Csvg width='40' height='20' viewBox='0 0 40 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 20 L10 10 L20 20 L30 10 L40 20 V18 L30 8 L20 18 L10 8 L0 18 Z' fill='%2318233b' fill-opacity='0.15'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  height: 20px;
+  width: 100%;
+}
+
+/*
+ * El mismo friso, en claro.
+ *
+ * El de arriba esta dibujado en azul oscuro, que es el color del pie: alli se volvia
+ * invisible. Las plantillas arrastraban ese fallo, porque encima le bajaban la
+ * opacidad. Sobre fondo oscuro hay que dibujarlo en claro.
+ */
+@utility site-frieze-light {
+  background-image: url("data:image/svg+xml,%3Csvg width='40' height='20' viewBox='0 0 40 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 20 L10 10 L20 20 L30 10 L40 20 V18 L30 8 L20 18 L10 8 L0 18 Z' fill='%23ffffff' fill-opacity='0.18'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  height: 20px;
+  width: 100%;
+}
+
+/*
+ * El mismo motivo en claro, para las bandas azules: el de abajo esta dibujado en azul
+ * oscuro y sobre fondo oscuro no se ve, igual que le pasaba al friso.
+ */
+@utility site-texture-light {
+  background-image: url("data:image/svg+xml,%3Csvg width='40' height='20' viewBox='0 0 40 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 20 L10 10 L20 20 L30 10 L40 20 V18 L30 8 L20 18 L10 8 L0 18 Z' fill='%23ffffff'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+/*
+ * El mismo motivo repetido en las dos direcciones, muy tenue, como fondo de las
+ * cabeceras de seccion. Sustituye a la fotografia de piedra tallada que las
+ * plantillas cargaban desde un servidor de Google.
+ */
+@utility site-texture {
+  background-image: url("data:image/svg+xml,%3Csvg width='40' height='20' viewBox='0 0 40 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 20 L10 10 L20 20 L30 10 L40 20 V18 L30 8 L20 18 L10 8 L0 18 Z' fill='%2318233b'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}

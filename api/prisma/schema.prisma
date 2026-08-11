@@ -1,0 +1,925 @@
+// Esquema de la plataforma academica personal.
+//
+// Fuente funcional: ERS.md §6-27. Convenciones (ERS §6):
+//   - IDs UUID (v7: ordenados en el tiempo, mejores para el indice que v4)
+//   - timestamps timestamptz en UTC
+//   - nombres de tabla y columna en snake_case
+//
+// La tabla `users` del ERS §7 NO existe aqui: Better Auth es dueno del usuario, la
+// sesion y el hashing (ADR-0001). Sus modelos estan al final del archivo.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/infrastructure/database/prisma/generated"
+  moduleFormat = "esm"
+  runtime      = "nodejs"
+}
+
+// Prisma 7 ya no admite `url` aqui: la cadena de conexion vive en prisma.config.ts
+// para las migraciones, y el cliente recibe un driver adapter en tiempo de ejecucion.
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enumerados
+//
+// Solo se modelan como enum los conjuntos que el ERS declara cerrados. Los que el
+// ERS llama "tipos sugeridos" (link_type, file_type, material_type, ...) quedan como
+// texto para poder ampliarlos sin migracion.
+// ---------------------------------------------------------------------------
+
+/// ERS RF-005. Unica puerta de la visibilidad publica (RN-001).
+enum EditorialStatus {
+  draft
+  published
+  archived
+
+  @@map("editorial_status")
+}
+
+// ---------------------------------------------------------------------------
+// Personas y perfil
+// ---------------------------------------------------------------------------
+
+/// ERS §8. Propietario del sitio y coautores.
+model Person {
+  id                        String   @id @default(uuid(7)) @db.Uuid
+  isSiteOwner               Boolean  @default(false) @map("is_site_owner")
+  fullName                  String   @map("full_name") @db.VarChar(200)
+  givenName                 String?  @map("given_name") @db.VarChar(100)
+  familyName                String?  @map("family_name") @db.VarChar(100)
+  preferredName             String?  @map("preferred_name") @db.VarChar(150)
+  professionalTitle         String?  @map("professional_title") @db.VarChar(200)
+  currentPosition           String?  @map("current_position") @db.VarChar(250)
+  publicEmail               String?  @map("public_email") @db.VarChar(320)
+  phone                     String?  @db.VarChar(50)
+  city                      String?  @db.VarChar(120)
+  countryCode               String?  @map("country_code") @db.Char(2)
+  shortBio                  String?  @map("short_bio")
+  fullBioMarkdown           String?  @map("full_bio_markdown")
+  researchStatementMarkdown String?  @map("research_statement_markdown")
+  photoMediaId              String?  @map("photo_media_id") @db.Uuid
+  cvMediaId                 String?  @map("cv_media_id") @db.Uuid
+  orcid                     String?  @db.VarChar(40)
+  googleScholarUrl          String?  @map("google_scholar_url")
+  scopusUrl                 String?  @map("scopus_url")
+  ssrnUrl                   String?  @map("ssrn_url")
+  repecUrl                  String?  @map("repec_url")
+  websiteUrl                String?  @map("website_url")
+  sortName                  String?  @map("sort_name") @db.VarChar(200)
+  createdAt                 DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                 DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  photo         MediaAsset?             @relation("PersonPhoto", fields: [photoMediaId], references: [id], onDelete: Restrict)
+  cv            MediaAsset?             @relation("PersonCv", fields: [cvMediaId], references: [id], onDelete: Restrict)
+  links         PersonLink[]
+  affiliations  Affiliation[]
+  authoredWork  WorkAuthor[]
+  taughtCourses CourseOfferingTeacher[]
+  siteSettings  SiteSettings[]
+
+  @@index([sortName])
+  @@map("persons")
+}
+
+/// ERS §9. Enlaces adicionales (LinkedIn, GitHub, Bluesky...) que RF-001 pide y que
+/// no tienen columna propia en `persons`.
+model PersonLink {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  personId    String   @map("person_id") @db.Uuid
+  linkType    String   @map("link_type") @db.VarChar(50)
+  label       String?  @db.VarChar(100)
+  url         String
+  iconKey     String?  @map("icon_key") @db.VarChar(50)
+  /// Icono propio subido, ademas de los de la lista.
+  iconMediaId String?  @map("icon_media_id") @db.Uuid
+  isPublic    Boolean  @default(true) @map("is_public")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  person Person      @relation(fields: [personId], references: [id], onDelete: Cascade)
+  icon   MediaAsset? @relation("PersonLinkIcon", fields: [iconMediaId], references: [id], onDelete: Restrict)
+
+  @@unique([personId, linkType, url])
+  @@index([personId, sortOrder])
+  @@map("person_links")
+}
+
+// ---------------------------------------------------------------------------
+// Instituciones
+// ---------------------------------------------------------------------------
+
+/// ERS §11.
+model Institution {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  name        String   @db.VarChar(250)
+  shortName   String?  @map("short_name") @db.VarChar(100)
+  slug        String   @unique @db.VarChar(180)
+  websiteUrl  String?  @map("website_url")
+  countryCode String?  @map("country_code") @db.Char(2)
+  city        String?  @db.VarChar(120)
+  logoMediaId String?  @map("logo_media_id") @db.Uuid
+  description String?
+  /// Color de marca, en hexadecimal, para distinguirla en la web.
+  brandColor  String?  @map("brand_color") @db.VarChar(20)
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  logo            MediaAsset?        @relation("InstitutionLogo", fields: [logoMediaId], references: [id], onDelete: Restrict)
+  departments     Department[]
+  affiliations    Affiliation[]
+  courseOfferings CourseOffering[]
+  events          EventInstitution[]
+
+  @@index([isActive])
+  @@map("institutions")
+}
+
+/// ERS §12. Un departamento pertenece a una institucion; un curso NO (RF-017).
+model Department {
+  id                  String   @id @default(uuid(7)) @db.Uuid
+  institutionId       String   @map("institution_id") @db.Uuid
+  name                String   @db.VarChar(250)
+  shortName           String?  @map("short_name") @db.VarChar(120)
+  slug                String   @db.VarChar(180)
+  websiteUrl          String?  @map("website_url")
+  descriptionMarkdown String?  @map("description_markdown")
+  sortOrder           Int      @default(0) @map("sort_order")
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  institution     Institution      @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  affiliations    Affiliation[]
+  courseOfferings CourseOffering[]
+
+  @@unique([institutionId, slug])
+  @@index([institutionId])
+  @@map("departments")
+}
+
+/// ERS §13. Historial profesional, independiente de la docencia (RF-018).
+model Affiliation {
+  id                  String    @id @default(uuid(7)) @db.Uuid
+  personId            String    @map("person_id") @db.Uuid
+  institutionId       String    @map("institution_id") @db.Uuid
+  departmentId        String?   @map("department_id") @db.Uuid
+  title               String    @db.VarChar(250)
+  affiliationType     String?   @map("affiliation_type") @db.VarChar(50)
+  startDate           DateTime? @map("start_date") @db.Date
+  endDate             DateTime? @map("end_date") @db.Date
+  isPrimary           Boolean   @default(false) @map("is_primary")
+  isCurrent           Boolean   @default(false) @map("is_current")
+  descriptionMarkdown String?   @map("description_markdown")
+  sortOrder           Int       @default(0) @map("sort_order")
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  person      Person      @relation(fields: [personId], references: [id], onDelete: Restrict)
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  department  Department? @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+
+  @@index([personId, sortOrder])
+  @@index([isCurrent])
+  @@map("affiliations")
+}
+
+// ---------------------------------------------------------------------------
+// Media
+// ---------------------------------------------------------------------------
+
+/// ERS §10. Registro de archivos. El binario vive en disco bajo STORAGE_ROOT
+/// (ADR-0002), nunca dentro de PostgreSQL.
+model MediaAsset {
+  id               String   @id @default(uuid(7)) @db.Uuid
+  storageKey       String   @unique @map("storage_key")
+  originalFilename String   @map("original_filename")
+  mimeType         String   @map("mime_type") @db.VarChar(150)
+  sizeBytes        BigInt   @map("size_bytes")
+  checksumSha256   String?  @map("checksum_sha256") @db.Char(64)
+  altText          String?  @map("alt_text")
+  caption          String?
+  credit           String?
+  isPublic         Boolean  @default(false) @map("is_public")
+  uploadedBy       String?  @map("uploaded_by")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  uploader User? @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
+
+  personPhotos       Person[]         @relation("PersonPhoto")
+  personCvs          Person[]         @relation("PersonCv")
+  institutionLogos   Institution[]    @relation("InstitutionLogo")
+  workCovers         Work[]           @relation("WorkCover")
+  courseCovers       Course[]         @relation("CourseCover")
+  pageHeroes         PageContent[]    @relation("PageHero")
+  eventImages        Event[]          @relation("EventImage")
+  linkIcons          PersonLink[]     @relation("PersonLinkIcon")
+  ogImages           SiteSettings[]   @relation("SiteOgImage")
+  siteLogos          SiteSettings[]   @relation("SiteLogo")
+  sectionBackgrounds PageSection[]    @relation("SectionBackground")
+  workFiles          WorkFile[]
+  courseMaterials    CourseMaterial[]
+
+  @@index([checksumSha256])
+  @@index([isPublic])
+  @@map("media_assets")
+}
+
+// ---------------------------------------------------------------------------
+// Catalogos editables
+// ---------------------------------------------------------------------------
+
+/// Vocabularios que el titular gestiona desde el panel: tipos de enlace, de archivo,
+/// de material de curso y de vinculo de una afiliacion.
+///
+/// NO hay clave foranea desde las columnas que usan estos codigos, y es deliberado.
+/// Esas columnas son texto libre desde el diseno inicial para poder ampliarlas sin
+/// migracion; esta tabla aporta las opciones del desplegable y su orden, no una
+/// restriccion. Asi un valor importado de otro sistema que todavia no tenga termino se
+/// guarda y se muestra igual, en vez de rechazarse.
+model CatalogTerm {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  /// A que vocabulario pertenece: work_link, person_link, work_file, course_material,
+  /// affiliation. Se valida en el borde HTTP, no con un enum, para que anadir un
+  /// vocabulario nuevo no obligue a migrar.
+  catalog     String   @db.VarChar(50)
+  /// Lo que se guarda en la columna de texto correspondiente.
+  code        String   @db.VarChar(50)
+  /// Lo que se lee en pantalla.
+  label       String   @db.VarChar(120)
+  /// Explicacion opcional. La web publica la usa como entradilla de cada grupo de
+  /// cursos; el resto de catalogos la dejan vacia.
+  description String?  @db.Text
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([catalog, code])
+  @@index([catalog, sortOrder])
+  @@map("catalog_terms")
+}
+
+// ---------------------------------------------------------------------------
+// Research
+// ---------------------------------------------------------------------------
+
+/// ERS RF-004. No confundir con el estado editorial: este describe la madurez del
+/// trabajo y no decide nada sobre su visibilidad.
+///
+/// Es catalogo y no enum porque ninguna regla de negocio mira su valor, asi que el
+/// titular puede anadir los que necesite sin migracion.
+model AcademicStatus {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  code      String   @unique @db.VarChar(50)
+  label     String   @db.VarChar(100)
+  /// Color en las tablas: success, warning, danger, info o neutral.
+  tone      String   @default("neutral") @db.VarChar(20)
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  works Work[]
+
+  @@map("academic_statuses")
+}
+
+/// Revista, editorial, congreso o serie donde aparece un trabajo.
+///
+/// Existe para dejar de repetir el nombre y el ISSN en cada articulo, y para tener
+/// sitio donde guardar el ranking y el CiteScore, que es como se lee un CV academico.
+/// Lo que cambia de un articulo a otro (volumen, numero, paginas, ano) NO esta aqui:
+/// vive en el trabajo.
+model Venue {
+  id            String   @id @default(uuid(7)) @db.Uuid
+  name          String   @unique @db.VarChar(300)
+  abbreviation  String?  @db.VarChar(100)
+  /// Codigo del catalogo `venue`.
+  venueType     String?  @map("venue_type") @db.VarChar(50)
+  publisherName String?  @map("publisher_name") @db.VarChar(300)
+  issn          String?  @db.VarChar(20)
+  isbnPrefix    String?  @map("isbn_prefix") @db.VarChar(30)
+  countryCode   String?  @map("country_code") @db.Char(2)
+  websiteUrl    String?  @map("website_url")
+  /// Texto, no numero: cada escala usa su notacion (Q1, A*, 4*).
+  ranking       String?  @db.VarChar(50)
+  citeScore     Decimal? @map("cite_score") @db.Decimal(6, 2)
+  notes         String?
+  isActive      Boolean  @default(true) @map("is_active")
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  works Work[]
+
+  @@index([isActive])
+  @@map("venues")
+}
+
+/// Estilos en los que se puede escribir la cita de un trabajo.
+model CitationStyle {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  code      String   @unique @db.VarChar(50)
+  name      String   @db.VarChar(100)
+  /// Extension al descargar la cita (.bib, .ris). Vacia si es texto plano.
+  extension String?  @db.VarChar(20)
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  citations WorkCitation[]
+
+  @@map("citation_styles")
+}
+
+/// La cita de un trabajo en un estilo concreto. Una por pareja.
+model WorkCitation {
+  id              String   @id @default(uuid(7)) @db.Uuid
+  workId          String   @map("work_id") @db.Uuid
+  citationStyleId String   @map("citation_style_id") @db.Uuid
+  content         String
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  work  Work          @relation(fields: [workId], references: [id], onDelete: Cascade)
+  style CitationStyle @relation(fields: [citationStyleId], references: [id], onDelete: Restrict)
+
+  @@unique([workId, citationStyleId])
+  @@index([citationStyleId])
+  @@map("work_citations")
+}
+
+/// ERS §14. Catalogo extensible: anadir un tipo no toca la estructura de `works`
+/// (RF-003).
+model WorkType {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  code         String   @unique @db.VarChar(50)
+  label        String   @db.VarChar(100)
+  pluralLabel  String   @map("plural_label") @db.VarChar(120)
+  sortOrder    Int      @default(0) @map("sort_order")
+  /// Cuantos de este tipo salen en la portada. Vacio: sin limite propio.
+  maxItemsHome Int?     @map("max_items_home")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  works Work[]
+
+  @@map("work_types")
+}
+
+/// ERS §15. Tabla unica para TODA la produccion academica (RF-002, ERS §60.10).
+model Work {
+  id                   String          @id @default(uuid(7)) @db.Uuid
+  workTypeId           String          @map("work_type_id") @db.Uuid
+  title                String
+  subtitle             String?
+  slug                 String          @unique @db.VarChar(260)
+  abstractMarkdown     String?         @map("abstract_markdown")
+  descriptionMarkdown  String?         @map("description_markdown")
+  academicStatusId     String          @map("academic_status_id") @db.Uuid
+  editorialStatus      EditorialStatus @default(draft) @map("editorial_status")
+  publicationDate      DateTime?       @map("publication_date") @db.Date
+  publicationYear      Int?            @map("publication_year") @db.SmallInt
+  firstOnlineDate      DateTime?       @map("first_online_date") @db.Date
+  /// Ficha de la publicacion, cuando merece tenerla.
+  venueId              String?         @map("venue_id") @db.Uuid
+  /// Texto suelto para lo que no merece ficha (una nota interna, un borrador). Un
+  /// trabajo tiene ficha O texto, nunca los dos: la migracion lo dejo asi.
+  venueName            String?         @map("venue_name") @db.VarChar(300)
+  publisherName        String?         @map("publisher_name") @db.VarChar(300)
+  volume               String?         @db.VarChar(50)
+  issue                String?         @db.VarChar(50)
+  pages                String?         @db.VarChar(50)
+  articleNumber        String?         @map("article_number") @db.VarChar(100)
+  /// Normalizado sin el prefijo https://doi.org/ (RN-009).
+  doi                  String?         @db.VarChar(255)
+  isbn                 String?         @db.VarChar(50)
+  issn                 String?         @db.VarChar(50)
+  languageCode         String?         @map("language_code") @db.VarChar(10)
+  coverMediaId         String?         @map("cover_media_id") @db.Uuid
+  /// Cita por defecto, cuando no se pide un estilo concreto. Las de cada estilo viven
+  /// en `work_citations`.
+  citationTextOverride String?         @map("citation_text_override")
+  /// En que version esta el trabajo. Distinto de la version de cada archivo.
+  versionLabel         String?         @map("version_label") @db.VarChar(50)
+  /// Codigo que el lector necesita para descargarlo en una web externa. Informativo:
+  /// no restringe nada aqui dentro.
+  downloadCode         String?         @map("download_code") @db.VarChar(100)
+  bibtexOverride       String?         @map("bibtex_override")
+  isFeatured           Boolean         @default(false) @map("is_featured")
+  featuredOrder        Int?            @map("featured_order")
+  /// En el carrusel de la portada. Es una seleccion aparte de los destacados: un
+  /// trabajo puede estar en las dos, en una o en ninguna.
+  isCarousel           Boolean         @default(false) @map("is_carousel")
+  carouselOrder        Int?            @map("carousel_order")
+  displayOrder         Int?            @map("display_order")
+  isOpenAccess         Boolean         @default(false) @map("is_open_access")
+  publishedAt          DateTime?       @map("published_at") @db.Timestamptz(6)
+  createdBy            String?         @map("created_by")
+  updatedBy            String?         @map("updated_by")
+  createdAt            DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+  archivedAt           DateTime?       @map("archived_at") @db.Timestamptz(6)
+
+  /// Mantenida por trigger en la migracion works_search_vector. Prisma la declara
+  /// para no borrarla al comparar esquemas, pero no la lee ni la escribe.
+  searchVector Unsupported("tsvector")? @map("search_vector")
+
+  workType       WorkType       @relation(fields: [workTypeId], references: [id], onDelete: Restrict)
+  academicStatus AcademicStatus @relation(fields: [academicStatusId], references: [id], onDelete: Restrict)
+  venue          Venue?         @relation(fields: [venueId], references: [id], onDelete: Restrict)
+  cover          MediaAsset?    @relation("WorkCover", fields: [coverMediaId], references: [id], onDelete: Restrict)
+  creator        User?          @relation("WorkCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  editor         User?          @relation("WorkUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  authors       WorkAuthor[]
+  tags          WorkTag[]
+  links         WorkLink[]
+  files         WorkFile[]
+  workCitations WorkCitation[]
+
+  @@index([editorialStatus])
+  @@index([workTypeId])
+  @@index([academicStatusId])
+  @@index([venueId])
+  @@index([publicationYear(sort: Desc)])
+  @@index([isFeatured, featuredOrder])
+  @@index([isCarousel, carouselOrder])
+  @@index([doi])
+  @@map("works")
+}
+
+/// ERS §16. Los autores NUNCA son un string (RF-006, ERS §60.7).
+model WorkAuthor {
+  workId           String   @map("work_id") @db.Uuid
+  personId         String   @map("person_id") @db.Uuid
+  authorOrder      Int      @map("author_order")
+  contributionRole String?  @map("contribution_role") @db.VarChar(80)
+  isCorresponding  Boolean  @default(false) @map("is_corresponding")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  work   Work   @relation(fields: [workId], references: [id], onDelete: Cascade)
+  person Person @relation(fields: [personId], references: [id], onDelete: Restrict)
+
+  @@id([workId, personId])
+  @@unique([workId, authorOrder])
+  @@index([personId])
+  @@map("work_authors")
+}
+
+/// ERS §17. Taxonomia unica para works y courses (RF-007).
+model Tag {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  name      String   @db.VarChar(120)
+  slug      String   @unique @db.VarChar(140)
+  category  String?  @db.VarChar(50)
+  sortOrder Int      @default(0) @map("sort_order")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  works   WorkTag[]
+  courses CourseTag[]
+
+  @@map("tags")
+}
+
+/// ERS §18.
+model WorkTag {
+  workId    String   @map("work_id") @db.Uuid
+  tagId     String   @map("tag_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  work Work @relation(fields: [workId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([workId, tagId])
+  @@index([tagId])
+  @@map("work_tags")
+}
+
+/// ERS §19.
+model WorkLink {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  workId    String   @map("work_id") @db.Uuid
+  linkType  String   @map("link_type") @db.VarChar(50)
+  label     String?  @db.VarChar(120)
+  url       String
+  sortOrder Int      @default(0) @map("sort_order")
+  isPublic  Boolean  @default(true) @map("is_public")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  work Work @relation(fields: [workId], references: [id], onDelete: Cascade)
+
+  @@index([workId, sortOrder])
+  @@map("work_links")
+}
+
+/// ERS §20.
+model WorkFile {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  workId       String   @map("work_id") @db.Uuid
+  mediaId      String   @map("media_id") @db.Uuid
+  fileType     String   @map("file_type") @db.VarChar(50)
+  label        String?  @db.VarChar(150)
+  versionLabel String?  @map("version_label") @db.VarChar(100)
+  sortOrder    Int      @default(0) @map("sort_order")
+  isPublic     Boolean  @default(false) @map("is_public")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  work  Work       @relation(fields: [workId], references: [id], onDelete: Cascade)
+  media MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@index([workId, sortOrder])
+  @@index([mediaId])
+  @@map("work_files")
+}
+
+// ---------------------------------------------------------------------------
+// Teaching
+// ---------------------------------------------------------------------------
+
+/// ERS §21. Concepto reutilizable del curso.
+///
+/// NO tiene institution_id ni department_id: esa es la decision central del ERS
+/// §2.4 y §60.8. La institucion pertenece a la edicion, no al curso.
+model Course {
+  id                  String          @id @default(uuid(7)) @db.Uuid
+  title               String          @db.VarChar(300)
+  shortTitle          String?         @map("short_title") @db.VarChar(160)
+  slug                String          @unique @db.VarChar(220)
+  defaultCode         String?         @map("default_code") @db.VarChar(80)
+  level               String?         @db.VarChar(80)
+  summary             String?
+  descriptionMarkdown String?         @map("description_markdown")
+  coverMediaId        String?         @map("cover_media_id") @db.Uuid
+  /// Enlace a la ficha oficial del curso en la web de la institucion.
+  externalUrl         String?         @map("external_url")
+  editorialStatus     EditorialStatus @default(draft) @map("editorial_status")
+  isFeatured          Boolean         @default(false) @map("is_featured")
+  featuredOrder       Int?            @map("featured_order")
+  displayOrder        Int?            @map("display_order")
+  publishedAt         DateTime?       @map("published_at") @db.Timestamptz(6)
+  createdBy           String?         @map("created_by")
+  updatedBy           String?         @map("updated_by")
+  createdAt           DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  cover   MediaAsset? @relation("CourseCover", fields: [coverMediaId], references: [id], onDelete: Restrict)
+  creator User?       @relation("CourseCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  editor  User?       @relation("CourseUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  tags      CourseTag[]
+  offerings CourseOffering[]
+
+  @@index([editorialStatus])
+  @@index([isFeatured, featuredOrder])
+  @@map("courses")
+}
+
+/// ERS §22.
+model CourseTag {
+  courseId  String   @map("course_id") @db.Uuid
+  tagId     String   @map("tag_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([courseId, tagId])
+  @@index([tagId])
+  @@map("course_tags")
+}
+
+/// ERS §23. Edicion concreta. Aqui viven institucion, departamento, periodo y rol.
+model CourseOffering {
+  id              String          @id @default(uuid(7)) @db.Uuid
+  courseId        String          @map("course_id") @db.Uuid
+  institutionId   String          @map("institution_id") @db.Uuid
+  departmentId    String?         @map("department_id") @db.Uuid
+  name            String?         @db.VarChar(250)
+  courseCode      String?         @map("course_code") @db.VarChar(80)
+  term            String?         @db.VarChar(100)
+  academicYear    Int?            @map("academic_year") @db.SmallInt
+  startDate       DateTime?       @map("start_date") @db.Date
+  endDate         DateTime?       @map("end_date") @db.Date
+  teachingRole    String?         @map("teaching_role") @db.VarChar(120)
+  summary         String?
+  contentMarkdown String?         @map("content_markdown")
+  isActive        Boolean         @default(false) @map("is_active")
+  editorialStatus EditorialStatus @default(draft) @map("editorial_status")
+  sortOrder       Int?            @map("sort_order")
+  publishedAt     DateTime?       @map("published_at") @db.Timestamptz(6)
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  course      Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  department  Department? @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+
+  materials CourseMaterial[]
+  teachers  CourseOfferingTeacher[]
+
+  @@index([courseId])
+  @@index([institutionId])
+  @@index([departmentId])
+  @@index([isActive])
+  @@index([academicYear(sort: Desc)])
+  @@index([editorialStatus])
+  @@map("course_offerings")
+}
+
+/// ERS §24. Debe existir exactamente uno de mediaId / externalUrl: la restriccion
+/// va como CHECK en la migracion, porque Prisma no expresa un XOR.
+model CourseMaterial {
+  id               String   @id @default(uuid(7)) @db.Uuid
+  courseOfferingId String   @map("course_offering_id") @db.Uuid
+  mediaId          String?  @map("media_id") @db.Uuid
+  externalUrl      String?  @map("external_url")
+  materialType     String   @map("material_type") @db.VarChar(50)
+  title            String   @db.VarChar(250)
+  description      String?
+  sortOrder        Int      @default(0) @map("sort_order")
+  isPublic         Boolean  @default(false) @map("is_public")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  offering CourseOffering @relation(fields: [courseOfferingId], references: [id], onDelete: Cascade)
+  media    MediaAsset?    @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@index([courseOfferingId, sortOrder])
+  @@index([mediaId])
+  @@map("course_materials")
+}
+
+/// Quien impartio cada edicion. Sustituye al texto libre `teaching_role`, que se
+/// conserva para lo que ya estuviera escrito.
+model CourseOfferingTeacher {
+  courseOfferingId String   @map("course_offering_id") @db.Uuid
+  personId         String   @map("person_id") @db.Uuid
+  /// Su papel en esa edicion concreta: responsable, co-docente, ayudante...
+  role             String?  @db.VarChar(120)
+  sortOrder        Int      @default(0) @map("sort_order")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  offering CourseOffering @relation(fields: [courseOfferingId], references: [id], onDelete: Cascade)
+  person   Person         @relation(fields: [personId], references: [id], onDelete: Restrict)
+
+  @@id([courseOfferingId, personId])
+  @@index([personId])
+  @@map("course_offering_teachers")
+}
+
+// ---------------------------------------------------------------------------
+// Eventos
+// ---------------------------------------------------------------------------
+
+/// Seminarios, congresos, defensas y convocatorias.
+///
+/// Viene del sistema anterior. Se rige por el mismo estado editorial que trabajos y
+/// cursos: la web solo ve los publicados (RN-001).
+model Event {
+  id              String          @id @default(uuid(7)) @db.Uuid
+  title           String          @db.VarChar(300)
+  slug            String          @unique @db.VarChar(220)
+  /// Codigo del catalogo `event`.
+  eventType       String?         @map("event_type") @db.VarChar(50)
+  summary         String?
+  contentMarkdown String?         @map("content_markdown")
+  startsAt        DateTime        @map("starts_at") @db.Timestamptz(6)
+  endsAt          DateTime?       @map("ends_at") @db.Timestamptz(6)
+  location        String?         @db.VarChar(300)
+  organizer       String?         @db.VarChar(300)
+  imageMediaId    String?         @map("image_media_id") @db.Uuid
+  imageAlt        String?         @map("image_alt") @db.VarChar(500)
+  buttonLabel     String?         @map("button_label") @db.VarChar(100)
+  buttonUrl       String?         @map("button_url")
+  /// Color libre: pertenece a la identidad del evento, no a la paleta del panel.
+  buttonColor     String?         @map("button_color") @db.VarChar(20)
+  isMain          Boolean         @default(false) @map("is_main")
+  editorialStatus EditorialStatus @default(draft) @map("editorial_status")
+  publishedAt     DateTime?       @map("published_at") @db.Timestamptz(6)
+  sortOrder       Int?            @map("sort_order")
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  image        MediaAsset?        @relation("EventImage", fields: [imageMediaId], references: [id], onDelete: Restrict)
+  institutions EventInstitution[]
+
+  @@index([editorialStatus])
+  @@index([startsAt(sort: Desc)])
+  @@map("events")
+}
+
+/// Quien organiza cada evento. Un evento puede tener varias instituciones.
+model EventInstitution {
+  eventId       String   @map("event_id") @db.Uuid
+  institutionId String   @map("institution_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  event       Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+
+  @@id([eventId, institutionId])
+  @@index([institutionId])
+  @@map("event_institutions")
+}
+
+// ---------------------------------------------------------------------------
+// Contenido de pagina y configuracion
+// ---------------------------------------------------------------------------
+
+/// ERS §25. Contenido editable de las tres paginas, sin page-builder (RF-020).
+/// Que bloques de cada pagina se ven, y en que orden.
+///
+/// NO es un constructor de paginas (RF-020): las secciones las define el codigo y esta
+/// tabla solo guarda su visibilidad. Una clave desconocida se ignora; una seccion del
+/// codigo sin fila se considera visible.
+model PageSection {
+  id                String   @id @default(uuid(7)) @db.Uuid
+  pageKey           String   @map("page_key") @db.VarChar(30)
+  sectionKey        String   @map("section_key") @db.VarChar(50)
+  isVisible         Boolean  @default(true) @map("is_visible")
+  /// Fondo de la banda. Sin imagen la seccion se pinta con su color liso.
+  backgroundMediaId String?  @map("background_media_id") @db.Uuid
+  /// Capa oscura sobre la imagen, de 0 a 100. Sin ella el texto pierde contraste.
+  backgroundOverlay Int      @default(45) @map("background_overlay")
+  sortOrder         Int      @default(0) @map("sort_order")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  background MediaAsset? @relation("SectionBackground", fields: [backgroundMediaId], references: [id], onDelete: Restrict)
+
+  @@unique([pageKey, sectionKey])
+  @@index([pageKey, sortOrder])
+  @@map("page_sections")
+}
+
+model PageContent {
+  id                String   @id @default(uuid(7)) @db.Uuid
+  pageKey           String   @unique @map("page_key") @db.VarChar(30)
+  pageTitle         String?  @map("page_title") @db.VarChar(250)
+  eyebrow           String?  @db.VarChar(120)
+  introMarkdown     String?  @map("intro_markdown")
+  secondaryMarkdown String?  @map("secondary_markdown")
+  heroMediaId       String?  @map("hero_media_id") @db.Uuid
+  heroAlt           String?  @map("hero_alt")
+  isPublished       Boolean  @default(true) @map("is_published")
+  updatedBy         String?  @map("updated_by")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  hero   MediaAsset? @relation("PageHero", fields: [heroMediaId], references: [id], onDelete: Restrict)
+  editor User?       @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@map("page_content")
+}
+
+/// ERS §26. Singleton: la migracion anade un indice unico parcial que impide un
+/// segundo registro.
+model SiteSettings {
+  id String @id @default(uuid(7)) @db.Uuid
+
+  /// Centinela del singleton. Con UNIQUE + CHECK(is_singleton) en la migracion, la
+  /// base de datos hace imposible un segundo registro; no depende de la aplicacion.
+  isSingleton Boolean @unique @default(true) @map("is_singleton")
+
+  siteName               String   @map("site_name") @db.VarChar(200)
+  ownerPersonId          String   @map("owner_person_id") @db.Uuid
+  defaultLocale          String   @default("en") @map("default_locale") @db.VarChar(10)
+  timezone               String   @default("UTC") @db.VarChar(60)
+  publicBaseUrl          String   @map("public_base_url")
+  contactEmail           String?  @map("contact_email") @db.VarChar(320)
+  metaTitleDefault       String?  @map("meta_title_default") @db.VarChar(200)
+  metaDescriptionDefault String?  @map("meta_description_default")
+  ogImageMediaId         String?  @map("og_image_media_id") @db.Uuid
+  /// Emblema de la cabecera del sitio publico. Distinto de ogImage, que se ve fuera.
+  logoMediaId            String?  @map("logo_media_id") @db.Uuid
+  footerText             String?  @map("footer_text")
+  updatedBy              String?  @map("updated_by")
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  owner   Person      @relation(fields: [ownerPersonId], references: [id], onDelete: Restrict)
+  ogImage MediaAsset? @relation("SiteOgImage", fields: [ogImageMediaId], references: [id], onDelete: Restrict)
+  logo    MediaAsset? @relation("SiteLogo", fields: [logoMediaId], references: [id], onDelete: Restrict)
+  editor  User?       @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@map("site_settings")
+}
+
+/// ERS §27. Auditoria de operaciones administrativas (ERS §60.20).
+model AuditLog {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  userId     String?  @map("user_id")
+  action     String   @db.VarChar(50)
+  entityType String   @map("entity_type") @db.VarChar(80)
+  entityId   String?  @map("entity_id") @db.Uuid
+  oldData    Json?    @map("old_data")
+  newData    Json?    @map("new_data")
+  ipAddress  String?  @map("ip_address") @db.Inet
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+  @@map("audit_log")
+}
+
+// ---------------------------------------------------------------------------
+// Better Auth (ADR-0001)
+//
+// Sustituye a la tabla `users` del ERS §7. Los nombres de modelo y campo son los
+// que espera el adaptador de Better Auth: no renombrar. `@map` solo cambia el
+// nombre de la columna en PostgreSQL, no el contrato con la libreria.
+//
+// `role`, `isActive` y `lastLoginAt` son campos adicionales que recuperan las
+// columnas equivalentes del ERS §7.
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String   @id
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false) @map("email_verified")
+  image         String?
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  role        String    @default("admin") @db.VarChar(30)
+  isActive    Boolean   @default(true) @map("is_active")
+  lastLoginAt DateTime? @map("last_login_at") @db.Timestamptz(6)
+
+  sessions Session[]
+  accounts Account[]
+
+  uploadedMedia  MediaAsset[]
+  createdWorks   Work[]         @relation("WorkCreatedBy")
+  updatedWorks   Work[]         @relation("WorkUpdatedBy")
+  createdCourses Course[]       @relation("CourseCreatedBy")
+  updatedCourses Course[]       @relation("CourseUpdatedBy")
+  editedPages    PageContent[]
+  editedSettings SiteSettings[]
+  auditEntries   AuditLog[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  token     String   @unique
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  userId    String   @map("user_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id")
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz(6)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(6)
+  scope                 String?
+  /// Hash de la contrasena, gestionado exclusivamente por Better Auth.
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([identifier])
+  @@map("verification")
+}

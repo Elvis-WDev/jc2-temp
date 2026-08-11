@@ -1,0 +1,41 @@
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { getSession } from '@/lib/api/auth'
+import { queryKeys } from '@/lib/api/query-keys'
+import { useAuthStore } from '@/stores/auth-store'
+import { AuthenticatedLayout } from '@/components/layout/authenticated-layout'
+
+/**
+ * Guard de todo el area autenticada.
+ *
+ * `beforeLoad` corre ANTES de montar nada, asi que una pantalla protegida no llega a
+ * pintarse sin sesion. Se aplica al layout `_authenticated`, de modo que cualquier
+ * ruta que se anada debajo nace protegida sin que nadie tenga que acordarse: es el
+ * mismo criterio que `requireAdmin` en el backend.
+ *
+ * `ensureQueryData` reutiliza la sesion ya cacheada, para no consultar la API en cada
+ * navegacion interna.
+ */
+export const Route = createFileRoute('/admin')({
+  beforeLoad: async ({ context, location }) => {
+    const user = await context.queryClient.ensureQueryData({
+      queryKey: queryKeys.session,
+      queryFn: getSession,
+      staleTime: 30_000,
+    })
+
+    if (user === null) {
+      throw redirect({
+        to: '/sign-in',
+        // Se conserva el destino para volver ahi despues de entrar.
+        search: { redirect: location.href },
+      })
+    }
+
+    // Se copia al estado para que el menu muestre quien esta dentro tambien al
+    // recargar la pagina, no solo justo despues de iniciar sesion.
+    useAuthStore.getState().setUser(user)
+
+    return { user }
+  },
+  component: AuthenticatedLayout,
+})

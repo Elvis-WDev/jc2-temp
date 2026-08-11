@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="/images/favicon.svg"
+      media="(prefers-color-scheme: light)"
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="/images/favicon_light.svg"
+      media="(prefers-color-scheme: dark)"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="/images/favicon.png"
+      media="(prefers-color-scheme: light)"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      href="/images/favicon_light.png"
+      media="(prefers-color-scheme: dark)"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!--
+      Valores de arranque, y solo eso.
+
+      Los definitivos los escribe cada ruta con los datos del sitio: titulo,
+      descripcion, canonica, OpenGraph, tarjetas de X y JSON-LD (ERS §39,
+      features/site/use-site-meta.ts). Aqui no puede haber nada especifico del
+      titular, porque este archivo se compila una vez y su contenido no cambia
+      cuando el se edita.
+
+      NO se anaden aqui og:* ni twitter:*: el hook los crea al vuelo, y dejar unos
+      fijos solo serviria para que un rastreador que no ejecuta JavaScript se llevara
+      los de la plantilla en vez de los suyos.
+    -->
+    <title>Sitio academico</title>
+    <meta name="description" content="Investigacion, publicaciones y docencia." />
+
+    <!-- font family -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Playfair Display es la serifa de los titulos del sitio publico; Inter, que ya
+         estaba, sirve para el cuerpo de los dos temas. -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Manrope:wght@200..800&family=Playfair+Display:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <meta name="theme-color" content="#fff" />
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

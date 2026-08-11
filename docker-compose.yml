@@ -1,0 +1,112 @@
+# Despliegue de produccion: solo la aplicacion.
+#
+# **La base de datos no esta aqui.** Se conecta a una externa a traves de DATABASE_URL.
+# Si algun dia hiciera falta una local para pruebas, esta `api/docker-compose.yml`, que
+# levanta un Postgres suelto y no forma parte de este despliegue.
+#
+#   cp .env.production.example .env.production   # y se rellena
+#   docker compose --env-file .env.production up -d --build
+#
+# Tres piezas:
+#
+#   migrate  se ejecuta una vez y termina. Aplica las migraciones y siembra.
+#   api      la API. No arranca hasta que `migrate` ha terminado bien.
+#   web      nginx: sirve el sitio y hace de unica puerta, con /api por dentro.
+#
+# Solo `web` publica puerto. La API no se expone al exterior: se llega a ella por el
+# proxy de nginx, que es lo que mantiene un unico origen para el sitio y la API.
+
+name: jc2
+
+services:
+  # Un solo uso: migra, siembra y sale. `api` espera a que termine con exito, asi que
+  # un fallo de migracion impide que arranque una version incompatible con la base.
+  migrate:
+    build:
+      context: ./api
+      target: migrate
+    image: jc2-migrate:${IMAGE_TAG:-latest}
+    restart: 'no'
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:?falta DATABASE_URL}
+      # El seeder del administrador las exige. Sin ellas no habria forma de entrar.
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?falta ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?falta ADMIN_PASSWORD}
+      ADMIN_NAME: ${ADMIN_NAME:-Site Administrator}
+      # `site-settings.seed` la usa para el sitemap y los enlaces canonicos.
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?falta PUBLIC_BASE_URL}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?falta BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${PUBLIC_BASE_URL}
+      CORS_ORIGIN: ${PUBLIC_BASE_URL}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+
+  api:
+    build:
+      context: ./api
+      target: runtime
+    image: jc2-api:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: ${DATABASE_URL:?falta DATABASE_URL}
+
+      # Autenticacion. El secreto firma la cookie de sesion: cambiarlo cierra todas las
+      # sesiones abiertas.
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?falta BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${PUBLIC_BASE_URL:?falta PUBLIC_BASE_URL}
+
+      # Un solo origen: el sitio y la API se sirven desde la misma direccion, asi que
+      # aqui va esa direccion, no una lista.
+      CORS_ORIGIN: ${PUBLIC_BASE_URL}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+
+      # No hace falta declarar el salto de proxy: en produccion la API confia en uno
+      # (`app.set('trust proxy', 1)`), que es exactamente el de nginx. Si delante
+      # pones otro proxy mas, hay que subir ese numero en `src/main/app.ts`.
+
+      STORAGE_ROOT: /data/storage
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-104857600}
+
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-60000}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-120}
+      PUBLIC_RATE_LIMIT_MAX: ${PUBLIC_RATE_LIMIT_MAX:-600}
+      LOGIN_RATE_LIMIT_MAX: ${LOGIN_RATE_LIMIT_MAX:-5}
+
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    volumes:
+      # Los archivos subidos viven aqui. **Sin este volumen, cada redespliegue los
+      # borra** y las filas de `media_assets` quedan apuntando al vacio.
+      - jc2-storage:/data/storage
+    expose:
+      - '4000'
+
+  web:
+    build:
+      context: ./web
+      target: runtime
+      args:
+        # Vite incrusta las VITE_* en tiempo de BUILD. Va vacia a proposito: con el
+        # proxy de nginx la API cuelga del mismo origen, y el cliente pide rutas
+        # relativas (`/api/...`). Poner aqui una direccion absoluta reintroduciria el
+        # salto de origen que el proxy existe para evitar.
+        VITE_API_URL: ''
+    image: jc2-web:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      # Solo escucha en la interfaz local: delante va el proxy que termina TLS. Para
+      # exponerlo directo a internet, se cambia a "80:80" —pero entonces el sitio va
+      # por HTTP sin cifrar, y la cookie de sesion es `Secure`.
+      - '${WEB_BIND:-127.0.0.1}:${WEB_PORT:-8080}:80'
+
+volumes:
+  jc2-storage:
+    # Con nombre: sobrevive a `docker compose down` y al redespliegue.
+    name: jc2-storage

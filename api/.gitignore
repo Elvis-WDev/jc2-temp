@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+
+# El .env vive en la raiz del proyecto, compartido con la otra aplicacion.
+
+# Archivos subidos por el admin
+storage/
+
+*.log
+.DS_Store
+
+# Cliente Prisma generado (se regenera con pnpm db:generate)
+src/infrastructure/database/prisma/generated/

@@ -1,0 +1,30 @@
+node_modules/
+dist/
+
+# Secretos: nunca versionar. Ver .env.example
+.env
+.env.*
+# Las plantillas si: solo llevan marcadores. `.env.*` las tapaba a las dos.
+!.env.example
+!.env.production.example
+
+*.log
+.DS_Store
+
+# Copias de seguridad de la base. Llevan el contenido entero y el hash de la
+# contrasena del administrador: no se versionan ni en un repositorio privado.
+backups/
+
+# Archivos subidos desde el panel. Viven en un volumen, no en el repositorio.
+api/storage/
+storage/
+
+# Cliente de Prisma: codigo generado. Lo produce `prisma generate` en cada build.
+api/src/infrastructure/database/prisma/generated/
+
+# Salidas de las pruebas. Las capturas de `__screenshots__` las escribe vitest cuando
+# una prueba falla; no son lineas base de nada.
+coverage/
+playwright-report/
+test-results/
+**/__screenshots__/
