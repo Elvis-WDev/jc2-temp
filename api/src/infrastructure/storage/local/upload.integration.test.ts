@@ -33,6 +33,8 @@ const SIN_REFERENCIAS: MediaReferences = {
   siteOgImages: 0,
   siteLogos: 0,
   sectionBackgrounds: 0,
+  eventImages: 0,
+  linkIcons: 0,
   total: 0,
 }
 

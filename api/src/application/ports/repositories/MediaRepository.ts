@@ -63,6 +63,8 @@ export interface MediaReferences {
   siteOgImages: number
   siteLogos: number
   sectionBackgrounds: number
+  eventImages: number
+  linkIcons: number
   total: number
 }
 

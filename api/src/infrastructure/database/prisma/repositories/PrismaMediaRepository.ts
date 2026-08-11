@@ -113,6 +113,8 @@ export class PrismaMediaRepository implements MediaRepository {
       siteOgImages,
       siteLogos,
       sectionBackgrounds,
+      eventImages,
+      linkIcons,
     ] = await Promise.all([
       prisma.workFile.count({ where: { mediaId: id } }),
       prisma.courseMaterial.count({ where: { mediaId: id } }),
@@ -125,6 +127,8 @@ export class PrismaMediaRepository implements MediaRepository {
       prisma.siteSettings.count({ where: { ogImageMediaId: id } }),
       prisma.siteSettings.count({ where: { logoMediaId: id } }),
       prisma.pageSection.count({ where: { backgroundMediaId: id } }),
+      prisma.event.count({ where: { imageMediaId: id } }),
+      prisma.personLink.count({ where: { iconMediaId: id } }),
     ])
 
     const referencias = {
@@ -139,6 +143,8 @@ export class PrismaMediaRepository implements MediaRepository {
       siteOgImages,
       siteLogos,
       sectionBackgrounds,
+      eventImages,
+      linkIcons,
     }
 
     return {
@@ -166,6 +172,7 @@ export class PrismaMediaRepository implements MediaRepository {
       ogDelSitio,
       emblemaDelSitio,
       fondoDeSeccion,
+      imagenDeEvento,
     ] = await Promise.all([
       prisma.workFile.count({
         where: { mediaId: id, isPublic: true, work: { editorialStatus: 'published' } },
@@ -197,6 +204,9 @@ export class PrismaMediaRepository implements MediaRepository {
       // fichas de detalle heredan el fondo de la cabecera de su listado y se siguen
       // abriendo aunque el listado este oculto.
       prisma.pageSection.count({ where: { backgroundMediaId: id } }),
+      // La imagen de un evento publicado. Faltaba: la agenda entregaba su direccion y
+      // la descarga respondia 404, asi que el hueco se pintaba vacio.
+      prisma.event.count({ where: { imageMediaId: id, editorialStatus: 'published' } }),
     ])
 
     return (
@@ -209,7 +219,8 @@ export class PrismaMediaRepository implements MediaRepository {
         heroDePagina +
         ogDelSitio +
         emblemaDelSitio +
-        fondoDeSeccion >
+        fondoDeSeccion +
+        imagenDeEvento >
       0
     )
   }

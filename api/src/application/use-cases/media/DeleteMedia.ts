@@ -22,6 +22,8 @@ function describirUsos(referencias: MediaReferences): string[] {
     ['siteOgImages', 'the site OpenGraph image'],
     ['siteLogos', 'the site emblem'],
     ['sectionBackgrounds', 'section backgrounds'],
+    ['eventImages', 'event images'],
+    ['linkIcons', 'link icons'],
   ]
 
   return etiquetas
