@@ -31,21 +31,29 @@ RUN corepack pnpm install --frozen-lockfile --prod
 FROM node:24-alpine AS migrate
 WORKDIR /app
 ENV NODE_ENV=production
-RUN corepack enable
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/prisma ./prisma
+# `--chown` en cada copia: el contenedor corre como `node` y con los ficheros de root
+# cualquier cosa que quiera escribir en /app falla con EACCES.
+COPY --from=deps --chown=node:node /app/node_modules ./node_modules
+COPY --from=build --chown=node:node /app/dist ./dist
+COPY --from=build --chown=node:node /app/prisma ./prisma
 # Desde Prisma 7 la cadena de conexion sale de aqui, no del esquema: sin este fichero
 # `migrate deploy` no sabe contra que base trabajar.
-COPY prisma.config.ts ./
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY --chown=node:node prisma.config.ts package.json ./
 
 USER node
 
+# Se llama al CLI de Prisma **directamente**, sin pnpm de por medio.
+#
+# Con `corepack pnpm exec` fallaba en el servidor: pnpm comprueba si node_modules cuadra
+# con el lockfile antes de ejecutar nada y, al no cuadrar, lanza un `install` que escribe
+# un temporal en /app. Como `node` no es dueño del directorio, moria con
+# `EACCES: permission denied, open '/app/_tmp_...'`. Aqui no hay nada que instalar: las
+# dependencias vienen de la etapa `deps`.
+#
 # `migrate deploy` aplica lo que falte y no genera nada: es el unico comando de Prisma
 # que se puede correr contra produccion. El seed va detras y es idempotente.
-CMD ["sh", "-c", "corepack pnpm exec prisma migrate deploy && node dist/infrastructure/database/seed/index.js"]
+CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node dist/infrastructure/database/seed/index.js"]
 
 # --- Ejecucion ------------------------------------------------------------
 FROM node:24-alpine AS runtime
