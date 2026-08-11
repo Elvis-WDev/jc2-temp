@@ -16,8 +16,11 @@ dist/
 backups/
 
 # Archivos subidos desde el panel. Viven en un volumen, no en el repositorio.
+#
+# Con ruta completa a proposito. Un `storage/` suelto casaria con cualquier carpeta que
+# se llame asi a cualquier profundidad, incluida `api/src/infrastructure/storage/`, que
+# es codigo.
 api/storage/
-storage/
 
 # Cliente de Prisma: codigo generado. Lo produce `prisma generate` en cada build.
 api/src/infrastructure/database/prisma/generated/

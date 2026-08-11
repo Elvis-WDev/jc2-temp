@@ -4,8 +4,13 @@ coverage/
 
 # El .env vive en la raiz del proyecto, compartido con la otra aplicacion.
 
-# Archivos subidos por el admin
-storage/
+# Archivos subidos por el admin.
+#
+# La barra inicial NO sobra: sin ella, git aplica el patron a CUALQUIER carpeta
+# llamada `storage` a cualquier profundidad, y `src/infrastructure/storage/` es codigo
+# fuente. Se quedo fuera del repositorio y el build fallaba en el servidor con
+# "Cannot find module '../infrastructure/storage/...'" mientras en local compilaba.
+/storage/
 
 *.log
 .DS_Store
