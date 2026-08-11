@@ -16,10 +16,20 @@ docker compose --env-file .env.production up -d --build
 | `api` | `jc2-api` | La API. No arranca hasta que `migrate` termina bien. |
 | `web` | `jc2-web` | nginx: sirve el sitio y hace de unica puerta, con `/api` por dentro. |
 
-**Solo `web` publica puerto**, y por defecto solo en `127.0.0.1:8080`. La API no se
-expone: se llega a ella por el proxy de nginx. Es lo que mantiene un unico origen para
-el sitio y la API, que es de lo que dependen la cookie de sesion y la cabecera
-`Cross-Origin-Resource-Policy` de las imagenes.
+**Ningun contenedor publica puerto en el anfitrion.** Quien termina TLS y enruta por
+dominio es el proxy —Traefik en Dokploy—, y llega por la red de Docker. La API tampoco
+se expone: se llega a ella por el proxy de nginx que va dentro de `web`. Es lo que
+mantiene un unico origen para el sitio y la API, de lo que dependen la cookie de sesion
+y la cabecera `Cross-Origin-Resource-Policy` de las imagenes.
+
+`web` se une a `dokploy-network`, que es externa. **Fuera de Dokploy hay que crearla:**
+
+```bash
+docker network create dokploy-network
+```
+
+Sin ella, `docker compose up` falla diciendo que la red no existe. Con proxy propio, se
+apunta a `web:80` dentro de esa misma red.
 
 `migrate` es una imagen aparte a proposito: lleva el CLI de Prisma, que es dependencia
 de desarrollo. Un contenedor que sirve peticiones no tiene por que poder migrar la base.
@@ -117,6 +127,16 @@ ser alcanzable desde la web publica. Piden por esas rutas y les responde la SPA 
 404.
 
 ## Comprobar un despliegue
+
+### En Dokploy
+
+En **Domains**: servicio `web`, **Container Port 80** (no 3000: nginx escucha en el 80) y
+**HTTPS encendido**. Sin certificado se ve el sitio publico pero no se entra al panel,
+porque la cookie de sesion es `Secure`.
+
+En **Environment** van todas las variables: el `.env.production` no viaja en el
+repositorio —esta en `.gitignore`— y el compose usa interpolacion estricta
+(`${VAR:?falta VAR}`), asi que sin ellas aborta antes de construir.
 
 ```bash
 curl -sI https://tu-dominio/ | grep -i content-security-policy   # cabeceras

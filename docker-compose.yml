@@ -100,11 +100,23 @@ services:
     depends_on:
       api:
         condition: service_healthy
-    ports:
-      # Solo escucha en la interfaz local: delante va el proxy que termina TLS. Para
-      # exponerlo directo a internet, se cambia a "80:80" —pero entonces el sitio va
-      # por HTTP sin cifrar, y la cookie de sesion es `Secure`.
-      - '${WEB_BIND:-127.0.0.1}:${WEB_PORT:-8080}:80'
+    # No se publica ningun puerto en el anfitrion: quien termina TLS y enruta por
+    # dominio es Traefik, y llega por la red de Docker. Publicar el puerto ademas solo
+    # abriria una segunda via al sitio, sin cifrar.
+    expose:
+      - '80'
+    networks:
+      # La propia, para hablar con `api`.
+      - default
+      # La de Dokploy, para que Traefik la alcance. Sin esto el dominio resuelve pero
+      # devuelve 502: el contenedor esta vivo y el proxy no sabe llegar.
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    # La crea Dokploy al instalarse. Fuera de Dokploy hay que crearla a mano:
+    #   docker network create dokploy-network
+    external: true
 
 volumes:
   jc2-storage:
