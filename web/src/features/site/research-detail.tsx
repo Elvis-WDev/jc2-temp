@@ -9,7 +9,6 @@ import { RichText } from './components/rich-text'
 import { SectionBackground } from './components/section-background'
 import { SiteButton } from './components/site-button'
 import { SiteChip } from './components/site-card'
-import { SiteFrieze } from './components/site-frieze'
 import { tonoDeBanda, useSectionBackground } from './use-section-background'
 import { resumirHtml, useSiteMeta } from './use-site-meta'
 import { coautores } from './work-format'
@@ -78,7 +77,6 @@ export function SiteResearchDetail() {
   return (
     <>
       <Cabecera work={work} ownerName={site?.owner.fullName ?? null} />
-      <SiteFrieze />
 
       <section className='w-full px-site-margin py-site-section lg:px-site-gutter'>
         <div className='mx-auto grid max-w-site grid-cols-1 gap-site-gutter lg:grid-cols-12'>

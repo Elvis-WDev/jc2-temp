@@ -172,13 +172,3 @@
   background-image: url("data:image/svg+xml,%3Csvg width='40' height='20' viewBox='0 0 40 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 20 L10 10 L20 20 L30 10 L40 20 V18 L30 8 L20 18 L10 8 L0 18 Z' fill='%23ffffff'/%3E%3C/svg%3E");
   background-repeat: repeat;
 }
-
-/*
- * El mismo motivo repetido en las dos direcciones, muy tenue, como fondo de las
- * cabeceras de seccion. Sustituye a la fotografia de piedra tallada que las
- * plantillas cargaban desde un servidor de Google.
- */
-@utility site-texture {
-  background-image: url("data:image/svg+xml,%3Csvg width='40' height='20' viewBox='0 0 40 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 20 L10 10 L20 20 L30 10 L40 20 V18 L30 8 L20 18 L10 8 L0 18 Z' fill='%2318233b'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-}

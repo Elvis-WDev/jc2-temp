@@ -13,7 +13,6 @@ import {
 import { CourseCard } from './components/course-card'
 import { RichText } from './components/rich-text'
 import { SectionBackground } from './components/section-background'
-import { SiteFrieze } from './components/site-frieze'
 import { SitePagination } from './components/site-pagination'
 import { agrupar } from './teaching-groups'
 import { useSectionBackground } from './use-section-background'
@@ -81,7 +80,6 @@ export function SiteTeaching() {
   return (
     <>
       <Cabecera page={page ?? null} />
-      <SiteFrieze />
 
       <section className='w-full bg-site-surface-bright px-site-margin py-site-section lg:px-site-gutter'>
         <div className='mx-auto max-w-site space-y-16'>

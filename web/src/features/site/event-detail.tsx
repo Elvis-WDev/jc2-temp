@@ -8,7 +8,6 @@ import { getEvent, getSite, type PublicEvent, type PublicSite } from './api'
 import { EventButton } from './components/event-card'
 import { RichText } from './components/rich-text'
 import { SectionBackground } from './components/section-background'
-import { SiteFrieze } from './components/site-frieze'
 import { rangoDeFechas } from './event-format'
 import { tonoDeBanda, useSectionBackground } from './use-section-background'
 import { resumirHtml, useSiteMeta } from './use-site-meta'
@@ -150,8 +149,6 @@ export function SiteEventDetail() {
           )}
         </div>
       </section>
-
-      <SiteFrieze />
 
       <section className='w-full px-site-margin py-site-section lg:px-site-gutter'>
         <div className='mx-auto max-w-3xl'>

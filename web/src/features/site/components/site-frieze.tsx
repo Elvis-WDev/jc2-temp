@@ -1,7 +1,11 @@
 import { cn } from '@/lib/utils'
 
 /**
- * El friso Moche que separa secciones y remata el pie.
+ * El friso Moche que remata el pie.
+ *
+ * Estuvo tambien entre la cabecera y el contenido de cada pagina, pero alli quedaba
+ * como una linea suelta entre dos bandas claras y se retiro. En el borde del pie si
+ * funciona: separa el contenido del bloque oscuro.
  *
  * Dos versiones porque el motivo esta dibujado en un color, no en `currentColor`: la
  * oscura para fondos claros y la clara para el pie, que es azul noche.
@@ -25,20 +29,5 @@ export function SiteFrieze({
         className
       )}
     />
-  )
-}
-
-/** Separador entre bloques de una misma pagina, a lo ancho del contenido. */
-export function SiteDivider({ className }: { className?: string }) {
-  return (
-    <div
-      aria-hidden
-      className={cn(
-        'mx-auto max-w-site px-site-margin lg:px-site-gutter',
-        className
-      )}
-    >
-      <SiteFrieze />
-    </div>
   )
 }

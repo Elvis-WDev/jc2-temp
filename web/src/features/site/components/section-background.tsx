@@ -30,7 +30,10 @@ export function SectionBackground({ clave }: { clave: string }) {
   if (fondo === null) return null
 
   return (
-    <div aria-hidden className='pointer-events-none absolute inset-0 z-0 bg-site-primary'>
+    <div
+      aria-hidden
+      className='pointer-events-none absolute inset-0 z-0 bg-site-primary'
+    >
       <div
         className='size-full bg-cover bg-center'
         style={{ backgroundImage: `url(${fondo.url})` }}

@@ -6,7 +6,6 @@ import { getPageContent, getSite, listEvents, type EventsQuery } from './api'
 import { EventCard } from './components/event-card'
 import { RichText } from './components/rich-text'
 import { SectionBackground } from './components/section-background'
-import { SiteFrieze } from './components/site-frieze'
 import { SitePagination } from './components/site-pagination'
 import { useSectionBackground } from './use-section-background'
 import { resumirHtml, titulo, useSiteMeta } from './use-site-meta'
@@ -150,8 +149,6 @@ export function SiteEvents() {
           )}
         </div>
       </section>
-
-      <SiteFrieze />
 
       <section className='w-full px-site-margin py-site-section lg:px-site-gutter'>
         <div className='mx-auto flex max-w-site flex-col gap-8'>

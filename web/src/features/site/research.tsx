@@ -16,7 +16,6 @@ import {
 } from './components/research-filters'
 import { RichText } from './components/rich-text'
 import { SectionBackground } from './components/section-background'
-import { SiteFrieze } from './components/site-frieze'
 import { SitePagination } from './components/site-pagination'
 import { WorkCard } from './components/work-card'
 import { useSectionBackground } from './use-section-background'
@@ -301,8 +300,6 @@ function Cabecera({
           )}
         </div>
       </section>
-
-      <SiteFrieze />
     </>
   )
 }
