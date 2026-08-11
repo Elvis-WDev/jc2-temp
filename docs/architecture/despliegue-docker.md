@@ -127,6 +127,24 @@ llevaban. Es un fallo silencioso: la pagina se ve igual.
 ser alcanzable desde la web publica. Piden por esas rutas y les responde la SPA con su
 404.
 
+## Antes de tocar `.gitignore`
+
+**Un patron de carpeta sin barra inicial casa a cualquier profundidad.** `storage/`
+excluyo `api/src/infrastructure/storage/`, que es codigo fuente: seis ficheros no
+llegaron al repositorio y el build fallaba solo en el servidor, que compila desde el
+clon, mientras en local seguia pasando porque los ficheros estaban en disco.
+
+Lo que lo detecta en un segundo:
+
+```bash
+comm -23 <(find api/src web/src -type f \( -name '*.ts' -o -name '*.tsx' \) \
+            | grep -v prisma/generated | sort) \
+         <(git ls-files api/src web/src | sort)
+```
+
+Vacio significa que el repositorio tiene todo el codigo. Conviene mirarlo despues de
+cualquier cambio en un `.gitignore`.
+
 ## Comprobar un despliegue
 
 ### En Dokploy
