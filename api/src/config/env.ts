@@ -55,12 +55,32 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>
 
+/**
+ * Cuantos caracteres llegaron, para las variables cuyo valor no se puede ensenar.
+ *
+ * Sin esto, "expected string to have >=12 characters" no distingue entre una
+ * contrasena corta y una que el orquestador trunco por el camino: un `$` sin escapar en
+ * un fichero de entorno se lee como una variable, y `Contrasena$Segura2026` llega como
+ * `Contrasena`. El numero lo delata de un vistazo, y el valor sigue sin salir al log.
+ */
+function longitudRecibida(source: NodeJS.ProcessEnv, nombre: string): string {
+  const secretas = ['ADMIN_PASSWORD', 'BETTER_AUTH_SECRET']
+  if (!secretas.includes(nombre)) return ''
+
+  const valor = source[nombre]
+  if (valor === undefined) return ''
+  return ` (llegaron ${String(valor.length)} caracteres)`
+}
+
 export function parseEnv(source: NodeJS.ProcessEnv): Env {
   const result = envSchema.safeParse(source)
 
   if (!result.success) {
     const detalle = result.error.issues
-      .map((issue) => `  - ${issue.path.join('.') || '(raiz)'}: ${issue.message}`)
+      .map((issue) => {
+        const nombre = issue.path.join('.') || '(raiz)'
+        return `  - ${nombre}: ${issue.message}${longitudRecibida(source, nombre)}`
+      })
       .join('\n')
 
     // El mensaje nombra la variable, nunca su valor: no filtramos secretos al log.

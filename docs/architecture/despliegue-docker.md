@@ -183,6 +183,19 @@ El log dice donde se paro, y el sitio exacto importa:
 **Prisma no lista las migraciones hasta despues de conectar.** Si en el log aparecen las
 16 con su `migration.sql`, la conexion funciona y el problema es otro.
 
+### La contrasena llega cortada
+
+`ADMIN_PASSWORD: Too small: expected string to have >=12 characters` no siempre
+significa que sea corta. **Un `$` sin escapar la trunca**: en un fichero de entorno
+`Clave$Segura2026` se lee como `Clave` mas una variable vacia, y llegan 5 caracteres.
+
+Por eso el error dice cuantos caracteres llegaron. Si el numero no cuadra con lo que
+escribiste, el valor viene cortado. Generar una sin caracteres especiales lo evita:
+
+```bash
+openssl rand -hex 24
+```
+
 ### Permisos en la base
 
 Desde PostgreSQL 15 el esquema `public` ya no concede `CREATE` a todo el mundo, asi que
