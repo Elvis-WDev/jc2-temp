@@ -97,7 +97,9 @@
   --chart-4: #ac73e6;
   --chart-5: #ee5e52;
 
-  --sidebar: #181826;
+  /* Un escalon por encima del contenido (#181826), como el panel de Strapi. Con el
+     mismo color los dos se camuflaban y la barra no se leia como una zona aparte. */
+  --sidebar: #212134;
   --sidebar-foreground: #ffffff;
   --sidebar-primary: #4945ff;
   --sidebar-primary-foreground: #ffffff;

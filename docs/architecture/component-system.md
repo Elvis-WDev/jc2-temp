@@ -122,6 +122,18 @@ Es lo mismo que hace Strapi.
 Cambiar esta paleta **no toca el sitio publico**: sus tokens van prefijados `site-*` y
 viven en `site.css`. Esa separacion es justo para esto.
 
+### El emblema hace tambien de favicon
+
+El archivo que se sube en Configuracion del sitio se usa en la cabecera y como icono de
+la pestaña. `index.html` trae cuatro `link[rel=icon]` de la plantilla; cuando hay emblema
+**se retiran todos** y se pone uno solo, porque con varios declarados el navegador elige
+y podria no elegir el del titular.
+
+Sin emblema no se toca nada y siguen los estaticos: mejor eso que una pestaña sin icono.
+
+Solo afecta al sitio publico. El panel conserva los suyos: no pide `/api/public/site`, y
+anadir esa peticion solo por el icono no compensa.
+
 ## Ownership And Documentation
 
 Document meaningful contract changes in `frontend.md` or an ADR. When replacing a shared

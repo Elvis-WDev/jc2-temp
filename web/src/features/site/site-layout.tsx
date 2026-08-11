@@ -4,6 +4,7 @@ import { FileText } from 'lucide-react'
 import { queryKeys } from '@/lib/api/query-keys'
 import { getSite, type PublicSite } from './api'
 import { SiteFrieze } from './components/site-frieze'
+import { useSiteIcon } from './use-site-meta'
 
 /**
  * Envoltura del sitio publico: cabecera, contenido y pie.
@@ -41,6 +42,10 @@ export function SiteLayout() {
     // Cambia cuando el titular toca Configuracion del sitio, no cada minuto.
     staleTime: 5 * 60_000,
   })
+
+  // El emblema hace tambien de favicon. Va aqui y no en cada pagina porque es del sitio
+  // entero, no de la pantalla que se este viendo.
+  useSiteIcon(site?.logoUrl ?? null)
 
   return (
     <div
