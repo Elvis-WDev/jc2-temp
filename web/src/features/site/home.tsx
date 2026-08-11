@@ -9,7 +9,6 @@ import { RichText } from './components/rich-text'
 import { SectionBackground } from './components/section-background'
 import { SiteButton } from './components/site-button'
 import { SiteCard, SiteChip } from './components/site-card'
-import { SiteDivider } from './components/site-frieze'
 import { SectionHeading, SiteSection } from './components/site-section'
 import { WorkCarousel } from './components/work-carousel'
 import { useSectionBackground } from './use-section-background'
@@ -69,12 +68,11 @@ export function SiteHome() {
 
   return (
     <>
-      {seVe('hero') && (
-        <>
-          <Hero home={home} />
-          <SiteDivider className='py-site-unit' />
-        </>
-      )}
+      {/* Sin separador debajo del hero: el friso esta dibujado para fondo claro, y
+          entre dos bandas oscuras —el hero con imagen y el carrusel— aparecia como una
+          franja blanca que parecia un hueco. Las demas paginas si lo llevan, porque
+          alli separa bandas claras. */}
+      {seVe('hero') && <Hero home={home} />}
       {seVe('carousel') && (
         <WorkCarousel
           works={home.carouselWorks}
@@ -177,21 +175,17 @@ function Hero({ home }: { home: PublicHome }) {
         </div>
 
         {profile.photoUrl !== null && (
+          // El contenedor se ajusta a la imagen: sin respaldo desplazado detras y sin
+          // proporcion forzada. El respaldo asomaba por la derecha y por abajo como un
+          // margen, y `aspect-square` recortaba un retrato apaisado.
           <div className='w-full shrink-0 md:w-[400px] lg:w-[480px]'>
-            <div className='relative'>
-              {/* Respaldo decorativo desplazado, como en la plantilla. */}
-              <div
-                aria-hidden
-                className='absolute -inset-4 translate-x-4 translate-y-4 rounded-site border border-site-outline-variant/30 bg-site-surface-container'
-              />
-              <img
-                // El texto alternativo es el nombre porque es un retrato: describir
-                // "foto de perfil" no le dice nada a quien usa un lector de pantalla.
-                alt={profile.fullName}
-                src={profile.photoUrl}
-                className='relative aspect-square w-full rounded-site object-cover shadow-xl'
-              />
-            </div>
+            <img
+              // El texto alternativo es el nombre porque es un retrato: describir
+              // "foto de perfil" no le dice nada a quien usa un lector de pantalla.
+              alt={profile.fullName}
+              src={profile.photoUrl}
+              className='block w-full rounded-site shadow-xl'
+            />
           </div>
         )}
       </div>
