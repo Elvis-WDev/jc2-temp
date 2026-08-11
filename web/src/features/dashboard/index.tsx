@@ -39,9 +39,9 @@ export function Dashboard() {
       valor: data?.publishedWorks ?? 0,
       icono: FileText,
     },
-    { etiqueta: 'Borradores', valor: data?.draftWorks ?? 0, icono: FileText },
+    { etiqueta: 'Drafts', valor: data?.draftWorks ?? 0, icono: FileText },
     {
-      etiqueta: 'Destacados en Home',
+      etiqueta: 'Featured on home',
       valor: data?.featuredWorks ?? 0,
       icono: Star,
     },
@@ -154,7 +154,7 @@ export function Dashboard() {
                           to='/admin/works/$workId'
                           params={{ workId: elemento.id }}
                         >
-                          Abrir
+                          Open
                         </Link>
                       </Button>
                     )}

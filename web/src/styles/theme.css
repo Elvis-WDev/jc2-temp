@@ -1,63 +1,110 @@
+/*
+ * Paleta del PANEL DE ADMINISTRACION. La del sitio publico esta en `site.css` y no se
+ * toca desde aqui: sus tokens van prefijados `site-*` a proposito, para que las dos
+ * puedan cambiar por separado dentro de la misma aplicacion.
+ *
+ * Los valores son los del sistema de diseno de Strapi, que es de donde viene el
+ * contenido de esta plataforma y el panel al que el titular esta acostumbrado.
+ *
+ *   neutral0   #181826   fondo en oscuro        neutral600 #8E8EA9
+ *   neutral100 #212134   tarjetas en oscuro     neutral700 #A5A5BA
+ *   neutral200 #32324D   bordes en oscuro       neutral800 #DCDCE4
+ *   neutral300 #4A4A6A   campos en oscuro       primary600 #4945FF
+ *   neutral500 #666687                          primary700 #7B79FF
+ *
+ * **El morado tiene dos tonos y no son intercambiables.** `#4945FF` vale como fondo de
+ * boton —el blanco encima da 5.9:1— pero como TEXTO sobre el fondo oscuro se queda en
+ * 3.0:1, por debajo de AA. Para eso esta `#7B79FF`, que llega a 5.0:1. Es lo mismo que
+ * hace Strapi: el enlace "Profile settings" de su panel es el tono claro.
+ *
+ * Todas las combinaciones de texto se comprobaron contra AA (4.5:1). La mas justa es el
+ * rojo de peligro sobre tarjeta oscura, 4.8:1.
+ */
+
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
 
-  --sidebar: var(--background);
-  --sidebar-foreground: var(--foreground);
-  --sidebar-primary: var(--primary);
-  --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: var(--accent);
-  --sidebar-accent-foreground: var(--accent-foreground);
-  --sidebar-border: var(--border);
-  --sidebar-ring: var(--ring);
+  /* Claro: fondo gris muy suave y tarjetas blancas, como el panel de Strapi. */
+  --background: #f6f6f9;
+  --foreground: #32324d;
+  --card: #ffffff;
+  --card-foreground: #32324d;
+  --popover: #ffffff;
+  --popover-foreground: #32324d;
+
+  --primary: #4945ff;
+  --primary-foreground: #ffffff;
+  --secondary: #eaeaef;
+  --secondary-foreground: #32324d;
+  --muted: #eaeaef;
+  --muted-foreground: #666687;
+
+  /* El estado de paso del raton en Strapi: morado muy diluido, no un gris. */
+  --accent: #f0f0ff;
+  --accent-foreground: #4945ff;
+
+  --destructive: #d02b20;
+  --border: #dcdce4;
+  --input: #dcdce4;
+  --ring: #4945ff;
+
+  --chart-1: #4945ff;
+  --chart-2: #328048;
+  --chart-3: #d9822f;
+  --chart-4: #ac73e6;
+  --chart-5: #d02b20;
+
+  /* En claro la barra lateral es blanca y el contenido gris: al reves que el resto. */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #32324d;
+  --sidebar-primary: #4945ff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f0f0ff;
+  --sidebar-accent-foreground: #4945ff;
+  --sidebar-border: #dcdce4;
+  --sidebar-ring: #4945ff;
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.14 0.04 259.21);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  --background: #181826;
+  --foreground: #ffffff;
+  --card: #212134;
+  --card-foreground: #ffffff;
+  --popover: #212134;
+  --popover-foreground: #ffffff;
+
+  --primary: #4945ff;
+  --primary-foreground: #ffffff;
+  --secondary: #32324d;
+  --secondary-foreground: #ffffff;
+  --muted: #32324d;
+  /* 6.5:1 sobre tarjeta. Strapi usa tambien #8E8EA9, que pasa AA por poco (4.9:1);
+     este tono da mas margen sin dejar de ser el gris de su paleta. */
+  --muted-foreground: #a5a5ba;
+
+  --accent: #32324d;
+  --accent-foreground: #ffffff;
+
+  --destructive: #ee5e52;
+  --border: #32324d;
+  --input: #4a4a6a;
+  /* El foco se ve sobre oscuro: el morado plano ahi no se distingue. */
+  --ring: #7b79ff;
+
+  --chart-1: #7b79ff;
+  --chart-2: #5cb176;
+  --chart-3: #f29d41;
+  --chart-4: #ac73e6;
+  --chart-5: #ee5e52;
+
+  --sidebar: #181826;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #4945ff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #32324d;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #32324d;
+  --sidebar-ring: #7b79ff;
 }
 
 @theme inline {

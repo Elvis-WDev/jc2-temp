@@ -109,6 +109,19 @@ Do not build public-site screens out of the panel's shadcn primitives. They carr
 panel's radius, typography and dark-mode behaviour. `features/site/components/` holds
 the site's own small set: section, heading, card, chip, button, frieze.
 
+### La paleta del panel es la de Strapi
+
+Los valores de `theme.css` son los del sistema de diseno de Strapi: es de donde viene el
+contenido de esta plataforma y el panel al que el titular esta acostumbrado.
+
+El morado tiene **dos tonos y no son intercambiables**. `#4945FF` vale como fondo de
+boton —el blanco encima da 5.9:1— pero como texto sobre el fondo oscuro se queda en
+3.0:1, por debajo de AA. Para texto y focos sobre oscuro va `#7B79FF`, que llega a 5.0:1.
+Es lo mismo que hace Strapi.
+
+Cambiar esta paleta **no toca el sitio publico**: sus tokens van prefijados `site-*` y
+viven en `site.css`. Esa separacion es justo para esto.
+
 ## Ownership And Documentation
 
 Document meaningful contract changes in `frontend.md` or an ADR. When replacing a shared
