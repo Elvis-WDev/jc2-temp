@@ -7,6 +7,11 @@
 //
 // La tabla `users` del ERS §7 NO existe aqui: Better Auth es dueno del usuario, la
 // sesion y el hashing (ADR-0001). Sus modelos estan al final del archivo.
+//
+// ANTES DE GENERAR UNA MIGRACION, leer docs/architecture/migraciones.md. Hay piezas
+// escritas a mano en las migraciones que Prisma no conoce —las claves foraneas
+// compuestas de RN-006, la unica de `departments` y el indice de busqueda— y que propone
+// borrar cada vez. Esas lineas se quitan del .sql antes de aplicarlo.
 
 generator client {
   provider     = "prisma-client"
@@ -220,6 +225,9 @@ model MediaAsset {
   linkIcons          PersonLink[]     @relation("PersonLinkIcon")
   ogImages           SiteSettings[]   @relation("SiteOgImage")
   siteLogos          SiteSettings[]   @relation("SiteLogo")
+  siteFooters        SiteSettings[]   @relation("SiteFooter")
+  postImages         Post[]           @relation("PostImage")
+  postFiles          PostFile[]       @relation("PostFileMedia")
   sectionBackgrounds PageSection[]    @relation("SectionBackground")
   workFiles          WorkFile[]
   courseMaterials    CourseMaterial[]
@@ -734,6 +742,66 @@ model EventInstitution {
 }
 
 // ---------------------------------------------------------------------------
+// Noticias y blog
+// ---------------------------------------------------------------------------
+
+/// Noticias y entradas de blog en una sola tabla.
+///
+/// Una noticia y una entrada son lo mismo por dentro —titulo, imagen, texto, fecha y
+/// estado— y solo cambian en tono y formato, que es una decision editorial. Es la misma
+/// decision que el ERS toma en RF-002 con `works`: una tabla y el tipo como campo, en vez
+/// de una tabla por forma.
+///
+/// `kind` sale del catalogo `post_kind`. Los codigos `news` y `personal` son reservados:
+/// de ellos cuelgan las dos rutas publicas.
+model Post {
+  id              String          @id @default(uuid(7)) @db.Uuid
+  kind            String          @db.VarChar(50)
+  title           String          @db.VarChar(300)
+  slug            String          @unique @db.VarChar(220)
+  summary         String?
+  /// Solo el blog lo usa; una noticia se queda en el resumen.
+  contentMarkdown String?         @map("content_markdown")
+  imageMediaId    String?         @map("image_media_id") @db.Uuid
+  imageAlt        String?         @map("image_alt") @db.VarChar(500)
+  editorialStatus EditorialStatus @default(draft) @map("editorial_status")
+  publishedAt     DateTime?       @map("published_at") @db.Timestamptz(6)
+  /// Orden manual dentro de su tipo. Vacio: manda la fecha de publicacion.
+  displayOrder    Int?            @map("display_order")
+  createdBy       String?         @map("created_by")
+  updatedBy       String?         @map("updated_by")
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  image   MediaAsset? @relation("PostImage", fields: [imageMediaId], references: [id], onDelete: Restrict)
+  creator User?       @relation("PostCreatedBy", fields: [createdBy], references: [id], onDelete: SetNull)
+  editor  User?       @relation("PostUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
+  files   PostFile[]
+
+  @@index([kind, editorialStatus])
+  @@index([publishedAt(sort: Desc)])
+  @@map("posts")
+}
+
+/// Material adjunto de una entrada. Copia la forma de `work_files`: varios archivos por
+/// ficha, cada uno con su etiqueta, su orden y su visibilidad.
+model PostFile {
+  id        String   @id @default(uuid(7)) @db.Uuid
+  postId    String   @map("post_id") @db.Uuid
+  mediaId   String   @map("media_id") @db.Uuid
+  label     String?  @db.VarChar(150)
+  sortOrder Int      @default(0) @map("sort_order")
+  isPublic  Boolean  @default(true) @map("is_public")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  post  Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  media MediaAsset @relation("PostFileMedia", fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@index([postId, sortOrder])
+  @@map("post_files")
+}
+
+// ---------------------------------------------------------------------------
 // Contenido de pagina y configuracion
 // ---------------------------------------------------------------------------
 
@@ -748,6 +816,10 @@ model PageSection {
   pageKey           String   @map("page_key") @db.VarChar(30)
   sectionKey        String   @map("section_key") @db.VarChar(50)
   isVisible         Boolean  @default(true) @map("is_visible")
+  /// Rotulo de la banda y su texto pequeno a la derecha. Vacios significa "el de la
+  /// plantilla": asi borrar el campo devuelve el original en vez de dejar el hueco.
+  heading           String?  @db.VarChar(120)
+  headingAside      String?  @map("heading_aside") @db.VarChar(120)
   /// Fondo de la banda. Sin imagen la seccion se pinta con su color liso.
   backgroundMediaId String?  @map("background_media_id") @db.Uuid
   /// Capa oscura sobre la imagen, de 0 a 100. Sin ella el texto pierde contraste.
@@ -803,6 +875,9 @@ model SiteSettings {
   ogImageMediaId         String?  @map("og_image_media_id") @db.Uuid
   /// Emblema de la cabecera del sitio publico. Distinto de ogImage, que se ve fuera.
   logoMediaId            String?  @map("logo_media_id") @db.Uuid
+  /// Imagen de la primera columna del pie. Aparte del emblema a proposito: la cabecera
+  /// pide una marca pequena y el pie admite otra cosa, como el escudo de la institucion.
+  footerMediaId          String?  @map("footer_media_id") @db.Uuid
   footerText             String?  @map("footer_text")
   updatedBy              String?  @map("updated_by")
   updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -810,6 +885,7 @@ model SiteSettings {
   owner   Person      @relation(fields: [ownerPersonId], references: [id], onDelete: Restrict)
   ogImage MediaAsset? @relation("SiteOgImage", fields: [ogImageMediaId], references: [id], onDelete: Restrict)
   logo    MediaAsset? @relation("SiteLogo", fields: [logoMediaId], references: [id], onDelete: Restrict)
+  footer  MediaAsset? @relation("SiteFooter", fields: [footerMediaId], references: [id], onDelete: Restrict)
   editor  User?       @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
 
   @@map("site_settings")
@@ -869,6 +945,8 @@ model User {
   updatedCourses Course[]       @relation("CourseUpdatedBy")
   editedPages    PageContent[]
   editedSettings SiteSettings[]
+  createdPosts   Post[]         @relation("PostCreatedBy")
+  editedPosts    Post[]         @relation("PostUpdatedBy")
   auditEntries   AuditLog[]
 
   @@map("user")

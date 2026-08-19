@@ -67,5 +67,4 @@ export interface PublicCourseRepository {
   ): Promise<{ items: PublicCourseSummary[]; totalItems: number }>
   facets(filters: PublicTeachingFilters): Promise<TeachingFacets>
   findPublished(idOrSlug: string): Promise<CourseRecord | null>
-  listFeatured(limit: number): Promise<PublicCourseSummary[]>
 }

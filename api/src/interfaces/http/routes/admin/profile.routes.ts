@@ -300,6 +300,8 @@ export function createProfileRouter(deps: ProfileRouterDeps): Router {
         unknown,
         {
           isVisible?: boolean
+          heading?: string | null
+          headingAside?: string | null
           backgroundMediaId?: string | null
           backgroundOverlay?: number
         }

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { FileText, GraduationCap, Plus, Star, UserCog } from 'lucide-react'
+import { FileText, GraduationCap, Plus, UserCog } from 'lucide-react'
 import { queryKeys } from '@/lib/api/query-keys'
 import { LOCALE } from '@/lib/locale'
 import { Button } from '@/components/ui/button'
@@ -40,11 +40,6 @@ export function Dashboard() {
       icono: FileText,
     },
     { etiqueta: 'Drafts', valor: data?.draftWorks ?? 0, icono: FileText },
-    {
-      etiqueta: 'Featured on home',
-      valor: data?.featuredWorks ?? 0,
-      icono: Star,
-    },
     { etiqueta: 'Courses', valor: data?.courses ?? 0, icono: GraduationCap },
     {
       etiqueta: 'Active offerings',

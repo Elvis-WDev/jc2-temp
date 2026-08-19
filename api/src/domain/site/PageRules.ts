@@ -35,10 +35,15 @@ export function assertPageCanBeHidden(pageKey: string): void {
  * fila se considera visible, para que anadir una no obligue a migrar.
  */
 export const SECCIONES: Record<string, readonly string[]> = {
-  home: ['hero', 'carousel', 'research_areas', 'featured_works', 'featured_courses', 'events'],
-  research: ['header', 'filters'],
+  // La portada habla de la persona, no de su produccion: el carrusel, los destacados,
+  // la docencia y la agenda se retiraron, y sus filas viejas de `page_sections` dejan de
+  // aparecer solas —lo que no esta aqui, no se dibuja ni se ofrece en el panel—.
+  home: ['hero', 'about', 'research_areas', 'appointments', 'latest_news', 'latest_blog'],
+  research: ['header'],
   teaching: ['header', 'filters'],
   events: ['header'],
+  news: ['header'],
+  blog: ['header'],
 }
 
 /** Si una seccion se ve, con el criterio de "sin fila, visible". */

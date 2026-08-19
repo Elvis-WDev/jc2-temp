@@ -137,36 +137,8 @@
 }
 
 /*
- * Friso Moche: el motivo en zigzag que separa las secciones y remata el pie.
- *
- * Va incrustado como SVG en la propia hoja de estilos. Las plantillas lo traian dos
- * veces: asi, y tambien como imagen alojada en un servidor de Google que caducara.
- * Se queda solo esta forma: no hay peticion de red ni enlace que pueda romperse.
- */
-@utility site-frieze {
-  background-image: url("data:image/svg+xml,%3Csvg width='40' height='20' viewBox='0 0 40 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 20 L10 10 L20 20 L30 10 L40 20 V18 L30 8 L20 18 L10 8 L0 18 Z' fill='%2318233b' fill-opacity='0.15'/%3E%3C/svg%3E");
-  background-repeat: repeat-x;
-  height: 20px;
-  width: 100%;
-}
-
-/*
- * El mismo friso, en claro.
- *
- * El de arriba esta dibujado en azul oscuro, que es el color del pie: alli se volvia
- * invisible. Las plantillas arrastraban ese fallo, porque encima le bajaban la
- * opacidad. Sobre fondo oscuro hay que dibujarlo en claro.
- */
-@utility site-frieze-light {
-  background-image: url("data:image/svg+xml,%3Csvg width='40' height='20' viewBox='0 0 40 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 20 L10 10 L20 20 L30 10 L40 20 V18 L30 8 L20 18 L10 8 L0 18 Z' fill='%23ffffff' fill-opacity='0.18'/%3E%3C/svg%3E");
-  background-repeat: repeat-x;
-  height: 20px;
-  width: 100%;
-}
-
-/*
- * El mismo motivo en claro, para las bandas azules: el de abajo esta dibujado en azul
- * oscuro y sobre fondo oscuro no se ve, igual que le pasaba al friso.
+ * El motivo Moche en claro, para las bandas azules: dibujado en azul oscuro sobre fondo
+ * oscuro no se veria.
  */
 @utility site-texture-light {
   background-image: url("data:image/svg+xml,%3Csvg width='40' height='20' viewBox='0 0 40 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 20 L10 10 L20 20 L30 10 L40 20 V18 L30 8 L20 18 L10 8 L0 18 Z' fill='%23ffffff'/%3E%3C/svg%3E");

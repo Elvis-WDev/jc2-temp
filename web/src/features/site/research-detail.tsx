@@ -195,15 +195,11 @@ export function SiteResearchDetail() {
 
             {work.tags.length > 0 && (
               <Bloque titulo='Topics'>
+                {/* Sin filtros en el listado, un enlace por etiqueta acabaria en el
+                    archivo entero: dice menos que no enlazar nada. */}
                 <div className='flex flex-wrap gap-2'>
                   {work.tags.map((tag) => (
-                    <Link
-                      key={tag.slug}
-                      to='/research'
-                      search={{ tag: tag.slug }}
-                    >
-                      <SiteChip>{tag.name}</SiteChip>
-                    </Link>
+                    <SiteChip key={tag.slug}>{tag.name}</SiteChip>
                   ))}
                 </div>
               </Bloque>

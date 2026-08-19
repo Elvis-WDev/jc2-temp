@@ -24,7 +24,11 @@ const TRABAJO: PublicWorkSummary = {
   slug: 'carbono',
   title: 'Asimetria de informacion en mercados de carbono',
   subtitle: null,
-  type: { code: 'journal_article', label: 'Articulo' },
+  type: {
+    code: 'journal_article',
+    label: 'Articulo',
+    pluralLabel: 'Articulos',
+  },
   academicStatus: 'published',
   academicStatusLabel: 'Publicado',
   year: 2024,
@@ -69,10 +73,9 @@ beforeEach(() => {
 })
 
 describe('tarjeta de una publicacion', () => {
-  it('muestra tipo, ano, estado y la referencia de la revista', async () => {
+  it('muestra ano, estado y la referencia de la revista', async () => {
     const screen = await pintar()
 
-    await expect.element(screen.getByText('Articulo')).toBeVisible()
     await expect.element(screen.getByText('2024')).toBeVisible()
     await expect.element(screen.getByText('Publicado')).toBeVisible()
     await expect
@@ -80,6 +83,15 @@ describe('tarjeta de una publicacion', () => {
         screen.getByText('The Quarterly Journal of Economics, Vol. 139 (2)')
       )
       .toBeVisible()
+  })
+
+  it('no repite el tipo de publicacion', async () => {
+    // El listado va agrupado por tipo y la banda de encima ya lo dice: repetirlo en
+    // cada tarjeta es ruido entre el lector y el titulo.
+    const screen = await pintar()
+    await expect.element(screen.getByText('2024')).toBeVisible()
+
+    await expect.element(screen.getByText('Articulo')).not.toBeInTheDocument()
   })
 
   it('descuenta al titular de los coautores', async () => {
@@ -110,6 +122,26 @@ describe('tarjeta de una publicacion', () => {
     await userEvent.click(screen.getByRole('button', { name: /abstract/i }))
 
     await expect.element(screen.getByText('Datos de replicacion')).toBeVisible()
+  })
+
+  it('un resumen largo se recorta: la tarjeta no vuelca el abstract entero', async () => {
+    // Un abstract academico ronda los dos mil caracteres. Volcado dentro de la tarjeta
+    // empuja el resto del listado fuera de la pantalla y ahi no lo lee nadie.
+    const largo = `${'Este trabajo estudia los mercados de carbono con datos de subasta. '.repeat(30)}FINAL DEL TEXTO`
+    getWork.mockResolvedValue({ abstractHtml: `<p>${largo}</p>`, links: [] })
+    const screen = await pintar()
+    await userEvent.click(screen.getByRole('button', { name: /abstract/i }))
+
+    await expect
+      .element(screen.getByText(/Este trabajo estudia los mercados de carbono/))
+      .toBeVisible()
+    // Lo que se pinta acaba en puntos suspensivos y no llega al final del abstract.
+    await expect
+      .element(screen.getByText('FINAL DEL TEXTO', { exact: false }))
+      .not.toBeInTheDocument()
+    const panel = await screen.getByText(/Este trabajo estudia/).element()
+    expect(panel.textContent?.endsWith('…')).toBe(true)
+    expect((panel.textContent ?? '').length).toBeLessThanOrEqual(420)
   })
 
   it('sin resumen escrito lo dice, en vez de abrir un panel vacio', async () => {

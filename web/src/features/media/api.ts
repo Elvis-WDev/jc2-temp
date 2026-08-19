@@ -16,6 +16,7 @@ export const MEDIA_PURPOSES = [
   'dataset',
   'archive',
   'source',
+  'audio',
 ] as const
 export type MediaPurpose = (typeof MEDIA_PURPOSES)[number]
 
@@ -33,6 +34,7 @@ export const PURPOSE_LABELS: Record<
     label: 'Code / sources',
     accepts: 'TEX, BIB, R, DO, M, PY, TXT, MD',
   },
+  audio: { label: 'Audio', accepts: 'MP3, M4A, OGG' },
 }
 
 export interface MediaAsset {
@@ -54,6 +56,7 @@ export interface MediaAsset {
  */
 export const MEDIA_KINDS = [
   'image',
+  'audio',
   'document',
   'data',
   'text',
@@ -63,6 +66,7 @@ export type MediaKind = (typeof MEDIA_KINDS)[number]
 
 export const NOMBRE_DE_FAMILIA: Record<MediaKind, string> = {
   image: 'Images',
+  audio: 'Audio',
   document: 'Documents',
   data: 'Data',
   text: 'Text and code',

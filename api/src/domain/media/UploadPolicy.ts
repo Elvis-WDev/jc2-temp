@@ -27,6 +27,7 @@ export const MEDIA_PURPOSES = [
   'dataset',
   'archive',
   'source',
+  'audio',
 ] as const
 export type MediaPurpose = (typeof MEDIA_PURPOSES)[number]
 
@@ -79,6 +80,25 @@ const IMAGENES: AllowedType[] = [
   { mime: 'image/gif', extension: 'gif', inlineSafe: true },
 ]
 
+/**
+ * Audio, para lo que se pueda escuchar sin descargarlo antes: una nota, un corte de una
+ * entrevista, una grabacion corta.
+ *
+ * `inlineSafe` porque un reproductor necesita que el navegador lo abra en lugar de
+ * bajarlo. El limite lo pone que la entrega no admite peticiones por rango: el archivo
+ * se descarga entero antes de sonar, asi que 30 MB es lo que se puede esperar de una
+ * conexion normal sin que la pagina parezca rota. Una charla de una hora se enlaza desde
+ * donde ya este alojada, igual que el video.
+ *
+ * `audio/x-m4a` y no `audio/mp4`: es lo que devuelve la deteccion por firma para un .m4a,
+ * y lo que se guarda es el tipo detectado, no el que diga el navegador.
+ */
+const AUDIOS: AllowedType[] = [
+  { mime: 'audio/mpeg', extension: 'mp3', inlineSafe: true },
+  { mime: 'audio/x-m4a', extension: 'm4a', inlineSafe: true },
+  { mime: 'audio/ogg', extension: 'ogg', inlineSafe: true },
+]
+
 const COMPRIMIDOS: AllowedType[] = [
   { mime: 'application/zip', extension: 'zip', inlineSafe: false },
   { mime: 'application/gzip', extension: 'gz', inlineSafe: false },
@@ -100,6 +120,7 @@ const POR_PROPOSITO: Record<MediaPurpose, { tipos: AllowedType[]; maxBytes: numb
   archive: { tipos: COMPRIMIDOS, maxBytes: 100 * 1024 * 1024 },
   // `source` no acepta ningun binario: solo texto plano (ver TextFormatPolicy).
   source: { tipos: [], maxBytes: 5 * 1024 * 1024 },
+  audio: { tipos: AUDIOS, maxBytes: 30 * 1024 * 1024 },
 }
 
 /** Cota superior de cualquier subida, sea cual sea el proposito. */

@@ -194,35 +194,6 @@ export function archiveWork(id: string): Promise<Work> {
   return post<Work>(`/api/admin/works/${id}/archive`)
 }
 
-/** RN-003: falla con 422 si el trabajo no esta publicado. */
-export function setWorkFeatured(
-  id: string,
-  isFeatured: boolean,
-  featuredOrder: number | null
-): Promise<Work> {
-  return post<Work>(`/api/admin/works/${id}/featured`, {
-    isFeatured,
-    featuredOrder,
-  })
-}
-
-/**
- * El carrusel de la portada.
- *
- * Aparte de los destacados a proposito: un trabajo puede estar en las dos listas, en
- * una o en ninguna. La API exige que este publicado, igual que para destacarlo.
- */
-export function setWorkCarousel(
-  id: string,
-  isCarousel: boolean,
-  carouselOrder: number | null
-): Promise<Work> {
-  return post<Work>(`/api/admin/works/${id}/carousel`, {
-    isCarousel,
-    carouselOrder,
-  })
-}
-
 export function deleteWork(id: string): Promise<void> {
   return del(`/api/admin/works/${id}`)
 }

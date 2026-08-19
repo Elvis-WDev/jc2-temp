@@ -1,5 +1,5 @@
 import { type ColumnDef } from '@tanstack/react-table'
-import { Archive, Pencil, Send, Star, Trash2 } from 'lucide-react'
+import { Archive, Pencil, Send, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -28,7 +28,6 @@ export function coursesColumns(acciones: {
   onEdit: (curso: Course) => void
   onPublish: (curso: Course) => void
   onArchive: (curso: Course) => void
-  onToggleFeatured: (curso: Course) => void
   onDelete: (curso: Course) => void
 }): ColumnDef<Course>[] {
   return [
@@ -94,9 +93,6 @@ export function coursesColumns(acciones: {
         return (
           <div className='flex flex-wrap gap-1'>
             <StatusBadge tone={estado.tono}>{estado.texto}</StatusBadge>
-            {row.original.isFeatured && (
-              <StatusBadge tone='info'>En portada</StatusBadge>
-            )}
           </div>
         )
       },
@@ -142,33 +138,6 @@ export function coursesColumns(acciones: {
               </TooltipTrigger>
               <TooltipContent>
                 {publicado ? 'Already published' : 'Publish to the site'}
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  disabled={!publicado}
-                  aria-label={`${curso.isFeatured ? 'Remove from the home page' : 'Feature on the home page'}: ${curso.title}`}
-                  onClick={() => {
-                    acciones.onToggleFeatured(curso)
-                  }}
-                >
-                  <Star
-                    className={
-                      curso.isFeatured ? 'size-4 fill-current' : 'size-4'
-                    }
-                  />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {!publicado
-                  ? 'Publicalo antes de destacarlo'
-                  : curso.isFeatured
-                    ? 'Remove from the home page'
-                    : 'Feature on the home page'}
               </TooltipContent>
             </Tooltip>
 

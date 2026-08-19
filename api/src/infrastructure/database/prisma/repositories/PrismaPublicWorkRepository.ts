@@ -33,7 +33,7 @@ const SELECT_RESUMEN = {
   issue: true,
   doi: true,
   isOpenAccess: true,
-  workType: { select: { code: true, label: true } },
+  workType: { select: { code: true, label: true, pluralLabel: true } },
   authors: {
     orderBy: { authorOrder: 'asc' },
     select: { authorOrder: true, person: { select: { fullName: true } } },
@@ -61,7 +61,7 @@ type FilaResumen = {
   issue: string | null
   doi: string | null
   isOpenAccess: boolean
-  workType: { code: string; label: string }
+  workType: { code: string; label: string; pluralLabel: string }
   authors: Array<{ authorOrder: number; person: { fullName: string } }>
   tags: Array<{ tag: { slug: string; name: string } }>
   files: Array<{ mediaId: string }>
@@ -75,6 +75,7 @@ function mapResumen(fila: FilaResumen): PublicWorkSummary {
     subtitle: fila.subtitle,
     workTypeCode: fila.workType.code,
     workTypeLabel: fila.workType.label,
+    workTypePluralLabel: fila.workType.pluralLabel,
     academicStatus: fila.academicStatus.code,
     academicStatusLabel: fila.academicStatus.label,
     publicationYear: fila.publicationYear,
@@ -144,6 +145,18 @@ export class PrismaPublicWorkRepository implements PublicWorkRepository {
         return [{ publicationYear: 'asc' }, { createdAt: 'asc' }]
       case 'title':
         return [{ title: 'asc' }]
+      case 'type':
+        // El orden de los tipos lo decide el titular en el panel, no el codigo. Dentro
+        // de cada uno manda RF-012, igual que en el orden por defecto: primero lo que
+        // el titular haya colocado a mano, y el resto por ano descendente. Sin esta
+        // linea el `display_order` del panel no hacia nada en el listado agrupado.
+        return [
+          { workType: { sortOrder: 'asc' } },
+          { workType: { label: 'asc' } },
+          { displayOrder: { sort: 'asc', nulls: 'last' } },
+          { publicationYear: 'desc' },
+          { createdAt: 'desc' },
+        ]
       default:
         // RF-012: display_order explicito primero, luego ano descendente, luego alta.
         return [
@@ -276,29 +289,5 @@ export class PrismaPublicWorkRepository implements PublicWorkRepository {
     })
 
     return fila === null ? null : mapWork(fila)
-  }
-
-  async listFeatured(limit: number): Promise<PublicWorkSummary[]> {
-    // ERS §52: destacados publicados, en su orden explicito.
-    const filas = await prisma.work.findMany({
-      where: { ...SOLO_PUBLICADOS, isFeatured: true },
-      orderBy: [{ featuredOrder: { sort: 'asc', nulls: 'last' } }, { publicationYear: 'desc' }],
-      take: limit,
-      select: SELECT_RESUMEN,
-    })
-
-    return filas.map(mapResumen)
-  }
-
-  async listCarousel(limit: number): Promise<PublicWorkSummary[]> {
-    // Misma garantia de RN-001 que el resto: solo lo publicado, en su orden explicito.
-    const filas = await prisma.work.findMany({
-      where: { ...SOLO_PUBLICADOS, isCarousel: true },
-      orderBy: [{ carouselOrder: { sort: 'asc', nulls: 'last' } }, { publicationYear: 'desc' }],
-      take: limit,
-      select: SELECT_RESUMEN,
-    })
-
-    return filas.map(mapResumen)
   }
 }

@@ -1,5 +1,7 @@
 import type { SiteContentUseCases } from '../site/SiteContentUseCases.js'
 import type { PublicEventUseCases } from '../events/EventUseCases.js'
+import { PAGINA_POR_TIPO_DE_POST } from '../../../domain/posts/kinds.js'
+import type { PostUseCases } from '../posts/PostUseCases.js'
 import type { PublicResearchUseCases } from '../research/PublicResearchUseCases.js'
 import type { PublicTeachingUseCases } from '../teaching/PublicTeachingUseCases.js'
 
@@ -27,11 +29,12 @@ export class GetSitemap {
     private readonly research: PublicResearchUseCases,
     private readonly teaching: PublicTeachingUseCases,
     private readonly events: PublicEventUseCases,
+    private readonly posts: PostUseCases,
     private readonly siteContent: SiteContentUseCases,
   ) {}
 
   async execute(): Promise<SitemapEntry[]> {
-    const [visibilidad, trabajos, cursos, eventos] = await Promise.all([
+    const [visibilidad, trabajos, cursos, eventos, entradasPublicadas] = await Promise.all([
       this.siteContent.getVisibility(),
       this.research.list(TODAS, {
         q: null,
@@ -51,6 +54,7 @@ export class GetSitemap {
         sort: 'newest',
       }),
       this.events.list(TODAS, { eventType: null, upcoming: null }),
+      this.posts.listPublishedRefs(),
     ])
 
     const seVe = (pagina: string) => visibilidad.pages[pagina] ?? true
@@ -75,6 +79,20 @@ export class GetSitemap {
     }
     for (const evento of eventos.items) {
       entradas.push({ path: `/events/${evento.slug}`, priority: '0.5' })
+    }
+
+    // Los indices de noticias y blog solo se anuncian si tienen algo detras, igual que
+    // eventos: un sitemap que apunta a una pagina vacia no ayuda a nadie.
+    for (const [tipo, pagina] of Object.entries(PAGINA_POR_TIPO_DE_POST)) {
+      const hay = entradasPublicadas.some((entrada) => entrada.kind === tipo)
+      if (hay && seVe(pagina)) entradas.push({ path: `/${pagina}`, priority: '0.7' })
+    }
+    // Las fichas se quedan aunque su indice este oculto, igual que las de trabajos.
+    for (const entrada of entradasPublicadas) {
+      const pagina = PAGINA_POR_TIPO_DE_POST[entrada.kind]
+      if (pagina !== undefined) {
+        entradas.push({ path: `/${pagina}/${entrada.slug}`, priority: '0.5' })
+      }
     }
 
     return entradas

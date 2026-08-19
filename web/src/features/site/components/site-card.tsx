@@ -1,32 +1,5 @@
 import { cn } from '@/lib/utils'
 
-/**
- * Tarjeta del sitio: un trabajo, un curso, un evento.
- *
- * El movimiento al pasar por encima viene de la plantilla, y es el mismo en las tres
- * paginas: se levanta un punto y gana una sombra muy suave. Nada de escalados ni de
- * cambios de color de fondo, que en una lista larga marean.
- */
-export function SiteCard({
-  children,
-  className,
-  ...props
-}: React.ComponentProps<'article'>) {
-  return (
-    <article
-      className={cn(
-        'group border border-site-outline-variant/30 bg-site-surface-container-lowest p-6',
-        'transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]',
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </article>
-  )
-}
-
-/** Etiqueta pequena: un tema, un tipo, un periodo. */
 export function SiteChip({
   children,
   tone = 'muted',

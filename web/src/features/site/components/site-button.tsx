@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 
 /**
@@ -19,18 +20,27 @@ const VARIANTES: Record<Variante, string> = {
     'border border-site-primary text-site-primary bg-transparent hover:bg-site-primary/5',
 }
 
+const BASE =
+  'inline-flex items-center justify-center gap-2 rounded-site px-6 py-3 font-site-body text-site-meta tracking-wider uppercase transition-colors duration-200'
+
 type Props = React.ComponentProps<'a'> & { variant?: Variante }
 
 export function SiteButton({ variant = 'solid', className, ...props }: Props) {
-  return (
-    <a
-      className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-site px-6 py-3',
-        'font-site-body text-site-meta tracking-wider uppercase transition-colors duration-200',
-        VARIANTES[variant],
-        className
-      )}
-      {...props}
-    />
-  )
+  return <a className={cn(BASE, VARIANTES[variant], className)} {...props} />
+}
+
+/**
+ * El mismo boton, pero hacia otra pagina del sitio.
+ *
+ * Un `<a>` normal recargaria la aplicacion entera para ir de la portada a Research, y
+ * con ella la cabecera, los estilos y las peticiones que ya estaban resueltas.
+ */
+type PropsEnlace = React.ComponentProps<typeof Link> & { variant?: Variante }
+
+export function SiteButtonLink({
+  variant = 'solid',
+  className,
+  ...props
+}: PropsEnlace) {
+  return <Link className={cn(BASE, VARIANTES[variant], className)} {...props} />
 }

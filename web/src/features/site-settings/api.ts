@@ -19,6 +19,8 @@ export interface SiteSettings {
   ogImageMediaId: string | null
   /** Emblema de la cabecera del sitio. Vacio: se muestra el nombre. */
   logoMediaId: string | null
+  /** Imagen de la primera columna del pie. */
+  footerMediaId: string | null
   footerText: string | null
 }
 

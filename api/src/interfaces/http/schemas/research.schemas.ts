@@ -13,7 +13,7 @@ export const publicResearchQuerySchema = z.object({
   year_from: z.coerce.number().int().min(1800).max(2200).optional(),
   year_to: z.coerce.number().int().min(1800).max(2200).optional(),
   tag: z.string().trim().max(140).optional(),
-  sort: z.enum(['newest', 'oldest', 'title', 'relevance']).default('newest'),
+  sort: z.enum(['newest', 'oldest', 'title', 'relevance', 'type']).default('newest'),
   page: z.coerce.number().int().min(1).default(1),
   page_size: z.coerce.number().int().min(1).max(100).default(20),
 })

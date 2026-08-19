@@ -20,6 +20,7 @@ export const CATALOGS = [
   'venue',
   'event',
   'course_level',
+  'post_kind',
 ] as const
 
 export type Catalog = (typeof CATALOGS)[number]
@@ -33,6 +34,7 @@ export const NOMBRE_DE_CATALOGO: Record<Catalog, string> = {
   venue: 'Venue types',
   event: 'Event types',
   course_level: 'Course levels',
+  post_kind: 'News and blog kinds',
 }
 
 export const QUE_ES_CATALOGO: Record<Catalog, string> = {
@@ -46,6 +48,8 @@ export const QUE_ES_CATALOGO: Record<Catalog, string> = {
   event: 'What each event is: seminar, conference, thesis defence...',
   course_level:
     'Your courses are grouped by these on the site. The description is the intro of each group.',
+  post_kind:
+    'What each entry is: a news item or a blog post. `news` and `personal` have their own page and are not removed.',
 }
 
 export interface CatalogTerm {

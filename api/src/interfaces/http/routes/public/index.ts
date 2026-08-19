@@ -6,6 +6,7 @@ import { createPublicMediaRouter } from './media.routes.js'
 import { createPublicProfileRouter, type PublicProfileRouterDeps } from './profile.routes.js'
 import { createPublicResearchRouter, type PublicResearchRouterDeps } from './research.routes.js'
 import { createPublicEventsRouter, type PublicEventsRouterDeps } from './events.routes.js'
+import { createPublicPostsRouter, type PublicPostsRouterDeps } from './posts.routes.js'
 import { createPublicHomeRouter, type PublicHomeRouterDeps } from './home.routes.js'
 import { createPublicSiteRouter, type PublicSiteRouterDeps } from './site.routes.js'
 import { createPublicSitemapRouter, type PublicSitemapRouterDeps } from './sitemap.routes.js'
@@ -20,6 +21,7 @@ export interface PublicRouterDeps {
   site: PublicSiteRouterDeps
   sitemap: PublicSitemapRouterDeps
   events: PublicEventsRouterDeps
+  posts: PublicPostsRouterDeps
 }
 
 /**
@@ -55,6 +57,7 @@ export function createPublicRouter(deps: PublicRouterDeps): Router {
   router.use('/research', createPublicResearchRouter(deps.research))
   router.use('/teaching', createPublicTeachingRouter(deps.teaching))
   router.use('/events', createPublicEventsRouter(deps.events))
+  router.use('/posts', createPublicPostsRouter(deps.posts))
   router.use('/', createPublicHomeRouter(deps.home))
   // La cabecera, el pie y los interruptores: es lo que el titular acaba de tocar y va
   // a mirar enseguida. Media vida de cache y a preguntar.

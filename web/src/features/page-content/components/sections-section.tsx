@@ -3,9 +3,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
 import { queryKeys } from '@/lib/api/query-keys'
 import { useToastMutation } from '@/hooks/use-toast-mutation'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { ImagePicker } from '@/components/image-picker'
+import { ImagePicker } from '@/components/media-picker'
 import {
   listPageSections,
   NOMBRE_DE_SECCION,
@@ -39,6 +40,8 @@ export function SectionsSection({ pageKey }: { pageKey: PageKey }) {
     }: {
       id: string
       isVisible?: boolean
+      heading?: string | null
+      headingAside?: string | null
       backgroundMediaId?: string | null
       backgroundOverlay?: number
     }) => updatePageSection(id, cambio),
@@ -92,6 +95,8 @@ function Bloque({
   pendiente: boolean
   onChange: (cambio: {
     isVisible?: boolean
+    heading?: string | null
+    headingAside?: string | null
     backgroundMediaId?: string | null
     backgroundOverlay?: number
   }) => void
@@ -125,11 +130,73 @@ function Bloque({
         />
       </div>
 
+      {nombre.admiteTitulo === true && (
+        <Rotulo seccion={seccion} onChange={onChange} />
+      )}
+
       {/* Los filtros son una barra de controles: una foto detrás sólo estorbaría, así
           que ni se ofrece. */}
       {nombre.admiteFondo === true && (
         <Fondo seccion={seccion} pendiente={pendiente} onChange={onChange} />
       )}
+    </div>
+  )
+}
+
+/**
+ * El encabezado de la banda: el título y el texto pequeño de su derecha.
+ *
+ * Se guarda al salir del campo, no en cada tecla: escribiendo «Research lines» saldrían
+ * catorce peticiones y trece avisos de guardado. Y sólo si ha cambiado algo, para que
+ * pasar de largo con el tabulador no dispare nada.
+ *
+ * Estos dos campos no se bloquean mientras hay un guardado en curso, al revés que el
+ * interruptor y el mando del fondo. Saltar del título al texto de al lado guarda el
+ * primero, y bloquear el segundo en ese momento se comía lo que se estaba escribiendo.
+ */
+function Rotulo({
+  seccion,
+  onChange,
+}: {
+  seccion: PageSection
+  onChange: (cambio: {
+    heading?: string | null
+    headingAside?: string | null
+  }) => void
+}) {
+  const guardarSiCambia =
+    (campo: 'heading' | 'headingAside') =>
+    (evento: React.FocusEvent<HTMLInputElement>) => {
+      const escrito = evento.target.value.trim()
+      const actual = seccion[campo] ?? ''
+      if (escrito === actual) return
+      // Vacío significa «el de la plantilla», y así se envía: null.
+      onChange({ [campo]: escrito === '' ? null : escrito })
+    }
+
+  return (
+    <div className='grid gap-2 border-t pt-3'>
+      <Label htmlFor={`rotulo-${seccion.id}`}>Heading</Label>
+      <p className='text-xs text-muted-foreground'>
+        What this band is called on the site. Leave it empty to go back to the
+        original one.
+      </p>
+      <div className='grid gap-2 sm:grid-cols-2'>
+        <Input
+          id={`rotulo-${seccion.id}`}
+          defaultValue={seccion.heading ?? ''}
+          maxLength={120}
+          placeholder='Research lines'
+          onBlur={guardarSiCambia('heading')}
+        />
+        <Input
+          aria-label='Small text on the right'
+          defaultValue={seccion.headingAside ?? ''}
+          maxLength={120}
+          placeholder='Main areas'
+          onBlur={guardarSiCambia('headingAside')}
+        />
+      </div>
     </div>
   )
 }

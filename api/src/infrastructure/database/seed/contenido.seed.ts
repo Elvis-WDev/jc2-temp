@@ -3,7 +3,8 @@ import { prisma } from '../prisma/client.js'
 import { CONTENIDO } from './data/contenido.data.js'
 
 /**
- * Contenido inicial: publicaciones, personas, cursos, eventos y los textos del sitio.
+ * Contenido inicial: publicaciones, personas, trayectoria, cursos, eventos, noticias,
+ * entradas de blog y los textos del sitio.
  *
  * **Solo siembra una base vacia.** Si ya hay algun trabajo, no toca nada y devuelve
  * `skipped`. Es lo que separa un seeder inicial de uno que pisa el trabajo del titular:
@@ -255,6 +256,48 @@ export async function seedContenidoInicial(): Promise<'seeded' | 'skipped' | 'no
         }
       }
 
+      // --- Trayectoria del titular -------------------------------------------
+      //
+      // Va despues de instituciones y personas porque cuelga de las dos. Sin ella la
+      // banda de cargos de la portada no se pinta: no es que salga vacia, es que no
+      // existe.
+      const titularId = personaPorNombre.get(
+        CONTENIDO.personas.find((persona) => persona.isSiteOwner)?.fullName ?? '',
+      )
+
+      if (titularId !== undefined) {
+        for (const afiliacion of CONTENIDO.afiliaciones) {
+          const { institution, department, ...datos } = afiliacion
+          const institutionId = institucionPorNombre.get(institution.name)
+          if (institutionId === undefined) {
+            throw new Error(`La institucion "${institution.name}" no esta en el contenido inicial.`)
+          }
+
+          await tx.affiliation.create({
+            data: {
+              ...datos,
+              personId: titularId,
+              institutionId,
+              // El departamento es opcional, y su clave compuesta con la institucion es
+              // la que RN-006 protege: si el nombre no cuadra, se deja vacio en lugar
+              // de enganchar el de otra universidad.
+              departmentId:
+                department === null ? null : (departamentoPorNombre.get(department.name) ?? null),
+            },
+          })
+        }
+      }
+
+      // --- Noticias y entradas de blog ---------------------------------------
+      for (const entrada of CONTENIDO.posts) {
+        await tx.post.create({
+          data: {
+            ...entrada,
+            editorialStatus: entrada.editorialStatus as EditorialStatus,
+          },
+        })
+      }
+
       // --- Eventos -----------------------------------------------------------
       for (const evento of CONTENIDO.events) {
         const { institutions, ...datos } = evento
@@ -304,12 +347,11 @@ export async function seedContenidoInicial(): Promise<'seeded' | 'skipped' | 'no
 
       // --- Configuracion del sitio ------------------------------------------
       //
-      // `publicBaseUrl` NO se copia: es propia de cada instalacion y la fija
+      // `publicBaseUrl` no viene en el fichero: es propia de cada instalacion y la fija
       // PUBLIC_BASE_URL en `site-settings.seed`. Traer aqui la direccion de la maquina
       // de desarrollo dejaria el sitemap apuntando a localhost.
       if (CONTENIDO.settings !== null) {
-        const { publicBaseUrl: _ignorada, ...ajustes } = CONTENIDO.settings
-        await tx.siteSettings.updateMany({ data: ajustes })
+        await tx.siteSettings.updateMany({ data: CONTENIDO.settings })
       }
     },
     // El contenido entero son unas doscientas escrituras: el limite de 5 s por defecto

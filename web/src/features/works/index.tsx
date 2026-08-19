@@ -19,8 +19,6 @@ import {
   deleteWork,
   listWorks,
   publishWork,
-  setWorkCarousel,
-  setWorkFeatured,
   type EditorialStatus,
   type Work,
 } from './api'
@@ -73,26 +71,6 @@ export function Works() {
     },
   })
 
-  const { mutate: alternarDestacado } = useToastMutation({
-    mutationFn: (work: Work) =>
-      setWorkFeatured(work.id, !work.isFeatured, work.featuredOrder),
-    invalidates: refresca,
-    success: (work) =>
-      work.isFeatured
-        ? 'Work featured on the home page.'
-        : 'Work removed from the home page.',
-  })
-
-  const { mutate: alternarCarrusel } = useToastMutation({
-    mutationFn: (work: Work) =>
-      setWorkCarousel(work.id, !work.isCarousel, work.carouselOrder),
-    invalidates: refresca,
-    success: (work) =>
-      work.isCarousel
-        ? 'Work added to the carousel.'
-        : 'Work removed from the carousel.',
-  })
-
   const borrar = useToastMutation({
     mutationFn: (id: string) => deleteWork(id),
     invalidates: refresca,
@@ -118,15 +96,9 @@ export function Works() {
           publicar(work.id)
         },
         onArchive: setArchivando,
-        onToggleFeatured: (work) => {
-          alternarDestacado(work)
-        },
-        onToggleCarousel: (work) => {
-          alternarCarrusel(work)
-        },
         onDelete: setBorrando,
       }),
-    [navigate, publicar, alternarDestacado, alternarCarrusel]
+    [navigate, publicar]
   )
 
   const hayFiltro =

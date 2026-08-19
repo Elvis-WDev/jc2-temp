@@ -8,8 +8,6 @@ const ACCIONES = {
   onEdit: vi.fn(),
   onPublish: vi.fn(),
   onArchive: vi.fn(),
-  onToggleFeatured: vi.fn(),
-  onToggleCarousel: vi.fn(),
   onDelete: vi.fn(),
 }
 
@@ -107,26 +105,6 @@ describe('acciones de ciclo de vida', () => {
 
     await expect
       .element(screen.getByRole('button', { name: /publish/i }))
-      .toBeEnabled()
-  })
-
-  it('un borrador no se puede destacar (RN-003)', async () => {
-    const screen = await renderTabla(
-      trabajo({ editorialStatus: 'draft', authors: [AUTOR] })
-    )
-
-    await expect
-      .element(screen.getByRole('button', { name: /featured/i }))
-      .toBeDisabled()
-  })
-
-  it('un trabajo publicado si se puede destacar', async () => {
-    const screen = await renderTabla(
-      trabajo({ editorialStatus: 'published', authors: [AUTOR] })
-    )
-
-    await expect
-      .element(screen.getByRole('button', { name: /featured/i }))
       .toBeEnabled()
   })
 

@@ -1,44 +1,35 @@
-import type { PublicCourseSummary } from '../../ports/repositories/PublicCourseRepository.js'
-import type { PublicWorkSummary } from '../../ports/repositories/PublicWorkRepository.js'
 import type { PageContentRecord } from '../../ports/repositories/SiteContentRepository.js'
 import type { SiteContentUseCases } from '../site/SiteContentUseCases.js'
-import type { PublicResearchUseCases } from '../research/PublicResearchUseCases.js'
-import type { PublicTeachingUseCases } from '../teaching/PublicTeachingUseCases.js'
-import type { EventRecord } from '../../ports/repositories/EventRepository.js'
-import type { PublicEventUseCases } from '../events/EventUseCases.js'
+import type { PostRecord } from '../../ports/repositories/PostRepository.js'
+import type { PostUseCases } from '../posts/PostUseCases.js'
 import type { GetPublicProfile, PublicProfile } from './GetPublicProfile.js'
 
-/** Cuantos destacados entran en Home sin convertirla en un listado. */
-const LIMITE_DESTACADOS = 6
-
-/** El carrusel es para uno o dos trabajos, no para el archivo entero. */
-const LIMITE_CARRUSEL = 5
-
-/** Dos filas de tres. Para la agenda entera esta la pagina de Eventos. */
-const LIMITE_EVENTOS = 6
+/** Lo ultimo, no un listado: para eso estan News y Blog. */
+const LIMITE_ENTRADAS = 3
 
 export interface HomePage {
   profile: PublicProfile
   /** Vacio si el titular oculto los textos de la portada. */
   page: PageContentRecord | null
-  /** Los que encabezan la portada. Seleccion aparte de los destacados. */
-  carouselWorks: PublicWorkSummary[]
-  featuredWorks: PublicWorkSummary[]
-  featuredCourses: PublicCourseSummary[]
   /**
-   * Los proximos; y si no hay ninguno por venir, los ultimos celebrados.
+   * Lo ultimo de News y de Blog, cada uno por su lado.
    *
-   * Asi la seccion no se queda vacia mientras haya historia que ensenar, que es lo
-   * habitual fuera de temporada.
+   * Separados y no mezclados en una sola lista: son dos cosas distintas y cada grupo
+   * lleva a su pagina. Un grupo llega vacio si su pagina esta apagada o si no hay nada
+   * publicado, que es la misma condicion con la que se decide el menu del sitio.
    */
-  events: EventRecord[]
-  eventTypeLabels: Record<string, string>
-  /** Que bloques se pintan, ya resuelto: `hero`, `carousel`, `featured_works`... */
+  latestPosts: { news: PostRecord[]; blog: PostRecord[] }
+  postKindLabels: Record<string, string>
+  /** Que bloques se pintan, ya resuelto: `hero`, `about`, `appointments`... */
   sections: Record<string, boolean>
 }
 
 /**
  * `GET /api/public/home` (ERS §30): el cuerpo de la portada en UNA llamada.
+ *
+ * La portada habla de la persona y no de su produccion, asi que aqui ya no viajan
+ * publicaciones, cursos ni eventos: eso lo cuentan Research, Teaching y Events, cada una
+ * en su pagina, y pedirlo eran cuatro consultas por visita que nadie llegaba a pintar.
  *
  * El ERS es explicito: "No obligar al frontend a realizar cinco peticiones para
  * construir Home". Las consultas van en paralelo, asi que el coste es el de la mas
@@ -55,66 +46,44 @@ export class GetHomePage {
   constructor(
     private readonly profile: GetPublicProfile,
     private readonly siteContent: SiteContentUseCases,
-    private readonly research: PublicResearchUseCases,
-    private readonly teaching: PublicTeachingUseCases,
-    private readonly events: PublicEventUseCases,
+    private readonly posts: PostUseCases,
   ) {}
 
   async execute(): Promise<HomePage> {
     const visibilidad = await this.siteContent.getVisibility()
     const seVe = (seccion: string) => visibilidad.sections[`home.${seccion}`] ?? true
 
-    const [profile, page, carouselWorks, featuredWorks, featuredCourses, proximos] =
-      await Promise.all([
-        this.profile.execute(),
-        // `findPublishedPage`, no `getPage`: con `getPage` el interruptor "visible en la
-        // web" de la portada no hacia nada, y sus textos se servian igual estando oculta.
-        seVe('hero') ? this.siteContent.findPublishedPage('home') : Promise.resolve(null),
-        seVe('carousel') ? this.research.listCarousel(LIMITE_CARRUSEL) : Promise.resolve([]),
-        seVe('featured_works')
-          ? this.research.listFeatured(LIMITE_DESTACADOS)
-          : Promise.resolve([]),
-        seVe('featured_courses')
-          ? this.teaching.listFeatured(LIMITE_DESTACADOS)
-          : Promise.resolve([]),
-        seVe('events') ? this.eventosDePortada() : Promise.resolve({ items: [], typeLabels: {} }),
-      ])
+    // Apagar la pagina apaga lo suyo tambien en la portada: enlazar desde aqui a una
+    // seccion que el menu no ensena llevaria a un 404.
+    const seVePagina = (pagina: string) => visibilidad.pages[pagina] ?? true
+    // Una banda por tipo, con su propio interruptor: son dos bloques distintos en la
+    // pagina, y un interruptor compartido obligaria a apagar los dos para apagar uno.
+    const ultimas = (tipo: string, pagina: string) =>
+      seVe(`latest_${pagina}`) && seVePagina(pagina)
+        ? this.posts.listPublished({ page: 1, page_size: LIMITE_ENTRADAS }, { kind: tipo })
+        : Promise.resolve({ items: [], kindLabels: {} })
+
+    const [profile, page, news, blog] = await Promise.all([
+      this.profile.execute(),
+      // `findPublishedPage`, no `getPage`: con `getPage` el interruptor "visible en la
+      // web" de la portada no hacia nada, y sus textos se servian igual estando oculta.
+      seVe('hero') || seVe('about') || seVe('research_areas')
+        ? this.siteContent.findPublishedPage('home')
+        : Promise.resolve(null),
+      ultimas('news', 'news'),
+      ultimas('personal', 'blog'),
+    ])
 
     return {
       profile,
       page,
-      carouselWorks,
-      featuredWorks,
-      featuredCourses,
-      events: proximos.items,
-      eventTypeLabels: proximos.typeLabels,
+      latestPosts: { news: news.items, blog: blog.items },
+      postKindLabels: { ...news.kindLabels, ...blog.kindLabels },
       sections: Object.fromEntries(
         Object.entries(visibilidad.sections)
           .filter(([clave]) => clave.startsWith('home.'))
           .map(([clave, valor]) => [clave.slice('home.'.length), valor]),
       ),
     }
-  }
-
-  /**
-   * Los proximos, y si no hay ninguno, los ultimos celebrados.
-   *
-   * La segunda consulta solo ocurre cuando la primera vuelve vacia: fuera de temporada
-   * una seccion en blanco no dice nada, y la historia si.
-   */
-  private async eventosDePortada(): Promise<{
-    items: EventRecord[]
-    typeLabels: Record<string, string>
-  }> {
-    const proximos = await this.events.list(
-      { page: 1, page_size: LIMITE_EVENTOS },
-      { eventType: null, upcoming: true },
-    )
-    if (proximos.items.length > 0) return proximos
-
-    return this.events.list(
-      { page: 1, page_size: LIMITE_EVENTOS },
-      { eventType: null, upcoming: false },
-    )
   }
 }

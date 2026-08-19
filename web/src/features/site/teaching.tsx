@@ -181,6 +181,8 @@ function Cabecera({
     pageTitle: string | null
     eyebrow: string | null
     introHtml: string | null
+    heroUrl: string | null
+    heroAlt: string | null
   } | null
 }) {
   // Sobre una foto oscurecida el texto oscuro no se lee: la cabecera entera se invierte.
@@ -196,7 +198,9 @@ function Cabecera({
       <SectionBackground clave='teaching.header' />
 
       <div className='relative z-10 mx-auto grid max-w-site grid-cols-1 items-center gap-site-gutter md:grid-cols-12'>
-        <div className='space-y-6 text-center md:col-span-8 md:col-start-3'>
+        {/* El texto a la izquierda, no centrado: con una ilustracion al lado, un titulo
+            centrado se descuelga de su propia columna. */}
+        <div className='space-y-6 md:col-span-8'>
           {page?.eyebrow != null && (
             <p
               className={cn(
@@ -220,13 +224,26 @@ function Cabecera({
           <RichText
             html={page?.introHtml ?? null}
             className={cn(
-              'mx-auto max-w-2xl text-site-body-lg leading-relaxed',
+              'max-w-2xl text-site-body-lg leading-relaxed',
               sobreImagen
                 ? 'text-site-on-primary/85'
                 : 'text-site-on-surface-variant'
             )}
           />
         </div>
+
+        {/* La ilustracion de la cabecera, elegida en Contenido de paginas. Sin
+            descripcion escrita va como decorativa: un `alt` inventado le cuenta a un
+            lector de pantalla algo que nadie ha comprobado. */}
+        {page?.heroUrl != null && (
+          <div className='flex md:col-span-4 md:justify-end'>
+            <img
+              src={page.heroUrl}
+              alt={page.heroAlt ?? ''}
+              className='w-full rounded-site shadow-xl md:max-w-[420px]'
+            />
+          </div>
+        )}
       </div>
     </section>
   )

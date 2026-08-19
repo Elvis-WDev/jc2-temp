@@ -28,6 +28,8 @@ const CAMPOS_SECCION = {
   pageKey: true,
   sectionKey: true,
   isVisible: true,
+  heading: true,
+  headingAside: true,
   backgroundMediaId: true,
   backgroundOverlay: true,
   sortOrder: true,
@@ -45,6 +47,7 @@ const CAMPOS_SETTINGS = {
   metaDescriptionDefault: true,
   ogImageMediaId: true,
   logoMediaId: true,
+  footerMediaId: true,
   footerText: true,
 } as const
 

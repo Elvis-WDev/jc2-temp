@@ -105,12 +105,4 @@ export class PublicResearchUseCases {
       },
     }
   }
-
-  listFeatured(limit: number): Promise<PublicWorkSummary[]> {
-    return this.repo.listFeatured(limit)
-  }
-
-  listCarousel(limit: number): Promise<PublicWorkSummary[]> {
-    return this.repo.listCarousel(limit)
-  }
 }

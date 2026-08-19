@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -22,6 +23,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { DocumentPicker, ImagePicker } from '@/components/media-picker'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
@@ -104,6 +106,13 @@ function ProfileFields({ profile }: { profile: Profile }) {
     defaultValues: aValores(profile),
   })
 
+  // El retrato y el CV son archivos, no textos: no pasan por react-hook-form, igual que
+  // el logotipo en Ajustes del sitio.
+  const [photoMediaId, setPhotoMediaId] = useState<string | null>(
+    profile.photoMediaId
+  )
+  const [cvMediaId, setCvMediaId] = useState<string | null>(profile.cvMediaId)
+
   const mutation = useToastMutation({
     mutationFn: (values: FormValues) =>
       updateProfile({
@@ -128,6 +137,8 @@ function ProfileFields({ profile }: { profile: Profile }) {
         ssrnUrl: nullSiVacio(values.ssrnUrl),
         repecUrl: nullSiVacio(values.repecUrl),
         websiteUrl: nullSiVacio(values.websiteUrl),
+        photoMediaId,
+        cvMediaId,
       }),
     invalidates: [queryKeys.profile],
     success: 'Profile updated. The changes are already visible on your site.',
@@ -270,6 +281,34 @@ function ProfileFields({ profile }: { profile: Profile }) {
                     </FormItem>
                   )}
                 />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Portrait</CardTitle>
+              </CardHeader>
+              <CardContent className='grid gap-2'>
+                <ImagePicker value={photoMediaId} onChange={setPhotoMediaId} />
+                <p className='text-sm text-muted-foreground'>
+                  Goes beside your name on the home page. It is not the same as
+                  the background of that band, which is set in Page content. The
+                  file has to be marked visible on the site.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Curriculum vitae</CardTitle>
+              </CardHeader>
+              <CardContent className='grid gap-2'>
+                <DocumentPicker value={cvMediaId} onChange={setCvMediaId} />
+                <p className='text-sm text-muted-foreground'>
+                  It becomes the CV button on your home page. The file has to be
+                  marked visible on the site: if it is not, the button does not
+                  appear.
+                </p>
               </CardContent>
             </Card>
 

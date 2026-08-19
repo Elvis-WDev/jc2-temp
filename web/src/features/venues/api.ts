@@ -1,6 +1,5 @@
 import {
   del,
-  get,
   getWithMeta,
   patch,
   post,
@@ -63,10 +62,6 @@ export async function listVenues(
 ): Promise<{ items: Venue[]; meta: PaginatedMeta }> {
   const { data, meta } = await getWithMeta<Venue[]>('/api/admin/venues', params)
   return { items: data, meta }
-}
-
-export function getVenue(id: string): Promise<Venue> {
-  return get<Venue>(`/api/admin/venues/${id}`)
 }
 
 /** El nombre es único: es lo que hace que la ficha se reutilice en vez de duplicarse. */

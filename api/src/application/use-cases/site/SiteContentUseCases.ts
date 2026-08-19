@@ -1,4 +1,4 @@
-import { assertPageCanBeHidden, esVisible } from '../../../domain/site/PageRules.js'
+import { assertPageCanBeHidden, esVisible, SECCIONES } from '../../../domain/site/PageRules.js'
 import { NotFoundError } from '../../../shared/errors/AppError.js'
 import type {
   PageContentInput,
@@ -10,6 +10,12 @@ import type {
   SiteSettingsInput,
   SiteSettingsRecord,
 } from '../../ports/repositories/SiteContentRepository.js'
+
+function sinBlancos(valor: string | null): string | null {
+  if (valor === null) return null
+  const limpio = valor.trim()
+  return limpio === '' ? null : limpio
+}
 
 /**
  * Textos de las tres paginas y configuracion global (ERS §25, §26).
@@ -77,12 +83,30 @@ export class SiteContentUseCases {
 
   // --- Secciones ---
 
-  listSections(pageKey: PageKey | null): Promise<PageSectionRecord[]> {
-    return this.repo.listSections(pageKey)
+  /**
+   * Las secciones de una pagina, sin las que el codigo ya no dibuja.
+   *
+   * `PageRules.SECCIONES` es la lista de verdad y dice que una fila con una clave
+   * desconocida quedo de una version anterior y se ignora. Pasan por aqui tanto el panel
+   * —que si no ensenaba un bloque con su clave en crudo cuyo interruptor no encendia
+   * nada— como la web, a traves de `getVisibility`. Asi retirar una seccion no obliga a
+   * borrar su fila.
+   */
+  async listSections(pageKey: PageKey | null): Promise<PageSectionRecord[]> {
+    const secciones = await this.repo.listSections(pageKey)
+    return secciones.filter((seccion) =>
+      (SECCIONES[seccion.pageKey] ?? []).includes(seccion.sectionKey),
+    )
   }
 
   updateSection(id: string, input: PageSectionInput): Promise<PageSectionRecord> {
-    return this.repo.updateSection(id, input)
+    // Un rotulo en blanco es "quiero el de la plantilla", no "quiero un hueco". Se
+    // normaliza aqui y no en el formulario: la regla vale para cualquier cliente.
+    return this.repo.updateSection(id, {
+      ...input,
+      ...(input.heading === undefined ? {} : { heading: sinBlancos(input.heading) }),
+      ...(input.headingAside === undefined ? {} : { headingAside: sinBlancos(input.headingAside) }),
+    })
   }
 
   /**
@@ -96,10 +120,19 @@ export class SiteContentUseCases {
     sections: Record<string, boolean>
     /** Solo las secciones que tienen fondo puesto: las demas se pintan lisas. */
     backgrounds: Record<string, { mediaId: string; overlay: number }>
+    /**
+     * Solo las secciones con rotulo escrito por el titular. Las que no aparecen usan
+     * el de la plantilla, que vive en el frontend porque es parte del diseno.
+     */
+    headings: Record<string, { title: string | null; aside: string | null }>
   }> {
     const [paginas, secciones] = await Promise.all([
       this.repo.listPages(),
-      this.repo.listSections(null),
+      // Por `listSections` y no por el repositorio: es lo que descarta las claves que el
+      // codigo ya no dibuja. Bajando al repositorio, la web anunciaba secciones
+      // retiradas —`research.filters` sobrevivio asi a su barra de filtros— y cualquiera
+      // que las leyera creeria que existen.
+      this.listSections(null),
     ])
 
     const pages: Record<string, boolean> = {}
@@ -107,6 +140,7 @@ export class SiteContentUseCases {
 
     const sections: Record<string, boolean> = {}
     const backgrounds: Record<string, { mediaId: string; overlay: number }> = {}
+    const headings: Record<string, { title: string | null; aside: string | null }> = {}
     for (const seccion of secciones) {
       const paginaVisible = pages[seccion.pageKey] ?? true
       const clave = `${seccion.pageKey}.${seccion.sectionKey}`
@@ -117,9 +151,12 @@ export class SiteContentUseCases {
           overlay: seccion.backgroundOverlay,
         }
       }
+      if (seccion.heading !== null || seccion.headingAside !== null) {
+        headings[clave] = { title: seccion.heading, aside: seccion.headingAside }
+      }
     }
 
-    return { pages, sections, backgrounds }
+    return { pages, sections, backgrounds, headings }
   }
 
   async getSettings(): Promise<SiteSettingsRecord> {

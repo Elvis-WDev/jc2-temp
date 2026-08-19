@@ -1,9 +1,15 @@
-/** Contenido de las tres paginas y configuracion global (ERS §25, §26). */
+/** Contenido de las paginas del sitio y configuracion global (ERS §25, §26). */
 
-export type PageKey = 'home' | 'research' | 'teaching' | 'events'
+/**
+ * Todas las paginas que existen. La portada nunca se oculta.
+ *
+ * Es un conjunto cerrado a proposito: esto no es un constructor de paginas (RF-020).
+ * El tipo se deriva de la lista, y no al reves, para que anadir una pagina sea tocar un
+ * sitio y no dos que puedan discrepar.
+ */
+export const PAGE_KEYS = ['home', 'research', 'teaching', 'events', 'news', 'blog'] as const
 
-/** Todas las paginas que existen. La portada nunca se oculta. */
-export const PAGE_KEYS: readonly PageKey[] = ['home', 'research', 'teaching', 'events']
+export type PageKey = (typeof PAGE_KEYS)[number]
 
 /**
  * Un bloque dentro de una pagina.
@@ -16,6 +22,10 @@ export interface PageSectionRecord {
   pageKey: string
   sectionKey: string
   isVisible: boolean
+  /** Rotulo de la banda. `null` significa el que trae la plantilla. */
+  heading: string | null
+  /** El texto pequeno a su derecha. `null` significa el de la plantilla. */
+  headingAside: string | null
   /** Fondo de la banda. Sin imagen, la seccion se pinta con su color liso. */
   backgroundMediaId: string | null
   /** Capa oscura sobre la imagen, de 0 a 100. */
@@ -26,6 +36,8 @@ export interface PageSectionRecord {
 /** Lo que se puede cambiar de una seccion desde el panel. */
 export interface PageSectionInput {
   isVisible?: boolean
+  heading?: string | null
+  headingAside?: string | null
   backgroundMediaId?: string | null
   backgroundOverlay?: number
 }
@@ -57,6 +69,8 @@ export interface SiteSettingsRecord {
   ogImageMediaId: string | null
   /** Emblema de la cabecera del sitio. Vacio: se muestra el nombre. */
   logoMediaId: string | null
+  /** Imagen de la primera columna del pie. */
+  footerMediaId: string | null
   footerText: string | null
 }
 

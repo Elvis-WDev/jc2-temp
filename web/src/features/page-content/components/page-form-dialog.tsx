@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -27,9 +28,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import { ImagePicker } from '@/components/media-picker'
 import {
   NOMBRE_DE_PAGINA,
   PAGINA_SIEMPRE_VISIBLE,
+  PAGINAS_CON_IMAGEN,
   updatePageContent,
   type PageContent,
 } from '../api'
@@ -40,6 +43,7 @@ const formSchema = z.object({
   pageTitle: z.string().trim().max(250),
   introMarkdown: z.string().max(50000),
   secondaryMarkdown: z.string().max(50000),
+  heroAlt: z.string().trim().max(500),
   isPublished: z.boolean(),
 })
 
@@ -65,7 +69,12 @@ export function PageFormDialog({ open, onOpenChange, page }: Props) {
 }
 
 function Campos({ onOpenChange, page }: Omit<Props, 'open'>) {
-  // La imagen no va en el formulario: se elige aparte y se envía con el resto.
+  // La imagen es un archivo, no un texto: no pasa por react-hook-form y se envía con
+  // el resto al guardar.
+  const [heroMediaId, setHeroMediaId] = useState<string | null>(
+    page.heroMediaId
+  )
+  const admiteImagen = PAGINAS_CON_IMAGEN.includes(page.pageKey)
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -74,6 +83,7 @@ function Campos({ onOpenChange, page }: Omit<Props, 'open'>) {
       pageTitle: page.pageTitle ?? '',
       introMarkdown: page.introMarkdown ?? '',
       secondaryMarkdown: page.secondaryMarkdown ?? '',
+      heroAlt: page.heroAlt ?? '',
       isPublished: page.isPublished,
     },
   })
@@ -86,6 +96,11 @@ function Campos({ onOpenChange, page }: Omit<Props, 'open'>) {
         introMarkdown: vacioANull(values.introMarkdown),
         secondaryMarkdown: vacioANull(values.secondaryMarkdown),
         isPublished: values.isPublished,
+        // Solo las páginas que la pintan la mandan: en las demás, tocar el campo
+        // guardaría una imagen que no se ve en ningún sitio.
+        ...(admiteImagen
+          ? { heroMediaId, heroAlt: vacioANull(values.heroAlt) }
+          : {}),
       }),
     invalidates: [queryKeys.pageContent.all],
     success: `${NOMBRE_DE_PAGINA[page.pageKey]} page saved.`,
@@ -166,18 +181,49 @@ function Campos({ onOpenChange, page }: Omit<Props, 'open'>) {
                 <Textarea rows={3} {...field} />
               </FormControl>
               <FormDescription>
-                Goes at the end of the page. Markdown is allowed.
+                On the home page it fills the &quot;Research lines&quot; band,
+                in columns: each heading opens a column. Markdown is allowed.
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        {/* Aqui hubo un campo "Header image" que el sitio publico nunca llego a
-            pintar: se guardaba y no se veia. Su trabajo lo hace ahora el fondo de la
-            seccion `header`, en el bloque de abajo, que si se pinta. La columna
-            `hero_media_id` se queda en la base sin usar; borrarla es una migracion
-            destructiva que nadie ha pedido. */}
+        {/* Este campo estuvo un tiempo en todas las páginas sin que ninguna lo
+            pintara: se guardaba la imagen y no aparecía nunca. Ahora solo sale donde
+            la cabecera la dibuja. No se confunde con el fondo de la sección `header`,
+            que está más abajo y ocupa la banda entera por detrás del texto: esta va
+            al lado, como una ilustración más. */}
+        {admiteImagen && (
+          <div className='grid gap-2 border-t pt-4'>
+            <Label>Header image</Label>
+            <p className='text-sm text-muted-foreground'>
+              Goes beside the title, on the right. It has to be marked visible
+              on the site.
+            </p>
+            <ImagePicker value={heroMediaId} onChange={setHeroMediaId} />
+
+            {heroMediaId !== null && (
+              <FormField
+                control={form.control}
+                name='heroAlt'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Image description</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      What it shows, for whoever cannot see it. Leave it empty
+                      if it is only decorative.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+          </div>
+        )}
 
         <FormField
           control={form.control}

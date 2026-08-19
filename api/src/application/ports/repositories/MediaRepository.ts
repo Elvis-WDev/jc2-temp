@@ -62,9 +62,20 @@ export interface MediaReferences {
   pageHeroes: number
   siteOgImages: number
   siteLogos: number
+  siteFooters: number
+  postImages: number
+  postFiles: number
   sectionBackgrounds: number
   eventImages: number
   linkIcons: number
+  /**
+   * Cuantos textos largos la citan, intercalada en su Markdown.
+   *
+   * No es una clave foranea: la cita es la direccion del archivo escrita dentro del
+   * texto. Se cuenta igual porque borrar el archivo dejaria un hueco en la entrada que
+   * lo ensena, que es exactamente de lo que avisa este recuento.
+   */
+  richTextMentions: number
   total: number
 }
 

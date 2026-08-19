@@ -1,12 +1,5 @@
 import { type ColumnDef } from '@tanstack/react-table'
-import {
-  Archive,
-  GalleryHorizontal,
-  Pencil,
-  Send,
-  Star,
-  Trash2,
-} from 'lucide-react'
+import { Archive, Pencil, Send, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -33,8 +26,6 @@ type Acciones = {
   onEdit: (work: Work) => void
   onPublish: (work: Work) => void
   onArchive: (work: Work) => void
-  onToggleFeatured: (work: Work) => void
-  onToggleCarousel: (work: Work) => void
   onDelete: (work: Work) => void
 }
 
@@ -124,8 +115,6 @@ export function worksColumns(acciones: Acciones): ColumnDef<Work>[] {
         return (
           <StatusBadge tone={TONO_PUBLICACION[estado]}>
             {EDITORIAL_STATUS_LABELS[estado]}
-            {row.original.isFeatured && ' · featured'}
-            {row.original.isCarousel && ' · carousel'}
           </StatusBadge>
         )
       },
@@ -178,67 +167,6 @@ export function worksColumns(acciones: Acciones): ColumnDef<Work>[] {
                   : publicado
                     ? 'Already published'
                     : 'Publicar'}
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    disabled={!publicado}
-                    aria-label={`${work.isFeatured ? 'Remove from' : 'Add to'} featured`}
-                    onClick={() => {
-                      acciones.onToggleFeatured(work)
-                    }}
-                  >
-                    <Star
-                      className={
-                        work.isFeatured ? 'size-4 fill-current' : 'size-4'
-                      }
-                    />
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                {!publicado
-                  ? 'Only published work can be featured'
-                  : work.isFeatured
-                    ? 'Remove from the home page'
-                    : 'Feature on the home page'}
-              </TooltipContent>
-            </Tooltip>
-
-            {/* El carrusel va justo al lado de destacar: son dos listas distintas y
-                verlas juntas es lo que deja claro que un trabajo puede estar en las
-                dos, en una o en ninguna. */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span>
-                  <Button
-                    variant='ghost'
-                    size='icon'
-                    disabled={!publicado}
-                    aria-label={`${work.isCarousel ? 'Remove from' : 'Add to'} carousel`}
-                    onClick={() => {
-                      acciones.onToggleCarousel(work)
-                    }}
-                  >
-                    <GalleryHorizontal
-                      className={
-                        work.isCarousel ? 'size-4 fill-current' : 'size-4'
-                      }
-                    />
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                {!publicado
-                  ? 'Only published work can go in the carousel'
-                  : work.isCarousel
-                    ? 'Remove from the carousel'
-                    : 'Put in the home carousel'}
               </TooltipContent>
             </Tooltip>
 

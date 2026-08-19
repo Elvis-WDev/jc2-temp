@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { CATALOGS } from '../../../../domain/catalog/catalogs.js'
 import type { GetAuditLog } from '../../../../application/use-cases/catalog/GetAuditLog.js'
 import type { AcademicStatusUseCases } from '../../../../application/use-cases/catalog/AcademicStatusUseCases.js'
 import type { CatalogTermUseCases } from '../../../../application/use-cases/catalog/CatalogTermUseCases.js'
@@ -26,23 +27,8 @@ const workTypeCreateSchema = z.object({
   maxItemsHome: z.number().int().min(0).max(100).nullable().optional(),
 })
 
-/**
- * Vocabularios que el panel gestiona. Se valida aqui, en el borde, y no con un enum en
- * la base de datos: anadir un vocabulario nuevo no debe obligar a migrar.
- */
-const CATALOGOS = [
-  'work_link',
-  'person_link',
-  'work_file',
-  'course_material',
-  'affiliation',
-  'venue',
-  'event',
-  'course_level',
-] as const
-
 const catalogTermListQuerySchema = z.object({
-  catalog: z.enum(CATALOGOS).optional(),
+  catalog: z.enum(CATALOGS).optional(),
   active: z
     .enum(['true', 'false'])
     .optional()
@@ -50,7 +36,7 @@ const catalogTermListQuerySchema = z.object({
 })
 
 const catalogTermCreateSchema = z.object({
-  catalog: z.enum(CATALOGOS),
+  catalog: z.enum(CATALOGS),
   // Mismo formato que el codigo de un tipo de trabajo: es lo que queda guardado en las
   // filas, asi que no admite espacios ni mayusculas.
   code: z

@@ -14,11 +14,12 @@ import { MEDIA_PURPOSES, allowedTypesForPurpose } from './UploadPolicy.js'
  * pide cuando lo que quiere es "ensename solo las imagenes".
  */
 
-export const MEDIA_KINDS = ['image', 'document', 'data', 'text', 'archive'] as const
+export const MEDIA_KINDS = ['image', 'audio', 'document', 'data', 'text', 'archive'] as const
 export type MediaKind = (typeof MEDIA_KINDS)[number]
 
 const MIMES: Record<MediaKind, readonly string[]> = {
   image: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+  audio: ['audio/mpeg', 'audio/x-m4a', 'audio/ogg'],
   document: [
     'application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
