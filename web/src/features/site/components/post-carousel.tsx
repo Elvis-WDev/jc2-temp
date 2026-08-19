@@ -44,7 +44,10 @@ export function PostCarousel({
     if (contenedor === null) return
 
     const destino = Math.max(0, Math.min(indice, entradas.length - 1))
-    contenedor.scrollTo({ left: destino * contenedor.clientWidth, behavior: 'smooth' })
+    contenedor.scrollTo({
+      left: destino * contenedor.clientWidth,
+      behavior: 'smooth',
+    })
     setActual(destino)
   }
 

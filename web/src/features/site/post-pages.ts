@@ -20,6 +20,15 @@ export interface PaginaDeEntradas {
   vacio: string
   /** Si sus entradas llevan cuerpo largo y adjuntos. */
   conCuerpo: boolean
+  /**
+   * Si su pagina reparte las entradas en dos columnas con la imagen de portada arriba,
+   * en lugar de una lista a lo ancho.
+   *
+   * Lo lleva el blog: sus entradas se eligen por la portada y el titulo, y en rejilla
+   * caben mas a la vista. Una noticia se lee de la primera linea, asi que en lista a lo
+   * ancho se recorre antes.
+   */
+  listadoEnRejilla: boolean
 }
 
 export const NOTICIAS: PaginaDeEntradas = {
@@ -31,6 +40,7 @@ export const NOTICIAS: PaginaDeEntradas = {
   entradilla: 'Announcements, awards and appointments.',
   vacio: 'No news published yet.',
   conCuerpo: false,
+  listadoEnRejilla: false,
 }
 
 export const BLOG: PaginaDeEntradas = {
@@ -42,4 +52,5 @@ export const BLOG: PaginaDeEntradas = {
   entradilla: 'Notes and longer writing, outside the academic record.',
   vacio: 'No entries published yet.',
   conCuerpo: true,
+  listadoEnRejilla: true,
 }
