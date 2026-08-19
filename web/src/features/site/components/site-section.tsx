@@ -13,8 +13,14 @@ import { SectionBackground } from './section-background'
 type SeccionProps = {
   children: React.ReactNode
   className?: string
-  /** Fondo propio. Por defecto hereda el de la pagina. */
-  tone?: 'default' | 'raised' | 'sunken' | 'dark'
+  /**
+   * Fondo propio. Por defecto hereda el de la pagina.
+   *
+   * `brand` es el solido del encabezado y el pie, el mismo que separa los tipos de
+   * publicacion en Research. Con el, el texto de la banda se invierte: sobre ese fondo
+   * el oscuro no se lee.
+   */
+  tone?: 'default' | 'raised' | 'sunken' | 'brand'
   id?: string
   /**
    * Clave de la seccion en `page_sections` (`home.featured_works`).
@@ -29,7 +35,7 @@ const FONDOS: Record<NonNullable<SeccionProps['tone']>, string> = {
   default: '',
   raised: 'bg-site-surface-container-lowest',
   sunken: 'bg-site-surface-container-low',
-  dark: 'bg-site-primary text-site-on-primary',
+  brand: 'bg-site-primary-container text-site-on-primary',
 }
 
 export function SiteSection({

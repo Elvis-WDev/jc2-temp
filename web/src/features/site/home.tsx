@@ -16,6 +16,38 @@ import {
 } from './use-section-background'
 import { useSiteMeta } from './use-site-meta'
 
+type Tono = 'brand' | 'default'
+
+/**
+ * El turno de colores de las bandas.
+ *
+ * El hero se queda con el fondo de la pagina; a partir de ahi se alternan el solido del
+ * encabezado y ese mismo fondo. Sobre el solido el texto oscuro no se lee, asi que la
+ * banda que lo lleva se invierte entera, igual que ya hacia la que tiene una foto detras.
+ *
+ * Se calcula sobre las bandas que **de verdad se pintan**, no sobre una lista fija: una
+ * banda se puede apagar desde el panel y otra desaparece sola cuando no tiene nada que
+ * ensenar. Con los colores escritos banda a banda, ocultar una dejaba dos seguidas del
+ * mismo color sin que nadie lo notase hasta verlo.
+ *
+ * El pie lleva ese mismo solido, asi que cuando el numero de bandas hace que la ultima
+ * caiga en solido, las dos se tocan. No se resuelve con el color —empezar en claro para
+ * acabar en oscuro dejaria el hero y la primera banda iguales— sino con el filete que
+ * lleva el pie en su borde superior.
+ */
+function turnoDeColores(cuantas: number): Tono[] {
+  // Desde arriba: el hero se queda con el fondo de la pagina, asi que la primera banda
+  // que viene detras es la del solido.
+  return Array.from({ length: cuantas }, (_, indice) =>
+    indice % 2 === 0 ? 'brand' : 'default'
+  )
+}
+
+/** Si la banda va invertida: por su color solido, o por la foto que tenga detras. */
+function useBandaInvertida(clave: string, tono: Tono): boolean {
+  return useSectionBackground(clave) !== null || tono === 'brand'
+}
+
 /**
  * Portada del sitio publico: quien es el titular, no que ha publicado.
  *
@@ -71,26 +103,57 @@ export function SiteHome() {
   // Sin fila, visible: anadir una seccion no obliga a tocar la base de datos.
   const seVe = (seccion: string) => home.sections[seccion] !== false
 
+  // Que bandas se pintan, en orden. Una encendida pero vacia no cuenta: no se dibuja, y
+  // dejarle su turno de color descuadraria las de debajo.
+  const bandas = [
+    seVe('about') &&
+    (home.page?.introHtml != null || home.profile.fullBioHtml !== null)
+      ? 'about'
+      : null,
+    seVe('research_areas') && home.page?.secondaryHtml != null
+      ? 'research_areas'
+      : null,
+    seVe('appointments') && home.profile.affiliations.length > 0
+      ? 'appointments'
+      : null,
+    seVe('latest_news') && home.latestPosts.news.length > 0
+      ? 'latest_news'
+      : null,
+    seVe('latest_blog') && home.latestPosts.blog.length > 0
+      ? 'latest_blog'
+      : null,
+  ].filter((banda): banda is string => banda !== null)
+
+  const turno = turnoDeColores(bandas.length)
+  const tono = (banda: string): Tono =>
+    turno[bandas.indexOf(banda)] ?? 'default'
+
   return (
     <>
       {seVe('hero') && (
         <Hero home={home} researchVisible={site?.pages.research === true} />
       )}
-      {seVe('about') && <Biografia home={home} />}
-      {seVe('research_areas') && <Dominios home={home} />}
-      {seVe('appointments') && <Trayectoria home={home} />}
-      {seVe('latest_news') && (
+      {bandas.includes('about') && (
+        <Biografia home={home} tone={tono('about')} />
+      )}
+      {bandas.includes('research_areas') && (
+        <Dominios home={home} tone={tono('research_areas')} />
+      )}
+      {bandas.includes('appointments') && (
+        <Trayectoria home={home} tone={tono('appointments')} />
+      )}
+      {bandas.includes('latest_news') && (
         <GrupoDeEntradas
           pagina={NOTICIAS}
           entradas={home.latestPosts.news}
-          tone='raised'
+          tone={tono('latest_news')}
         />
       )}
-      {seVe('latest_blog') && (
+      {bandas.includes('latest_blog') && (
         <GrupoDeEntradas
           pagina={BLOG}
           entradas={home.latestPosts.blog}
-          tone='sunken'
+          tone={tono('latest_blog')}
         />
       )}
     </>
@@ -228,8 +291,8 @@ function Hero({
  * fijas: si escribe tres apartados sale igual que la plantilla, y si escribe dos o
  * cuatro tambien funciona en vez de romperse.
  */
-function Dominios({ home }: { home: PublicHome }) {
-  const sobreImagen = useSectionBackground('home.research_areas') !== null
+function Dominios({ home, tone }: { home: PublicHome; tone: Tono }) {
+  const invertido = useBandaInvertida('home.research_areas', tone)
   // El titular puede renombrar la banda desde Contenido de paginas; si no lo hace,
   // queda el rotulo de la plantilla.
   const rotulo = useSectionHeading('home.research_areas', {
@@ -241,11 +304,11 @@ function Dominios({ home }: { home: PublicHome }) {
   if (home.page === null || home.page.secondaryHtml === null) return null
 
   return (
-    <SiteSection tone='raised' backgroundKey='home.research_areas'>
+    <SiteSection tone={tone} backgroundKey='home.research_areas'>
       <SectionHeading
         title={rotulo.title}
         aside={rotulo.aside}
-        dark={sobreImagen}
+        dark={invertido}
       />
       <RichText
         html={home.page.secondaryHtml}
@@ -253,7 +316,7 @@ function Dominios({ home }: { home: PublicHome }) {
           'gap-12 md:columns-2 lg:columns-3',
           '[&_h1]:font-site-display [&_h2]:font-site-display [&_h3]:font-site-display',
           '[&_h1]:text-site-headline-sm [&_h2]:text-site-headline-sm [&_h3]:text-site-headline-sm',
-          sobreImagen
+          invertido
             ? '[&_h1]:text-site-on-primary [&_h2]:text-site-on-primary [&_h3]:text-site-on-primary'
             : '[&_h1]:text-site-primary [&_h2]:text-site-primary [&_h3]:text-site-primary',
           '[&_h1]:mb-3 [&_h2]:mb-3 [&_h3]:mb-3',
@@ -261,7 +324,7 @@ function Dominios({ home }: { home: PublicHome }) {
           // parrafo que explica.
           '[&_h1]:break-after-avoid [&_h2]:break-after-avoid [&_h3]:break-after-avoid',
           '[&_p]:mb-6 [&_p]:break-inside-avoid',
-          sobreImagen
+          invertido
             ? '[&_p]:text-site-on-primary/85'
             : '[&_p]:text-site-on-surface-variant',
           '[&_ul]:mb-6 [&_ul]:list-disc [&_ul]:break-inside-avoid [&_ul]:ps-5',
@@ -279,9 +342,9 @@ function Dominios({ home }: { home: PublicHome }) {
  * pagina: se guardaba y se tiraba. La entradilla es el `introMarkdown` de la portada,
  * que vivia dentro de la banda de Docencia y se habria quedado huerfano al retirarla.
  */
-function Biografia({ home }: { home: PublicHome }) {
+function Biografia({ home, tone }: { home: PublicHome; tone: Tono }) {
   const { profile, page } = home
-  const sobreImagen = useSectionBackground('home.about') !== null
+  const invertido = useBandaInvertida('home.about', tone)
   const rotulo = useSectionHeading('home.about', { title: 'About' })
 
   // Nada que contar: ni entradilla ni biografia. La banda no se pinta en lugar de
@@ -289,11 +352,11 @@ function Biografia({ home }: { home: PublicHome }) {
   if (page?.introHtml == null && profile.fullBioHtml === null) return null
 
   return (
-    <SiteSection tone='raised' backgroundKey='home.about'>
+    <SiteSection tone={tone} backgroundKey='home.about'>
       <SectionHeading
         title={rotulo.title}
         aside={rotulo.aside}
-        dark={sobreImagen}
+        dark={invertido}
       />
 
       <div className='grid gap-12 md:grid-cols-12'>
@@ -302,7 +365,7 @@ function Biografia({ home }: { home: PublicHome }) {
             html={page.introHtml}
             className={cn(
               'text-site-body-lg leading-relaxed font-light italic md:col-span-5',
-              sobreImagen
+              invertido
                 ? 'text-site-on-primary/85'
                 : 'text-site-on-surface-variant'
             )}
@@ -317,7 +380,7 @@ function Biografia({ home }: { home: PublicHome }) {
               // como que falta algo.
               page?.introHtml == null ? 'md:col-span-12' : 'md:col-span-7',
               '[&_p]:mb-4',
-              sobreImagen
+              invertido
                 ? 'text-site-on-primary/85'
                 : 'text-site-on-surface-variant'
             )}
@@ -350,8 +413,8 @@ function periodo(
  * El orden llega resuelto del servidor —vigente primero y dentro de eso lo mas
  * reciente—, asi que aqui no se reordena nada.
  */
-function Trayectoria({ home }: { home: PublicHome }) {
-  const sobreImagen = useSectionBackground('home.appointments') !== null
+function Trayectoria({ home, tone }: { home: PublicHome; tone: Tono }) {
+  const invertido = useBandaInvertida('home.appointments', tone)
   const rotulo = useSectionHeading('home.appointments', {
     title: 'Appointments',
   })
@@ -360,11 +423,11 @@ function Trayectoria({ home }: { home: PublicHome }) {
   if (affiliations.length === 0) return null
 
   return (
-    <SiteSection tone='sunken' backgroundKey='home.appointments'>
+    <SiteSection tone={tone} backgroundKey='home.appointments'>
       <SectionHeading
         title={rotulo.title}
         aside={rotulo.aside}
-        dark={sobreImagen}
+        dark={invertido}
       />
 
       <ol className='flex flex-col'>
@@ -373,7 +436,7 @@ function Trayectoria({ home }: { home: PublicHome }) {
             key={`${afiliacion.institution}-${afiliacion.title}-${String(indice)}`}
             className={cn(
               'grid gap-2 border-t py-6 md:grid-cols-12 md:gap-8',
-              sobreImagen
+              invertido
                 ? 'border-site-on-primary/10'
                 : 'border-site-outline-variant/20',
               // La primera no lleva filete arriba: el encabezado ya trae el suyo.
@@ -383,7 +446,7 @@ function Trayectoria({ home }: { home: PublicHome }) {
             <span
               className={cn(
                 'text-site-meta tracking-widest uppercase md:col-span-3',
-                sobreImagen
+                invertido
                   ? 'text-site-on-primary/70'
                   : 'text-site-on-surface-variant'
               )}
@@ -395,14 +458,14 @@ function Trayectoria({ home }: { home: PublicHome }) {
               <h3
                 className={cn(
                   'font-site-display text-site-headline-sm',
-                  sobreImagen ? 'text-site-on-primary' : 'text-site-primary'
+                  invertido ? 'text-site-on-primary' : 'text-site-primary'
                 )}
               >
                 {afiliacion.title}
               </h3>
               <p
                 className={cn(
-                  sobreImagen
+                  invertido
                     ? 'text-site-on-primary/85'
                     : 'text-site-on-surface-variant'
                 )}
@@ -433,10 +496,10 @@ function GrupoDeEntradas({
 }: {
   pagina: PaginaDeEntradas
   entradas: PublicHome['latestPosts']['news']
-  tone: 'raised' | 'sunken'
+  tone: Tono
 }) {
   const clave = `home.latest_${pagina.pageKey}`
-  const sobreImagen = useSectionBackground(clave) !== null
+  const invertido = useBandaInvertida(clave, tone)
   const rotulo = useSectionHeading(clave, { title: pagina.titulo })
 
   if (entradas.length === 0) return null
@@ -445,7 +508,7 @@ function GrupoDeEntradas({
     <SiteSection tone={tone} backgroundKey={clave}>
       <SectionHeading
         title={rotulo.title}
-        dark={sobreImagen}
+        dark={invertido}
         // El aside del encabezado ya viene en versalitas: aqui basta con hacerlo enlace,
         // sin un boton que compita con el titulo de la banda.
         aside={

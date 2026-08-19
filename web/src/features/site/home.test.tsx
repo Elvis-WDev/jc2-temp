@@ -411,3 +411,65 @@ describe('lo ultimo', () => {
       .not.toBeInTheDocument()
   })
 })
+
+/** Con las seis bandas visibles: es donde el turno se puede comprobar entero. */
+const HOME_LLENO: PublicHome = {
+  ...HOME,
+  profile: { ...HOME.profile, fullBioHtml: '<p>Se doctoro en 2015.</p>' },
+  page: { ...PAGINA, secondaryHtml: '<h3>Diseno de mecanismos</h3>' },
+  latestPosts: {
+    news: HOME.latestPosts.news,
+    blog: [{ ...HOME.latestPosts.news[0]!, id: 'b1', slug: 'una-entrada' }],
+  },
+}
+
+describe('el turno de colores de las bandas', () => {
+  // Por la clase y no por el color calculado: en este entorno la hoja del sitio no se
+  // carga, asi que `getComputedStyle` devolvia transparente para todas y la comprobacion
+  // se cumplia sin comprobar nada. Lo que se fija aqui es el turno; que ese solido se
+  // vea como se espera es cosa del barrido en el navegador.
+  const SOLIDO = 'bg-site-primary-container'
+  const bandas = () =>
+    [...document.querySelectorAll('section')].map((seccion) =>
+      seccion.className.includes(SOLIDO) ? 'solido' : 'fondo'
+    )
+
+  it('ninguna banda repite el color de la de arriba', async () => {
+    getHome.mockResolvedValue(HOME_LLENO)
+    const screen = await pintar()
+    await expect.element(screen.getByText('Appointments')).toBeVisible()
+
+    const turno = bandas()
+    const repetida = turno.findIndex((c, i) => i > 0 && c === turno[i - 1])
+
+    expect(turno).toHaveLength(6)
+    expect({ repetida, turno }).toEqual({ repetida: -1, turno })
+  })
+
+  it('el hero se queda con el fondo y la banda de debajo lleva el solido', async () => {
+    // Es lo que se pidio. Que la ultima caiga tambien en solido —y toque el pie, que
+    // lleva el mismo— lo resuelve el filete del pie, no el color.
+    getHome.mockResolvedValue(HOME_LLENO)
+    const screen = await pintar()
+    await expect.element(screen.getByText('Appointments')).toBeVisible()
+
+    expect(bandas().slice(0, 3)).toEqual(['fondo', 'solido', 'fondo'])
+  })
+
+  it('una banda que no se pinta no gasta su turno', async () => {
+    // Sin trayectoria, la banda desaparece: las de debajo corren el turno en lugar de
+    // quedarse dos seguidas del mismo color.
+    getHome.mockResolvedValue({
+      ...HOME_LLENO,
+      profile: { ...HOME_LLENO.profile, affiliations: [] },
+    })
+    const screen = await pintar()
+    await expect.element(screen.getByText('News')).toBeVisible()
+
+    const turno = bandas()
+    const repetida = turno.findIndex((c, i) => i > 0 && c === turno[i - 1])
+
+    expect(turno).toHaveLength(5)
+    expect({ repetida, turno }).toEqual({ repetida: -1, turno })
+  })
+})

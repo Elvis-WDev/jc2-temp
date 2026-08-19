@@ -144,7 +144,9 @@ function SiteFooter({ site }: { site: PublicSite }) {
   ]
 
   return (
-    <footer className='w-full bg-site-primary-container text-site-on-primary'>
+    // El filete superior separa el pie de la ultima banda cuando las dos llevan el mismo
+    // solido: sin el se funden en un solo bloque oscuro y la seccion pierde su borde.
+    <footer className='w-full border-t border-site-on-primary/15 bg-site-primary-container text-site-on-primary'>
       <div className='mx-auto max-w-site px-site-margin py-site-section lg:px-site-gutter'>
         {/* Tres columnas: la imagen, los perfiles y el contacto. El CV, cuando lo
             hay, cuelga de los perfiles en vez de abrir una cuarta columna, que
