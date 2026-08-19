@@ -10,6 +10,7 @@ import { RichText } from './components/rich-text'
 import { SectionBackground } from './components/section-background'
 import { SiteButton, SiteButtonLink } from './components/site-button'
 import { SectionHeading, SiteSection } from './components/site-section'
+import { fondoDeCabecera } from './page-heroes'
 import { BLOG, NOTICIAS, type PaginaDeEntradas } from './post-pages'
 import {
   useSectionBackground,
@@ -183,7 +184,7 @@ function Hero({
     <section
       className={cn(
         'relative overflow-hidden py-site-section',
-        sobreImagen && 'text-site-on-primary'
+        sobreImagen ? 'text-site-on-primary' : fondoDeCabecera('home')
       )}
     >
       <SectionBackground clave='home.hero' />

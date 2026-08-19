@@ -7,6 +7,7 @@ import { EventCard } from './components/event-card'
 import { RichText } from './components/rich-text'
 import { SectionBackground } from './components/section-background'
 import { SitePagination } from './components/site-pagination'
+import { fondoDeCabecera } from './page-heroes'
 import { useSectionBackground } from './use-section-background'
 import { resumirHtml, titulo, useSiteMeta } from './use-site-meta'
 
@@ -69,7 +70,7 @@ export function SiteEvents() {
       <section
         className={cn(
           'relative w-full overflow-hidden px-site-margin pt-16 pb-24 lg:px-site-gutter lg:pt-24 lg:pb-32',
-          sobreImagen ? 'text-site-on-primary' : 'bg-site-surface-container'
+          sobreImagen ? 'text-site-on-primary' : fondoDeCabecera('events')
         )}
       >
         <SectionBackground clave='events.header' />
