@@ -19,12 +19,15 @@ import {
   EventUseCases,
   PublicEventUseCases,
 } from '../application/use-cases/events/EventUseCases.js'
+import { PostUseCases } from '../application/use-cases/posts/PostUseCases.js'
 import { CitationUseCases } from '../application/use-cases/citations/CitationUseCases.js'
 import { VenueUseCases } from '../application/use-cases/research/VenueUseCases.js'
 import type { AdminVenuesRouterDeps } from '../interfaces/http/routes/admin/venues.routes.js'
 import type { AdminEventsRouterDeps } from '../interfaces/http/routes/admin/events.routes.js'
+import type { AdminPostsRouterDeps } from '../interfaces/http/routes/admin/posts.routes.js'
 import type { AdminCitationsRouterDeps } from '../interfaces/http/routes/admin/citations.routes.js'
 import type { PublicEventsRouterDeps } from '../interfaces/http/routes/public/events.routes.js'
+import type { PublicPostsRouterDeps } from '../interfaces/http/routes/public/posts.routes.js'
 import { CatalogTermUseCases } from '../application/use-cases/catalog/CatalogTermUseCases.js'
 import { WorkTypeUseCases } from '../application/use-cases/catalog/WorkTypeUseCases.js'
 import { GetHomePage } from '../application/use-cases/public/GetHomePage.js'
@@ -57,6 +60,7 @@ import { PrismaTagRepository } from '../infrastructure/database/prisma/repositor
 import { PrismaAcademicStatusRepository } from '../infrastructure/database/prisma/repositories/PrismaAcademicStatusRepository.js'
 import { PrismaCitationRepository } from '../infrastructure/database/prisma/repositories/PrismaCitationRepository.js'
 import { PrismaEventRepository } from '../infrastructure/database/prisma/repositories/PrismaEventRepository.js'
+import { PrismaPostRepository } from '../infrastructure/database/prisma/repositories/PrismaPostRepository.js'
 import { PrismaVenueRepository } from '../infrastructure/database/prisma/repositories/PrismaVenueRepository.js'
 import { PrismaCatalogRepository } from '../infrastructure/database/prisma/repositories/PrismaCatalogRepository.js'
 import { PrismaWorkTypeRepository } from '../infrastructure/database/prisma/repositories/PrismaWorkTypeRepository.js'
@@ -104,8 +108,10 @@ export interface Container {
   catalog: AdminCatalogRouterDeps
   venues: AdminVenuesRouterDeps
   events: AdminEventsRouterDeps
+  posts: AdminPostsRouterDeps
   citations: AdminCitationsRouterDeps
   publicEvents: PublicEventsRouterDeps
+  publicPosts: PublicPostsRouterDeps
   checkDatabase: () => Promise<boolean>
 }
 
@@ -127,9 +133,12 @@ export function buildContainer(): Container {
 
   // Se comparten instancias: Home compone los mismos casos de uso que sirven
   // /research y /teaching, en vez de duplicar la logica de destacados.
-  const publicProfile = new GetPublicProfile(peopleRepository, institutionsRepository)
+  const publicProfile = new GetPublicProfile(peopleRepository)
   const catalogRepository = new PrismaCatalogRepository()
   const publicEvents = new PublicEventUseCases(eventRepo, catalogRepository)
+  // Noticias y blog comparten caso de uso entre el panel y la web: la puerta publica es
+  // el estado editorial, no una clase distinta.
+  const posts = new PostUseCases(new PrismaPostRepository(), auditLogger, catalogRepository)
   const publicResearch = new PublicResearchUseCases(
     new PrismaPublicWorkRepository(),
     catalogRepository,
@@ -184,21 +193,15 @@ export function buildContainer(): Container {
       publicBaseUrl: env.PUBLIC_BASE_URL,
     },
     home: {
-      home: new GetHomePage(
-        publicProfile,
-        siteContent,
-        publicResearch,
-        publicTeaching,
-        publicEvents,
-      ),
+      home: new GetHomePage(publicProfile, siteContent, posts),
       publicBaseUrl: env.PUBLIC_BASE_URL,
     },
     site: {
-      site: new GetPublicSite(siteContent, publicProfile, publicEvents),
+      site: new GetPublicSite(siteContent, publicProfile, publicEvents, posts),
       publicBaseUrl: env.PUBLIC_BASE_URL,
     },
     sitemap: {
-      sitemap: new GetSitemap(publicResearch, publicTeaching, publicEvents, siteContent),
+      sitemap: new GetSitemap(publicResearch, publicTeaching, publicEvents, posts, siteContent),
       publicBaseUrl: env.PUBLIC_BASE_URL,
     },
     dashboard: { dashboard: new GetDashboardMetrics(new PrismaDashboardRepository()) },
@@ -215,6 +218,7 @@ export function buildContainer(): Container {
     events: {
       events: new EventUseCases(eventRepo, auditLogger),
     },
+    posts: { posts },
     citations: {
       citations: new CitationUseCases(new PrismaCitationRepository()),
     },
@@ -223,6 +227,7 @@ export function buildContainer(): Container {
       siteContent,
       publicBaseUrl: env.PUBLIC_BASE_URL,
     },
+    publicPosts: { posts, siteContent, publicBaseUrl: env.PUBLIC_BASE_URL },
     checkDatabase: checkDatabaseConnection,
   }
 }

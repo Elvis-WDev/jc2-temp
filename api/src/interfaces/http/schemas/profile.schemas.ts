@@ -1,3 +1,4 @@
+import { PAGE_KEYS } from '../../../application/ports/repositories/SiteContentRepository.js'
 import { z } from '../openapi/registry.js'
 import { calendarDateSchema, patchSchemaOf } from './common.schemas.js'
 
@@ -131,17 +132,22 @@ export const affiliationQuerySchema = z.object({
 
 // --- Paginas y configuracion ---
 
+// Derivados de `PAGE_KEYS` y no escritos otra vez: cuando eran dos listas a mano,
+// abrir una pagina nueva obligaba a acordarse de los dos sitios.
 export const pageKeyParamsSchema = z.object({
-  pageKey: z.enum(['home', 'research', 'teaching', 'events']),
+  pageKey: z.enum(PAGE_KEYS),
 })
 
 export const pageSectionQuerySchema = z.object({
-  page: z.enum(['home', 'research', 'teaching', 'events']).optional(),
+  page: z.enum(PAGE_KEYS).optional(),
 })
 
 export const pageSectionPatchSchema = z
   .object({
     isVisible: z.boolean(),
+    /** El rotulo de la banda. `null` o en blanco devuelve el de la plantilla. */
+    heading: z.string().trim().max(120).nullable(),
+    headingAside: z.string().trim().max(120).nullable(),
     /** El fondo de la banda. `null` la devuelve a su color liso. */
     backgroundMediaId: z.uuid().nullable(),
     /** Capa oscura sobre la imagen, de 0 a 100. */
@@ -172,6 +178,7 @@ export const siteSettingsPatchSchema = z
     metaDescriptionDefault: z.string().max(500).nullable(),
     ogImageMediaId: z.uuid().nullable(),
     logoMediaId: z.uuid().nullable(),
+    footerMediaId: z.uuid().nullable(),
     footerText: z.string().max(2000).nullable(),
   })
   .partial()

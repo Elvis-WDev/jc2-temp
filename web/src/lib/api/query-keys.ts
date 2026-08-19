@@ -62,6 +62,11 @@ export const queryKeys = {
     list: (filtros?: unknown) => ['events', 'list', filtros ?? {}] as const,
     detail: (id: string) => ['events', 'detail', id] as const,
   },
+  posts: {
+    all: ['posts'] as const,
+    list: (filtros?: unknown) => ['posts', 'list', filtros ?? {}] as const,
+    detail: (id: string) => ['posts', 'detail', id] as const,
+  },
   citationStyles: {
     all: ['citation-styles'] as const,
     list: (activeOnly?: boolean) =>
@@ -113,5 +118,7 @@ export const queryKeys = {
     course: (idOrSlug: string) => ['public', 'course', idOrSlug] as const,
     events: (filtros?: unknown) => ['public', 'events', filtros ?? {}] as const,
     event: (idOrSlug: string) => ['public', 'event', idOrSlug] as const,
+    posts: (filtros?: unknown) => ['public', 'posts', filtros ?? {}] as const,
+    post: (idOrSlug: string) => ['public', 'post', idOrSlug] as const,
   },
 } as const

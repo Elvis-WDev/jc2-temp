@@ -32,9 +32,13 @@ const SIN_REFERENCIAS: MediaReferences = {
   pageHeroes: 0,
   siteOgImages: 0,
   siteLogos: 0,
+  siteFooters: 0,
+  postImages: 0,
+  postFiles: 0,
   sectionBackgrounds: 0,
   eventImages: 0,
   linkIcons: 0,
+  richTextMentions: 0,
   total: 0,
 }
 

@@ -1,3 +1,4 @@
+import { SECCIONES } from '../../../domain/site/PageRules.js'
 import { prisma } from '../prisma/client.js'
 
 /**
@@ -31,15 +32,17 @@ const PAGES = [
     pageTitle: 'Events',
     introMarkdown: null,
   },
+  {
+    pageKey: 'news',
+    pageTitle: 'News',
+    introMarkdown: null,
+  },
+  {
+    pageKey: 'blog',
+    pageTitle: 'Blog',
+    introMarkdown: null,
+  },
 ] as const
-
-/** En el orden en que se pintan. Debe coincidir con `domain/site/PageRules.ts`. */
-const SECTIONS: Record<(typeof PAGES)[number]['pageKey'], readonly string[]> = {
-  home: ['hero', 'carousel', 'research_areas', 'featured_works', 'featured_courses', 'events'],
-  research: ['header', 'filters'],
-  teaching: ['header', 'filters'],
-  events: ['header'],
-}
 
 export async function seedPageContent(): Promise<number> {
   for (const page of PAGES) {
@@ -55,7 +58,7 @@ export async function seedPageContent(): Promise<number> {
       },
     })
 
-    for (const [indice, sectionKey] of SECTIONS[page.pageKey].entries()) {
+    for (const [indice, sectionKey] of (SECCIONES[page.pageKey] ?? []).entries()) {
       await prisma.pageSection.upsert({
         where: { pageKey_sectionKey: { pageKey: page.pageKey, sectionKey } },
         // El orden se reafirma; la visibilidad no, que el titular pudo apagarla.

@@ -1821,6 +1821,40 @@ export const CONTENIDO = {
       workCitations: [],
     },
   ],
+  afiliaciones: [
+    {
+      title: 'Associate Professor',
+      affiliationType: 'permanent',
+      startDate: new Date('2013-01-01T00:00:00.000Z'),
+      endDate: null,
+      isPrimary: true,
+      isCurrent: true,
+      descriptionMarkdown: null,
+      sortOrder: 0,
+      institution: {
+        name: 'UNSW Sydney',
+      },
+      department: {
+        name: 'School of Economics',
+      },
+    },
+    {
+      title: 'Lecturer in Economics',
+      affiliationType: 'permanent',
+      startDate: new Date('2009-01-01T00:00:00.000Z'),
+      endDate: new Date('2012-12-31T00:00:00.000Z'),
+      isPrimary: false,
+      isCurrent: false,
+      descriptionMarkdown: null,
+      sortOrder: 1,
+      institution: {
+        name: 'The University of Queensland',
+      },
+      department: {
+        name: 'Business, Economics & Law Faculty',
+      },
+    },
+  ],
   courses: [
     {
       title: 'Advanced Managerial Economics (Graduate)',
@@ -2079,7 +2113,78 @@ export const CONTENIDO = {
       ],
     },
   ],
+  posts: [
+    {
+      kind: 'news',
+      title: 'The Economic Theory Festival returns to UNSW',
+      slug: 'the-economic-theory-festival-returns-to-unsw',
+      summary:
+        'Two days of invited talks and a mini-course, hosted this year by the School of Economics.',
+      contentMarkdown: null,
+      imageAlt: null,
+      displayOrder: null,
+      editorialStatus: 'published',
+      publishedAt: new Date('2026-08-10T09:00:00.000Z'),
+    },
+    {
+      kind: 'news',
+      title: 'New working paper on auctions with budget constraints',
+      slug: 'new-working-paper-on-auctions-with-budget-constraints',
+      summary:
+        'A revenue-equivalence result that survives when bidders cannot pay above a cap. Comments welcome.',
+      contentMarkdown: null,
+      imageAlt: null,
+      displayOrder: null,
+      editorialStatus: 'published',
+      publishedAt: new Date('2026-06-18T09:00:00.000Z'),
+    },
+    {
+      kind: 'news',
+      title: 'Intermediate Microeconomics moves to a single online pathway',
+      slug: 'intermediate-microeconomics-moves-to-a-single-online-pathway',
+      summary: 'Text, problem sets, interactive figures and video in one place, instead of five.',
+      contentMarkdown: null,
+      imageAlt: null,
+      displayOrder: null,
+      editorialStatus: 'published',
+      publishedAt: new Date('2026-03-02T09:00:00.000Z'),
+    },
+    {
+      kind: 'personal',
+      title: 'What I learned rebuilding a microeconomics course',
+      slug: 'what-i-learned-rebuilding-a-microeconomics-course',
+      summary:
+        'Three years of teaching the same subject, and the two changes that made the difference.',
+      contentMarkdown:
+        '## Starting from the problem set\n\nFor years I wrote the lectures first and the problem sets afterwards, as an afterthought. Rebuilding the course the other way round —problems first, then the minimum theory needed to solve them— changed what students did in the week between classes.\n\n## Interactive figures are not decoration\n\nA budget line a student can drag is not the same object as a budget line on a slide. The first one answers questions; the second one only illustrates an answer somebody else already gave.\n\n## What did not work\n\nRecording long videos. Nobody watched past the first few minutes, and the effort would have been better spent writing two more exercises.',
+      imageAlt: null,
+      displayOrder: null,
+      editorialStatus: 'published',
+      publishedAt: new Date('2026-07-22T09:00:00.000Z'),
+    },
+    {
+      kind: 'personal',
+      title: 'Notes on writing a theory paper that people finish',
+      slug: 'notes-on-writing-a-theory-paper-that-people-finish',
+      summary: 'The introduction is not a summary of the paper. It is the argument for reading it.',
+      contentMarkdown:
+        '## The first page does the work\n\nMost readers decide on the first page whether the rest is worth their afternoon. A theory paper that hides its contribution behind three pages of setup is asking for a decision before giving the reader anything to decide with.\n\n## One example, early\n\nA single worked example in the introduction does more than a paragraph of motivation. It also keeps the author honest: an example that is hard to state usually means the result is narrower than the abstract claims.\n\n## Proofs at the end\n\nNobody reads a proof to be convinced the first time. They read it to check, later, once they already believe the statement.',
+      imageAlt: null,
+      displayOrder: null,
+      editorialStatus: 'published',
+      publishedAt: new Date('2026-04-14T09:00:00.000Z'),
+    },
+  ],
   pages: [
+    {
+      pageKey: 'blog',
+      pageTitle: 'Blog',
+      eyebrow: null,
+      introMarkdown: null,
+      secondaryMarkdown: null,
+      heroAlt: null,
+      isPublished: true,
+    },
     {
       pageKey: 'events',
       pageTitle: 'Economic Theory Festival',
@@ -2098,6 +2203,15 @@ export const CONTENIDO = {
         'I teach microeconomic theory at graduate and undergraduate level, and I am developing an alternative pathway through Intermediate Microeconomics that mixes text, problem sets, interactive figures and video on a single platform.',
       secondaryMarkdown:
         '### Mechanism Design\n\nIncentive compatibility, revenue equivalence and auctions with budget constraints in quasi-linear environments.\n\n### Political Economy\n\nDynamic models of political polarisation, policy persistence and how institutions change under conflict and weak state capacity.\n\n### Behavioural Economics\n\nBounded rationality, misspecified causal models and loss aversion, and what they imply for market and policy design.',
+      heroAlt: null,
+      isPublished: true,
+    },
+    {
+      pageKey: 'news',
+      pageTitle: 'News',
+      eyebrow: null,
+      introMarkdown: null,
+      secondaryMarkdown: null,
       heroAlt: null,
       isPublished: true,
     },
@@ -2124,6 +2238,13 @@ export const CONTENIDO = {
   ],
   sections: [
     {
+      pageKey: 'blog',
+      sectionKey: 'header',
+      isVisible: true,
+      backgroundOverlay: 45,
+      sortOrder: 0,
+    },
+    {
       pageKey: 'events',
       sectionKey: 'header',
       isVisible: true,
@@ -2139,7 +2260,7 @@ export const CONTENIDO = {
     },
     {
       pageKey: 'home',
-      sectionKey: 'research_areas',
+      sectionKey: 'about',
       isVisible: true,
       backgroundOverlay: 45,
       sortOrder: 1,
@@ -2149,7 +2270,21 @@ export const CONTENIDO = {
       sectionKey: 'carousel',
       isVisible: true,
       backgroundOverlay: 45,
+      sortOrder: 1,
+    },
+    {
+      pageKey: 'home',
+      sectionKey: 'research_areas',
+      isVisible: true,
+      backgroundOverlay: 45,
       sortOrder: 2,
+    },
+    {
+      pageKey: 'home',
+      sectionKey: 'appointments',
+      isVisible: true,
+      backgroundOverlay: 45,
+      sortOrder: 3,
     },
     {
       pageKey: 'home',
@@ -2167,10 +2302,31 @@ export const CONTENIDO = {
     },
     {
       pageKey: 'home',
+      sectionKey: 'latest_news',
+      isVisible: true,
+      backgroundOverlay: 45,
+      sortOrder: 4,
+    },
+    {
+      pageKey: 'home',
       sectionKey: 'events',
       isVisible: true,
       backgroundOverlay: 45,
       sortOrder: 5,
+    },
+    {
+      pageKey: 'home',
+      sectionKey: 'latest_blog',
+      isVisible: true,
+      backgroundOverlay: 45,
+      sortOrder: 5,
+    },
+    {
+      pageKey: 'news',
+      sectionKey: 'header',
+      isVisible: true,
+      backgroundOverlay: 45,
+      sortOrder: 0,
     },
     {
       pageKey: 'research',
@@ -2205,7 +2361,6 @@ export const CONTENIDO = {
     siteName: 'Juan Carlos Carbajal',
     defaultLocale: 'en',
     timezone: 'Australia/Sydney',
-    publicBaseUrl: 'http://localhost:4000',
     contactEmail: 'jc.carbajal@unsw.edu.au',
     metaTitleDefault: 'Juan Carlos Carbajal - Economic Theory',
     metaDescriptionDefault:

@@ -5,7 +5,6 @@ import {
   type UseMutationResult,
 } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ApiError } from '@/lib/api/api-error'
 import { handleServerError } from '@/lib/handle-server-error'
 
 /**
@@ -57,12 +56,4 @@ export function useToastMutation<TData, TVars = void>(
       handleServerError(error)
     },
   })
-}
-
-/** Mensaje del error, ya traducido, para usarlo dentro de un formulario. */
-export function mensajeDeApiError(
-  error: unknown,
-  porDefecto = 'It could not be completed.'
-): string {
-  return error instanceof ApiError ? error.message : porDefecto
 }

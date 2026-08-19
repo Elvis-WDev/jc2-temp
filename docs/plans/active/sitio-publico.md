@@ -229,9 +229,10 @@ Cada cosa que se ve, de dónde sale:
 | Antetítulo «Department of Economics» | `page.eyebrow`, y si está vacío el departamento de la afiliación principal |
 | Nombre grande | `profile.fullName` |
 | Párrafo | `profile.shortBio` |
-| «Featured Work» / «View CV» | Ancla a los destacados / `profile.cvUrl` |
+| «CV» / «Research» | `profile.cvUrl`, que se elige en Perfil académico / la página de Research, si está encendida |
+| Imagen junto al título de Research y de Teaching | `page.heroUrl` y `page.heroAlt`, en Contenido de páginas → esa página |
 | Retrato | `profile.photoUrl` |
-| «Research Domains», tres columnas | `page.secondaryHtml`, en Contenido de páginas |
+| «Research lines», tres columnas | El cuerpo, de `page.secondaryHtml` en Contenido de páginas; el rótulo, del de la banda `home.research_areas` si el titular escribió uno |
 | Publicaciones destacadas | `featuredWorks` (año, revista, título, autores) |
 | «Mentorship & Pedagogy» + cita | `page.introHtml` |
 | Cursos actuales | `featuredCourses` (código y título) |
@@ -282,16 +283,21 @@ Dos cambios de contrato, ninguno consumido todavía por nadie más:
 
 ## Fase 4 — Research
 
-La página con más trabajo: barra lateral de filtros, listado y paginación.
+Listado agrupado por tipo y paginación.
 
-- Ruta `/research`. **Todo el estado vive en la dirección**: búsqueda, tipo, año, etiqueta,
-  orden y página. Copiar el enlace reproduce exactamente lo que se está viendo, y volver
-  atrás funciona. Es el mismo criterio que ya siguen las tablas del panel.
-- Los filtros se resuelven en el servidor (PERF-001). Los números que acompañan a cada
-  opción son las facetas, calculadas sobre el mismo conjunto filtrado.
-- Filtro por año: la plantilla trae un desplegable; las facetas ya dan los años con su
-  recuento, y «2020 y anteriores» es `year_to=2020`.
-- Etiquetas activas arriba, con su aspa, y «limpiar todo».
+> **La barra de filtros se retiró.** Lo que sigue describe cómo quedó la página; el
+> porqué y lo que se quitó están en [research-por-tipo.md](research-por-tipo.md). La API
+> conserva los filtros y las facetas, así que volver a montarla no tocaría el backend.
+
+- Ruta `/research`. Lo único que viaja en la dirección es la página: sin filtros no hay
+  más estado que conservar al copiar el enlace.
+- Un apartado por tipo de trabajo, con el plural del tipo como rótulo. El orden de los
+  apartados es el `sort_order` que el titular da a cada tipo en el panel, y dentro de
+  cada uno mandan el año descendente (`sort=type` en la API).
+- Sigue paginando en el servidor (PERF-001). Un tipo que se parta entre dos páginas
+  repite su rótulo en la siguiente.
+- Las fichas ocupan el ancho completo de la página, sin barra lateral que las estreche, y
+  cada tipo se abre con una banda de color a todo el ancho de la ventana.
 - Tarjeta: tipo, año, título, autores (`con X y Z`, o «autoría única», comparando con el
   titular del sitio), revista con volumen y número, PDF, DOI y desplegable de resumen.
 - **El resumen se pide al abrirlo**, no en el listado. Una petición solo cuando alguien

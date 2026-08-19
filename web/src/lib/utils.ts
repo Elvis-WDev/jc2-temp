@@ -1,12 +1,34 @@
 import { type ClassValue, clsx } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { extendTailwindMerge } from 'tailwind-merge'
+
+/**
+ * Los tamanos de letra del sitio publico, declarados como tales.
+ *
+ * `tailwind-merge` decide que dos clases chocan por su prefijo. `text-site-display-sm`
+ * (un tamano) y `text-site-on-surface` (un color) empiezan igual, asi que las tomaba por
+ * el mismo grupo y se quedaba con la ultima: **el tamano desaparecia**. En escritorio no
+ * se veia porque sobrevivia la variante `md:`, pero en movil el titulo de Research caia
+ * a los 16px del navegador.
+ *
+ * Con esto sabe que son tamanos y dejan de pelearse con los colores.
+ */
+const TAMANOS_DEL_SITIO = [
+  'site-display-lg',
+  'site-display-sm',
+  'site-headline-md',
+  'site-headline-sm',
+  'site-body-lg',
+  'site-body-md',
+  'site-label',
+  'site-meta',
+]
+
+const twMerge = extendTailwindMerge({
+  extend: { classGroups: { 'font-size': [{ text: TAMANOS_DEL_SITIO }] } },
+})
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
-}
-
-export function sleep(ms: number = 1000) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 /**
@@ -57,19 +79,4 @@ export function getPageNumbers(currentPage: number, totalPages: number) {
   }
 
   return rangeWithDots
-}
-
-/**
- * Initials from a display name: first character of the first word + first
- * character of the last word. One word only: first two characters. Empty: `?`.
- */
-export function getDisplayNameInitials(displayName: string): string {
-  const parts = displayName.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return '?'
-  if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase()
-  }
-  const first = parts[0][0] ?? ''
-  const last = parts[parts.length - 1]?.[0] ?? ''
-  return (first + last).toUpperCase()
 }

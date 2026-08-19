@@ -176,17 +176,6 @@ export function archiveCourse(id: string): Promise<Course> {
   return post<Course>(`/api/admin/courses/${id}/archive`)
 }
 
-export function setCourseFeatured(
-  id: string,
-  isFeatured: boolean,
-  featuredOrder: number | null
-): Promise<Course> {
-  return post<Course>(`/api/admin/courses/${id}/featured`, {
-    isFeatured,
-    featuredOrder,
-  })
-}
-
 // --- Ediciones ---
 
 export function createOffering(

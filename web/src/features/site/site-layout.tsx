@@ -2,9 +2,9 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet } from '@tanstack/react-router'
 import { FileText } from 'lucide-react'
 import { queryKeys } from '@/lib/api/query-keys'
+import { cn } from '@/lib/utils'
 import { useSiteIcon } from '@/hooks/use-site-icon'
 import { getSite, type PublicSite } from './api'
-import { SiteFrieze } from './components/site-frieze'
 
 /**
  * Envoltura del sitio publico: cabecera, contenido y pie.
@@ -25,7 +25,8 @@ import { SiteFrieze } from './components/site-frieze'
  * El menu.
  *
  * Inicio siempre; el resto solo si su pagina esta visible, porque enlazar una pagina
- * oculta lleva a un 404. Eventos ademas necesita tener algo publicado.
+ * oculta lleva a un 404. Eventos, noticias y blog ademas necesitan tener algo
+ * publicado.
  */
 const INICIO = { etiqueta: 'Home', to: '/' } as const
 
@@ -33,6 +34,8 @@ const OPCIONALES = [
   { etiqueta: 'Research', to: '/research', pagina: 'research' },
   { etiqueta: 'Teaching', to: '/teaching', pagina: 'teaching' },
   { etiqueta: 'Events', to: '/events', pagina: 'events' },
+  { etiqueta: 'News', to: '/news', pagina: 'news' },
+  { etiqueta: 'Blog', to: '/blog', pagina: 'blog' },
 ] as const
 
 export function SiteLayout() {
@@ -142,27 +145,46 @@ function SiteFooter({ site }: { site: PublicSite }) {
 
   return (
     <footer className='w-full bg-site-primary-container text-site-on-primary'>
-      <SiteFrieze tone='light' />
-
       <div className='mx-auto max-w-site px-site-margin py-site-section lg:px-site-gutter'>
+        {/* Tres columnas: la imagen, los perfiles y el contacto. El CV, cuando lo
+            hay, cuelga de los perfiles en vez de abrir una cuarta columna, que
+            desbarataria la rejilla. */}
         <div className='grid grid-cols-1 gap-site-gutter md:grid-cols-3'>
+          {site.footerImageUrl !== null ? (
+            <div className='flex items-start'>
+              <img
+                src={site.footerImageUrl}
+                // Decorativa: lo que dice ya esta escrito al lado, y el nombre del
+                // archivo no le aporta nada a quien usa un lector de pantalla.
+                alt=''
+                className='w-full max-w-56 rounded-site'
+              />
+            </div>
+          ) : (
+            // Sin imagen la columna sigue existiendo, para que las otras dos no se
+            // desplacen al ponerla o quitarla.
+            <div aria-hidden />
+          )}
+
           {/* Una columna sin nada dentro no se pinta: un titulo con el hueco debajo
               parece que algo se ha roto (ERS §55). */}
           <ColumnaDePie
             titulo='Academic profiles'
-            enlaces={repositorios(site)}
+            enlaces={[
+              ...repositorios(site),
+              ...(owner.cvUrl === null
+                ? []
+                : [
+                    {
+                      etiqueta: 'Curriculum vitae',
+                      url: owner.cvUrl,
+                      icono: true,
+                    },
+                  ]),
+            ]}
           />
 
-          {owner.cvUrl !== null && (
-            <ColumnaDePie
-              titulo='Documents'
-              enlaces={[
-                { etiqueta: 'Curriculum vitae', url: owner.cvUrl, icono: true },
-              ]}
-            />
-          )}
-
-          <ColumnaDePie titulo='Contact' enlaces={contactos} />
+          <ColumnaDePie titulo='Contact' enlaces={contactos} alineado='fin' />
         </div>
 
         {site.footerText !== null && (
@@ -178,14 +200,26 @@ function SiteFooter({ site }: { site: PublicSite }) {
 function ColumnaDePie({
   titulo,
   enlaces,
+  alineado = 'inicio',
 }: {
   titulo: string
   enlaces: Array<{ etiqueta: string; url: string; icono?: boolean }>
+  /** `fin` alinea la columna a la derecha, solo a partir de pantalla mediana. */
+  alineado?: 'inicio' | 'fin'
 }) {
   if (enlaces.length === 0) return null
 
+  const alFinal = alineado === 'fin'
+
   return (
-    <div className='space-y-site-unit'>
+    <div
+      className={cn(
+        'space-y-site-unit',
+        // En movil las columnas se apilan: alinear a la derecha ahi dejaria el texto
+        // desperdigado contra el borde.
+        alFinal && 'md:text-right'
+      )}
+    >
       <h2 className='text-site-label text-site-on-primary-container uppercase'>
         {titulo}
       </h2>
@@ -195,7 +229,10 @@ function ColumnaDePie({
             key={enlace.url}
             href={enlace.url}
             rel='me noopener'
-            className='flex items-center gap-2 text-site-on-primary/80 transition-colors hover:text-site-on-primary'
+            className={cn(
+              'flex items-center gap-2 text-site-on-primary/80 transition-colors hover:text-site-on-primary',
+              alFinal && 'md:justify-end'
+            )}
           >
             {enlace.icono === true && <FileText className='size-4' />}
             {enlace.etiqueta}

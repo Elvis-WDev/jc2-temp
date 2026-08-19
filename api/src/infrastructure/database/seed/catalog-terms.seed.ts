@@ -1,3 +1,4 @@
+import { CATALOGS, type Catalog } from '../../../domain/catalog/catalogs.js'
 import { prisma } from '../prisma/client.js'
 
 /**
@@ -11,19 +12,6 @@ import { prisma } from '../prisma/client.js'
  * Las columnas que guardan estos codigos siguen siendo texto libre: esta tabla ofrece
  * las opciones, no restringe lo que se puede guardar.
  */
-
-export const CATALOGS = [
-  'work_link',
-  'person_link',
-  'work_file',
-  'course_material',
-  'affiliation',
-  'venue',
-  'event',
-  'course_level',
-] as const
-
-export type Catalog = (typeof CATALOGS)[number]
 
 const TERMINOS: Record<Catalog, Array<{ code: string; label: string; description?: string }>> = {
   work_link: [
@@ -110,6 +98,12 @@ const TERMINOS: Record<Catalog, Array<{ code: string; label: string; description
     { code: 'doctoral', label: 'Doctoral' },
     { code: 'executive', label: 'Executive education' },
     { code: 'other', label: 'Other' },
+  ],
+  // `news` y `personal` son codigos reservados: de ellos cuelgan las dos rutas publicas.
+  // Un termino nuevo aqui necesitaria su propia ruta para verse.
+  post_kind: [
+    { code: 'news', label: 'News', description: 'Short items about anything.' },
+    { code: 'personal', label: 'Blog', description: 'Longer, personal writing.' },
   ],
   affiliation: [
     { code: 'permanent', label: 'Permanent' },

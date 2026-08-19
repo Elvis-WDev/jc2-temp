@@ -38,14 +38,6 @@ const formSchema = z.object({
     ),
   label: z.string().trim().min(1, 'Required.').max(100),
   pluralLabel: z.string().trim().min(1, 'Required.').max(120),
-  // Texto y no numero: un campo numerico vacio da NaN y rompe el resolver antes de
-  // poder mostrar un mensaje util.
-  maxItemsHome: z
-    .string()
-    .refine(
-      (valor) => valor === '' || (/^\d+$/.test(valor) && Number(valor) <= 100),
-      'Write a number from 0 to 100.'
-    ),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -62,7 +54,7 @@ export function WorkTypeFormDialog({ open, onOpenChange, workType }: Props) {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { code: '', label: '', pluralLabel: '', maxItemsHome: '' },
+    defaultValues: { code: '', label: '', pluralLabel: '' },
   })
 
   useEffect(() => {
@@ -71,11 +63,6 @@ export function WorkTypeFormDialog({ open, onOpenChange, workType }: Props) {
         code: workType?.code ?? '',
         label: workType?.label ?? '',
         pluralLabel: workType?.pluralLabel ?? '',
-        maxItemsHome:
-          workType?.maxItemsHome === null ||
-          workType?.maxItemsHome === undefined
-            ? ''
-            : String(workType.maxItemsHome),
       })
     }
   }, [open, workType, form])
@@ -86,15 +73,11 @@ export function WorkTypeFormDialog({ open, onOpenChange, workType }: Props) {
         ? updateWorkType(workType.id, {
             label: values.label,
             pluralLabel: values.pluralLabel,
-            maxItemsHome:
-              values.maxItemsHome === '' ? null : Number(values.maxItemsHome),
           })
         : createWorkType({
             code: values.code,
             label: values.label,
             pluralLabel: values.pluralLabel,
-            maxItemsHome:
-              values.maxItemsHome === '' ? null : Number(values.maxItemsHome),
           }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.workTypes.all })
@@ -186,28 +169,6 @@ export function WorkTypeFormDialog({ open, onOpenChange, workType }: Props) {
                   <FormDescription>
                     Used when several are grouped, for example &quot;3
                     articles&quot;.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name='maxItemsHome'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>How many on the home page</FormLabel>
-                  <FormControl>
-                    <Input
-                      inputMode='numeric'
-                      placeholder='No limit'
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    How many works of this type appear on the home page. Empty:
-                    as many as fit.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

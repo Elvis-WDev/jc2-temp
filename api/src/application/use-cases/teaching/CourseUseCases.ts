@@ -1,5 +1,9 @@
 import { assertDepartmentBelongsToInstitution } from '../../../domain/institutions/rules.js'
-import { generateSlug, resolveSlugOnUpdate, withSuffix } from '../../../domain/research/Slug.js'
+import {
+  escribirConSlugLibre,
+  generateSlug,
+  resolveSlugOnUpdate,
+} from '../../../domain/research/Slug.js'
 import {
   assertCourseCanBeFeatured,
   assertMaterialSourceIsExclusive,
@@ -19,8 +23,6 @@ import type {
   CourseRepository,
   CourseWriteInput,
 } from '../../ports/repositories/CourseRepository.js'
-
-const MAX_INTENTOS_SLUG = 50
 
 export interface TeachingActor {
   userId: string | null
@@ -55,17 +57,27 @@ export class CourseUseCases {
     return curso
   }
 
-  private async slugLibre(base: string, exceptId?: string): Promise<string> {
-    for (let intento = 1; intento <= MAX_INTENTOS_SLUG; intento += 1) {
-      const candidato = withSuffix(base, intento)
-      if (!(await this.repo.slugExists(candidato, exceptId))) return candidato
-    }
-    return `${base.slice(0, 190)}-${Date.now().toString(36)}`
+  /** Escribe con un slug libre, reintentando si otra peticion se lo lleva antes. */
+  private conSlugLibre<T>(
+    base: string,
+    exceptId: string | undefined,
+    escribir: (slug: string) => Promise<T>,
+  ): Promise<T> {
+    return escribirConSlugLibre({
+      base,
+      exceptId,
+      existe: (slug, except) => this.repo.slugExists(slug, except),
+      escribir,
+      agotado: () => escribir(`${base.slice(0, 190)}-${Date.now().toString(36)}`),
+    })
   }
 
   async create(input: CourseWriteInput, actor: TeachingActor): Promise<CourseRecord> {
-    const slug = await this.slugLibre(generateSlug(input.slug === '' ? input.title : input.slug))
-    const creado = await this.repo.create({ ...input, slug })
+    const creado = await this.conSlugLibre(
+      generateSlug(input.slug === '' ? input.title : input.slug),
+      undefined,
+      (slug) => this.repo.create({ ...input, slug }),
+    )
 
     await this.audit.record({
       userId: actor.userId,
@@ -93,9 +105,12 @@ export class CourseUseCases {
       tituloNuevo: input.title,
       yaPublicado: actual.editorialStatus === 'published',
     })
-    const slug = slugDeseado === actual.slug ? actual.slug : await this.slugLibre(slugDeseado, id)
-
-    const actualizado = await this.repo.update(id, { ...input, slug })
+    const actualizado =
+      slugDeseado === actual.slug
+        ? await this.repo.update(id, { ...input, slug: actual.slug })
+        : await this.conSlugLibre(slugDeseado, id, (slug) =>
+            this.repo.update(id, { ...input, slug }),
+          )
 
     await this.audit.record({
       userId: actor.userId,

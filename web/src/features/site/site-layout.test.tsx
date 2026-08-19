@@ -37,10 +37,18 @@ const SITIO: PublicSite = {
   footerText: '© 2026 Juana Castro.',
   contactEmail: null,
   logoUrl: null,
+  footerImageUrl: null,
   meta: { title: null, description: null, ogImageUrl: null },
-  pages: { research: true, teaching: true, events: false },
+  pages: {
+    research: true,
+    teaching: true,
+    events: false,
+    news: false,
+    blog: false,
+  },
   sections: {},
   sectionBackgrounds: {},
+  sectionHeadings: {},
   owner: {
     fullName: 'Juana Castro',
     publicEmail: 'juana@ejemplo.edu',
@@ -91,13 +99,40 @@ describe('envoltura del sitio publico', () => {
     // Enlazar una pagina oculta lleva a un 404, asi que no se enlaza.
     getSite.mockResolvedValue({
       ...SITIO,
-      pages: { research: true, teaching: false, events: false },
+      pages: {
+        research: true,
+        teaching: false,
+        events: false,
+        news: false,
+        blog: false,
+      },
     })
     const screen = await pintar()
 
     await expect.element(screen.getByText('Research')).toBeVisible()
     await expect.element(screen.getByText('Teaching')).not.toBeInTheDocument()
     await expect.element(screen.getByText('Events')).not.toBeInTheDocument()
+    await expect.element(screen.getByText('News')).not.toBeInTheDocument()
+    await expect.element(screen.getByText('Blog')).not.toBeInTheDocument()
+  })
+
+  it('noticias y blog aparecen cuando su pagina esta encendida', async () => {
+    // La API ya combina las dos condiciones: pagina visible Y algo publicado. Aqui solo
+    // se comprueba que el menu la respeta, igual que hace con Eventos.
+    getSite.mockResolvedValue({
+      ...SITIO,
+      pages: {
+        research: false,
+        teaching: false,
+        events: false,
+        news: true,
+        blog: true,
+      },
+    })
+    const screen = await pintar()
+
+    await expect.element(screen.getByText('News')).toBeVisible()
+    await expect.element(screen.getByText('Blog')).toBeVisible()
   })
 
   it('mientras no se sabe que hay, solo Inicio', async () => {
@@ -143,6 +178,30 @@ describe('envoltura del sitio publico', () => {
     await expect.element(screen.getByTestId('contenido')).toBeInTheDocument()
     await expect
       .element(screen.getByText('Academic profiles'))
+      .not.toBeInTheDocument()
+  })
+})
+
+describe('la imagen del pie', () => {
+  it('con imagen elegida, abre la primera columna', async () => {
+    getSite.mockResolvedValue({
+      ...SITIO,
+      footerImageUrl: '/api/public/media/abc',
+    })
+    const screen = await pintar()
+
+    const imagen = screen.getByRole('presentation')
+    await expect.element(imagen).toHaveAttribute('src', '/api/public/media/abc')
+  })
+
+  it('sin imagen, las otras columnas no se mueven de sitio', async () => {
+    // La columna sigue existiendo vacia: si desapareciera, poner o quitar la imagen
+    // desplazaria los perfiles y el contacto.
+    const screen = await pintar()
+    await expect.element(screen.getByText('Academic profiles')).toBeVisible()
+
+    await expect
+      .element(screen.getByRole('presentation'))
       .not.toBeInTheDocument()
   })
 })

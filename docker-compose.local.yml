@@ -1,0 +1,59 @@
+# Arranque LOCAL con Docker, con base de datos incluida. No es el despliegue.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml \
+#     --env-file .env.docker-local up -d --build
+#
+# Dos cosas que el despliegue no lleva, y a proposito:
+#
+# 1. **Una base de datos.** En produccion la base es externa y vive fuera del compose,
+#    para que un redespliegue no pueda llevarsela por delante. En una maquina de trabajo
+#    eso obliga a montar un Postgres aparte antes de poder ver nada, asi que aqui se
+#    incluye uno con su propio volumen.
+#
+# 2. **Puertos publicados.** En produccion ningun contenedor publica: quien enruta es
+#    Traefik por la red `dokploy-network`. Aqui no hay Traefik, y sin publicar el sitio
+#    no se puede abrir desde el navegador.
+#
+# Va aparte y con nombre propio, no como `docker-compose.override.yml`, porque ese
+# Compose lo aplicaria solo: el despliegue de produccion acabaria con una base de datos
+# dentro y un puerto abierto sin que nadie lo pidiera.
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: jc2
+      POSTGRES_PASSWORD: jc2
+      POSTGRES_DB: jc2
+    ports:
+      # 5433 y no 5432: el Postgres suelto de `api/docker-compose.dev.yml` ya ocupa el
+      # 5432 del anfitrion. Los contenedores no usan este puerto —se hablan por la red
+      # interna, en `db:5432`—; esta aqui para poder asomarse con un cliente.
+      - '5433:5432'
+    volumes:
+      # Con nombre: los datos sobreviven a `docker compose down`.
+      - jc2-db-local:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U jc2 -d jc2']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # `migrate` migra y siembra; sin base sana no tiene nada que hacer.
+  migrate:
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    ports:
+      - '8080:80'
+
+volumes:
+  jc2-db-local:

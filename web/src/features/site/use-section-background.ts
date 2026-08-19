@@ -23,6 +23,30 @@ export function useSectionBackground(clave: string): {
 }
 
 /**
+ * El rotulo de una banda: el que el titular escribio, o el de la plantilla.
+ *
+ * El de la plantilla se queda en el frontend a proposito. Es parte del diseno, no
+ * contenido, y guardarlo en la base obligaria a sembrar una fila por banda solo para
+ * repetir lo que ya dice el codigo. Lo que se guarda es unicamente el cambio.
+ */
+export function useSectionHeading(
+  clave: string,
+  porDefecto: { title: string; aside?: string }
+): { title: string; aside?: string } {
+  const { data: site } = useQuery({
+    queryKey: queryKeys.public.site,
+    queryFn: getSite,
+    staleTime: 5 * 60_000,
+  })
+
+  const escrito = site?.sectionHeadings[clave]
+  return {
+    title: escrito?.title ?? porDefecto.title,
+    aside: escrito?.aside ?? porDefecto.aside,
+  }
+}
+
+/**
  * Las clases de texto de una banda, segun lleve foto detras o no.
  *
  * Sobre una foto oscurecida el texto oscuro deja de leerse, asi que la banda entera se

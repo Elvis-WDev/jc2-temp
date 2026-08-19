@@ -52,8 +52,4 @@ export class PublicTeachingUseCases {
       materialTypeLabels: Object.fromEntries(tipos.map((tipo) => [tipo.code, tipo.label])),
     }
   }
-
-  listFeatured(limit: number): Promise<PublicCourseSummary[]> {
-    return this.repo.listFeatured(limit)
-  }
 }

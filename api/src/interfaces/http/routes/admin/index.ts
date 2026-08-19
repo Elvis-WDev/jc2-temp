@@ -11,6 +11,7 @@ import { createAdminTagsRouter, type AdminTagsRouterDeps } from './tags.routes.j
 import { createAdminTeachingRouter, type AdminTeachingRouterDeps } from './teaching.routes.js'
 import { createAdminCitationsRouter, type AdminCitationsRouterDeps } from './citations.routes.js'
 import { createAdminEventsRouter, type AdminEventsRouterDeps } from './events.routes.js'
+import { createAdminPostsRouter, type AdminPostsRouterDeps } from './posts.routes.js'
 import { createAdminVenuesRouter, type AdminVenuesRouterDeps } from './venues.routes.js'
 
 export interface AdminRouterDeps {
@@ -24,6 +25,7 @@ export interface AdminRouterDeps {
   catalog: AdminCatalogRouterDeps
   venues: AdminVenuesRouterDeps
   events: AdminEventsRouterDeps
+  posts: AdminPostsRouterDeps
   citations: AdminCitationsRouterDeps
 }
 
@@ -50,6 +52,7 @@ export function createAdminRouter(deps: AdminRouterDeps): Router {
   router.use('/works', createAdminResearchRouter(deps.research))
   router.use('/', createAdminVenuesRouter(deps.venues))
   router.use('/events', createAdminEventsRouter(deps.events))
+  router.use('/posts', createAdminPostsRouter(deps.posts))
   router.use('/', createAdminCitationsRouter(deps.citations))
   router.use('/', createAdminTeachingRouter(deps.teaching))
   router.use('/', createProfileRouter(deps.profile))

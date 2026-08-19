@@ -48,6 +48,8 @@ const TEXTO_POR_PROPOSITO: Record<MediaPurpose, TextFormat[]> = {
   dataset: DATOS,
   archive: [],
   source: [...FUENTES, ...DATOS],
+  // Un audio nunca es texto plano: no hay formato que aceptar por este camino.
+  audio: [],
 }
 
 export function textFormatsForPurpose(purpose: MediaPurpose): readonly TextFormat[] {

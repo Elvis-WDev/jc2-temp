@@ -21,7 +21,11 @@ export function toPublicWorkSummaryDto(work: PublicWorkSummary, baseUrl: string)
     slug: work.slug,
     title: work.title,
     subtitle: work.subtitle,
-    type: { code: work.workTypeCode, label: work.workTypeLabel },
+    type: {
+      code: work.workTypeCode,
+      label: work.workTypeLabel,
+      pluralLabel: work.workTypePluralLabel,
+    },
     academicStatus: work.academicStatus,
     academicStatusLabel: work.academicStatusLabel,
     year: work.publicationYear,

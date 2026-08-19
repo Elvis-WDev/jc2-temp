@@ -66,6 +66,14 @@ const formSchema = z.object({
   // Se valida como texto y se convierte al enviar: una union con z.coerce.number()
   // hace que el tipo de entrada y el de salida difieran, y el resolver deja de
   // encajar con el tipo del formulario.
+  // Orden manual dentro de su tipo en Research. Texto por lo mismo que el ano: un
+  // `z.coerce.number()` haria que el tipo de entrada y el de salida difieran.
+  displayOrder: z
+    .string()
+    .trim()
+    .refine((valor) => valor === '' || /^\d{1,4}$/.test(valor), {
+      message: 'A whole number, or leave it empty.',
+    }),
   publicationYear: z
     .string()
     .trim()
@@ -99,6 +107,7 @@ const VACIOS: FormValues = {
   title: '',
   subtitle: '',
   academicStatus: 'working_paper',
+  displayOrder: '',
   publicationYear: '',
   publisherName: '',
   volume: '',
@@ -127,6 +136,7 @@ function aValores(work: Work | undefined): FormValues {
     title: work.title,
     subtitle: work.subtitle ?? '',
     academicStatus: work.academicStatus,
+    displayOrder: work.displayOrder === null ? '' : String(work.displayOrder),
     publicationYear:
       work.publicationYear === null ? '' : String(work.publicationYear),
     publisherName: work.publisherName ?? '',
@@ -243,6 +253,8 @@ function WorkFormFields({ work }: { work: Work | undefined }) {
         title: values.title,
         subtitle: nullSiVacio(values.subtitle),
         academicStatus: values.academicStatus,
+        displayOrder:
+          values.displayOrder === '' ? null : Number(values.displayOrder),
         publicationYear:
           values.publicationYear === '' ? null : Number(values.publicationYear),
         // Una cosa o la otra, nunca las dos: la API lo rechazaria con 422.
@@ -626,6 +638,32 @@ function WorkFormFields({ work }: { work: Work | undefined }) {
                           {...field}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Order in Research</CardTitle>
+              </CardHeader>
+              <CardContent className='grid gap-4'>
+                <FormField
+                  control={form.control}
+                  name='displayOrder'
+                  render={({ field }) => (
+                    <FormItem className='max-w-40'>
+                      <FormLabel>Position</FormLabel>
+                      <FormControl>
+                        <Input inputMode='numeric' placeholder='1' {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Within its publication type: 1 goes first, then 2, and
+                        so on. Leave it empty and it falls in by year, most
+                        recent first, after the ones you numbered.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

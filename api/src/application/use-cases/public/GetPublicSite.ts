@@ -1,6 +1,7 @@
 import type { PersonLinkRecord } from '../../ports/repositories/PeopleRepository.js'
 import type { SiteContentUseCases } from '../site/SiteContentUseCases.js'
 import type { PublicEventUseCases } from '../events/EventUseCases.js'
+import type { PostUseCases } from '../posts/PostUseCases.js'
 import type { GetPublicProfile } from './GetPublicProfile.js'
 
 /**
@@ -19,6 +20,8 @@ export interface PublicSite {
   footerText: string | null
   contactEmail: string | null
   logoMediaId: string | null
+  /** Imagen de la primera columna del pie. */
+  footerMediaId: string | null
   /** Valores por defecto para los metadatos de cada pagina (ERS §39). */
   meta: {
     title: string | null
@@ -28,18 +31,25 @@ export interface PublicSite {
   /**
    * Que paginas se ven. El menu del sitio se construye con esto.
    *
-   * Eventos ademas necesita tener algo publicado: un menu que lleva a una pagina vacia
-   * estorba tanto como uno que lleva a una pagina oculta.
+   * Eventos, noticias y blog ademas necesitan tener algo publicado: un menu que lleva a
+   * una pagina vacia estorba tanto como uno que lleva a una pagina oculta.
    */
   pages: {
     research: boolean
     teaching: boolean
     events: boolean
+    news: boolean
+    blog: boolean
   }
   /** Que bloques se pintan, por pagina y seccion: `research.filters`, `home.hero`... */
   sections: Record<string, boolean>
   /** El fondo de las secciones que tienen uno, con la misma clave. */
   sectionBackgrounds: Record<string, { mediaId: string; overlay: number }>
+  /**
+   * El rotulo de las secciones donde el titular ha escrito uno, con la misma clave.
+   * Las que no aparecen usan el de la plantilla.
+   */
+  sectionHeadings: Record<string, { title: string | null; aside: string | null }>
   owner: {
     fullName: string
     publicEmail: string | null
@@ -61,15 +71,20 @@ export class GetPublicSite {
     private readonly siteContent: SiteContentUseCases,
     private readonly profile: GetPublicProfile,
     private readonly events: PublicEventUseCases,
+    private readonly posts: PostUseCases,
   ) {}
 
   async execute(): Promise<PublicSite> {
-    const [settings, perfil, hayEventos, visibilidad] = await Promise.all([
-      this.siteContent.getSettings(),
-      this.profile.execute(),
-      this.events.hasPublished(),
-      this.siteContent.getVisibility(),
-    ])
+    const [settings, perfil, hayEventos, hayNoticias, hayEntradas, visibilidad] = await Promise.all(
+      [
+        this.siteContent.getSettings(),
+        this.profile.execute(),
+        this.events.hasPublished(),
+        this.posts.hasPublished('news'),
+        this.posts.hasPublished('personal'),
+        this.siteContent.getVisibility(),
+      ],
+    )
 
     const persona = perfil.person
 
@@ -78,6 +93,7 @@ export class GetPublicSite {
       footerText: settings.footerText,
       contactEmail: settings.contactEmail,
       logoMediaId: settings.logoMediaId,
+      footerMediaId: settings.footerMediaId,
       meta: {
         title: settings.metaTitleDefault,
         description: settings.metaDescriptionDefault,
@@ -87,9 +103,12 @@ export class GetPublicSite {
         research: visibilidad.pages.research ?? true,
         teaching: visibilidad.pages.teaching ?? true,
         events: (visibilidad.pages.events ?? true) && hayEventos,
+        news: (visibilidad.pages.news ?? true) && hayNoticias,
+        blog: (visibilidad.pages.blog ?? true) && hayEntradas,
       },
       sections: visibilidad.sections,
       sectionBackgrounds: visibilidad.backgrounds,
+      sectionHeadings: visibilidad.headings,
       owner: {
         fullName: persona.fullName,
         publicEmail: persona.publicEmail,

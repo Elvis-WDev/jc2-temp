@@ -40,7 +40,9 @@ import { Route as AdminAffiliationsIndexRouteImport } from './routes/admin/affil
 import { Route as AdminAcademicStatusesIndexRouteImport } from './routes/admin/academic-statuses/index'
 import { Route as PublicTeachingIndexRouteImport } from './routes/_public/teaching/index'
 import { Route as PublicResearchIndexRouteImport } from './routes/_public/research/index'
+import { Route as PublicNewsIndexRouteImport } from './routes/_public/news/index'
 import { Route as PublicEventsIndexRouteImport } from './routes/_public/events/index'
+import { Route as PublicBlogIndexRouteImport } from './routes/_public/blog/index'
 import { Route as AdminWorksNewRouteImport } from './routes/admin/works/new'
 import { Route as AdminWorksWorkIdRouteImport } from './routes/admin/works/$workId'
 import { Route as AdminEventsNewRouteImport } from './routes/admin/events/new'
@@ -50,7 +52,12 @@ import { Route as AdminCoursesNewRouteImport } from './routes/admin/courses/new'
 import { Route as AdminCoursesCourseIdRouteImport } from './routes/admin/courses/$courseId'
 import { Route as PublicTeachingSlugRouteImport } from './routes/_public/teaching/$slug'
 import { Route as PublicResearchSlugRouteImport } from './routes/_public/research/$slug'
+import { Route as PublicNewsSlugRouteImport } from './routes/_public/news/$slug'
 import { Route as PublicEventsSlugRouteImport } from './routes/_public/events/$slug'
+import { Route as PublicBlogSlugRouteImport } from './routes/_public/blog/$slug'
+import { Route as AdminPostsKindIndexRouteImport } from './routes/admin/posts/$kind/index'
+import { Route as AdminPostsKindNewRouteImport } from './routes/admin/posts/$kind/new'
+import { Route as AdminPostsKindPostIdRouteImport } from './routes/admin/posts/$kind/$postId'
 
 const AdminRouteRoute = AdminRouteRouteImport.update({
   id: '/admin',
@@ -208,9 +215,19 @@ const PublicResearchIndexRoute = PublicResearchIndexRouteImport.update({
   path: '/research/',
   getParentRoute: () => PublicRouteRoute,
 } as any)
+const PublicNewsIndexRoute = PublicNewsIndexRouteImport.update({
+  id: '/news/',
+  path: '/news/',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
 const PublicEventsIndexRoute = PublicEventsIndexRouteImport.update({
   id: '/events/',
   path: '/events/',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
+const PublicBlogIndexRoute = PublicBlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
   getParentRoute: () => PublicRouteRoute,
 } as any)
 const AdminWorksNewRoute = AdminWorksNewRouteImport.update({
@@ -258,10 +275,35 @@ const PublicResearchSlugRoute = PublicResearchSlugRouteImport.update({
   path: '/research/$slug',
   getParentRoute: () => PublicRouteRoute,
 } as any)
+const PublicNewsSlugRoute = PublicNewsSlugRouteImport.update({
+  id: '/news/$slug',
+  path: '/news/$slug',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
 const PublicEventsSlugRoute = PublicEventsSlugRouteImport.update({
   id: '/events/$slug',
   path: '/events/$slug',
   getParentRoute: () => PublicRouteRoute,
+} as any)
+const PublicBlogSlugRoute = PublicBlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
+const AdminPostsKindIndexRoute = AdminPostsKindIndexRouteImport.update({
+  id: '/posts/$kind/',
+  path: '/posts/$kind/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminPostsKindNewRoute = AdminPostsKindNewRouteImport.update({
+  id: '/posts/$kind/new',
+  path: '/posts/$kind/new',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminPostsKindPostIdRoute = AdminPostsKindPostIdRouteImport.update({
+  id: '/posts/$kind/$postId',
+  path: '/posts/$kind/$postId',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -274,7 +316,9 @@ export interface FileRoutesByFullPath {
   '/500': typeof errors500Route
   '/503': typeof errors503Route
   '/admin/': typeof AdminIndexRoute
+  '/blog/$slug': typeof PublicBlogSlugRoute
   '/events/$slug': typeof PublicEventsSlugRoute
+  '/news/$slug': typeof PublicNewsSlugRoute
   '/research/$slug': typeof PublicResearchSlugRoute
   '/teaching/$slug': typeof PublicTeachingSlugRoute
   '/admin/courses/$courseId': typeof AdminCoursesCourseIdRoute
@@ -284,7 +328,9 @@ export interface FileRoutesByFullPath {
   '/admin/events/new': typeof AdminEventsNewRoute
   '/admin/works/$workId': typeof AdminWorksWorkIdRoute
   '/admin/works/new': typeof AdminWorksNewRoute
+  '/blog/': typeof PublicBlogIndexRoute
   '/events/': typeof PublicEventsIndexRoute
+  '/news/': typeof PublicNewsIndexRoute
   '/research/': typeof PublicResearchIndexRoute
   '/teaching/': typeof PublicTeachingIndexRoute
   '/admin/academic-statuses/': typeof AdminAcademicStatusesIndexRoute
@@ -306,6 +352,9 @@ export interface FileRoutesByFullPath {
   '/admin/venues/': typeof AdminVenuesIndexRoute
   '/admin/work-types/': typeof AdminWorkTypesIndexRoute
   '/admin/works/': typeof AdminWorksIndexRoute
+  '/admin/posts/$kind/$postId': typeof AdminPostsKindPostIdRoute
+  '/admin/posts/$kind/new': typeof AdminPostsKindNewRoute
+  '/admin/posts/$kind/': typeof AdminPostsKindIndexRoute
 }
 export interface FileRoutesByTo {
   '/sign-in': typeof authSignInRoute
@@ -316,7 +365,9 @@ export interface FileRoutesByTo {
   '/503': typeof errors503Route
   '/': typeof PublicIndexRoute
   '/admin': typeof AdminIndexRoute
+  '/blog/$slug': typeof PublicBlogSlugRoute
   '/events/$slug': typeof PublicEventsSlugRoute
+  '/news/$slug': typeof PublicNewsSlugRoute
   '/research/$slug': typeof PublicResearchSlugRoute
   '/teaching/$slug': typeof PublicTeachingSlugRoute
   '/admin/courses/$courseId': typeof AdminCoursesCourseIdRoute
@@ -326,7 +377,9 @@ export interface FileRoutesByTo {
   '/admin/events/new': typeof AdminEventsNewRoute
   '/admin/works/$workId': typeof AdminWorksWorkIdRoute
   '/admin/works/new': typeof AdminWorksNewRoute
+  '/blog': typeof PublicBlogIndexRoute
   '/events': typeof PublicEventsIndexRoute
+  '/news': typeof PublicNewsIndexRoute
   '/research': typeof PublicResearchIndexRoute
   '/teaching': typeof PublicTeachingIndexRoute
   '/admin/academic-statuses': typeof AdminAcademicStatusesIndexRoute
@@ -348,6 +401,9 @@ export interface FileRoutesByTo {
   '/admin/venues': typeof AdminVenuesIndexRoute
   '/admin/work-types': typeof AdminWorkTypesIndexRoute
   '/admin/works': typeof AdminWorksIndexRoute
+  '/admin/posts/$kind/$postId': typeof AdminPostsKindPostIdRoute
+  '/admin/posts/$kind/new': typeof AdminPostsKindNewRoute
+  '/admin/posts/$kind': typeof AdminPostsKindIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -361,7 +417,9 @@ export interface FileRoutesById {
   '/(errors)/503': typeof errors503Route
   '/_public/': typeof PublicIndexRoute
   '/admin/': typeof AdminIndexRoute
+  '/_public/blog/$slug': typeof PublicBlogSlugRoute
   '/_public/events/$slug': typeof PublicEventsSlugRoute
+  '/_public/news/$slug': typeof PublicNewsSlugRoute
   '/_public/research/$slug': typeof PublicResearchSlugRoute
   '/_public/teaching/$slug': typeof PublicTeachingSlugRoute
   '/admin/courses/$courseId': typeof AdminCoursesCourseIdRoute
@@ -371,7 +429,9 @@ export interface FileRoutesById {
   '/admin/events/new': typeof AdminEventsNewRoute
   '/admin/works/$workId': typeof AdminWorksWorkIdRoute
   '/admin/works/new': typeof AdminWorksNewRoute
+  '/_public/blog/': typeof PublicBlogIndexRoute
   '/_public/events/': typeof PublicEventsIndexRoute
+  '/_public/news/': typeof PublicNewsIndexRoute
   '/_public/research/': typeof PublicResearchIndexRoute
   '/_public/teaching/': typeof PublicTeachingIndexRoute
   '/admin/academic-statuses/': typeof AdminAcademicStatusesIndexRoute
@@ -393,6 +453,9 @@ export interface FileRoutesById {
   '/admin/venues/': typeof AdminVenuesIndexRoute
   '/admin/work-types/': typeof AdminWorkTypesIndexRoute
   '/admin/works/': typeof AdminWorksIndexRoute
+  '/admin/posts/$kind/$postId': typeof AdminPostsKindPostIdRoute
+  '/admin/posts/$kind/new': typeof AdminPostsKindNewRoute
+  '/admin/posts/$kind/': typeof AdminPostsKindIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -406,7 +469,9 @@ export interface FileRouteTypes {
     | '/500'
     | '/503'
     | '/admin/'
+    | '/blog/$slug'
     | '/events/$slug'
+    | '/news/$slug'
     | '/research/$slug'
     | '/teaching/$slug'
     | '/admin/courses/$courseId'
@@ -416,7 +481,9 @@ export interface FileRouteTypes {
     | '/admin/events/new'
     | '/admin/works/$workId'
     | '/admin/works/new'
+    | '/blog/'
     | '/events/'
+    | '/news/'
     | '/research/'
     | '/teaching/'
     | '/admin/academic-statuses/'
@@ -438,6 +505,9 @@ export interface FileRouteTypes {
     | '/admin/venues/'
     | '/admin/work-types/'
     | '/admin/works/'
+    | '/admin/posts/$kind/$postId'
+    | '/admin/posts/$kind/new'
+    | '/admin/posts/$kind/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/sign-in'
@@ -448,7 +518,9 @@ export interface FileRouteTypes {
     | '/503'
     | '/'
     | '/admin'
+    | '/blog/$slug'
     | '/events/$slug'
+    | '/news/$slug'
     | '/research/$slug'
     | '/teaching/$slug'
     | '/admin/courses/$courseId'
@@ -458,7 +530,9 @@ export interface FileRouteTypes {
     | '/admin/events/new'
     | '/admin/works/$workId'
     | '/admin/works/new'
+    | '/blog'
     | '/events'
+    | '/news'
     | '/research'
     | '/teaching'
     | '/admin/academic-statuses'
@@ -480,6 +554,9 @@ export interface FileRouteTypes {
     | '/admin/venues'
     | '/admin/work-types'
     | '/admin/works'
+    | '/admin/posts/$kind/$postId'
+    | '/admin/posts/$kind/new'
+    | '/admin/posts/$kind'
   id:
     | '__root__'
     | '/_public'
@@ -492,7 +569,9 @@ export interface FileRouteTypes {
     | '/(errors)/503'
     | '/_public/'
     | '/admin/'
+    | '/_public/blog/$slug'
     | '/_public/events/$slug'
+    | '/_public/news/$slug'
     | '/_public/research/$slug'
     | '/_public/teaching/$slug'
     | '/admin/courses/$courseId'
@@ -502,7 +581,9 @@ export interface FileRouteTypes {
     | '/admin/events/new'
     | '/admin/works/$workId'
     | '/admin/works/new'
+    | '/_public/blog/'
     | '/_public/events/'
+    | '/_public/news/'
     | '/_public/research/'
     | '/_public/teaching/'
     | '/admin/academic-statuses/'
@@ -524,6 +605,9 @@ export interface FileRouteTypes {
     | '/admin/venues/'
     | '/admin/work-types/'
     | '/admin/works/'
+    | '/admin/posts/$kind/$postId'
+    | '/admin/posts/$kind/new'
+    | '/admin/posts/$kind/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -756,11 +840,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicResearchIndexRouteImport
       parentRoute: typeof PublicRouteRoute
     }
+    '/_public/news/': {
+      id: '/_public/news/'
+      path: '/news'
+      fullPath: '/news/'
+      preLoaderRoute: typeof PublicNewsIndexRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
     '/_public/events/': {
       id: '/_public/events/'
       path: '/events'
       fullPath: '/events/'
       preLoaderRoute: typeof PublicEventsIndexRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
+    '/_public/blog/': {
+      id: '/_public/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof PublicBlogIndexRouteImport
       parentRoute: typeof PublicRouteRoute
     }
     '/admin/works/new': {
@@ -826,6 +924,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicResearchSlugRouteImport
       parentRoute: typeof PublicRouteRoute
     }
+    '/_public/news/$slug': {
+      id: '/_public/news/$slug'
+      path: '/news/$slug'
+      fullPath: '/news/$slug'
+      preLoaderRoute: typeof PublicNewsSlugRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
     '/_public/events/$slug': {
       id: '/_public/events/$slug'
       path: '/events/$slug'
@@ -833,25 +938,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicEventsSlugRouteImport
       parentRoute: typeof PublicRouteRoute
     }
+    '/_public/blog/$slug': {
+      id: '/_public/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof PublicBlogSlugRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
+    '/admin/posts/$kind/': {
+      id: '/admin/posts/$kind/'
+      path: '/posts/$kind'
+      fullPath: '/admin/posts/$kind/'
+      preLoaderRoute: typeof AdminPostsKindIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/posts/$kind/new': {
+      id: '/admin/posts/$kind/new'
+      path: '/posts/$kind/new'
+      fullPath: '/admin/posts/$kind/new'
+      preLoaderRoute: typeof AdminPostsKindNewRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/posts/$kind/$postId': {
+      id: '/admin/posts/$kind/$postId'
+      path: '/posts/$kind/$postId'
+      fullPath: '/admin/posts/$kind/$postId'
+      preLoaderRoute: typeof AdminPostsKindPostIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
   }
 }
 
 interface PublicRouteRouteChildren {
   PublicIndexRoute: typeof PublicIndexRoute
+  PublicBlogSlugRoute: typeof PublicBlogSlugRoute
   PublicEventsSlugRoute: typeof PublicEventsSlugRoute
+  PublicNewsSlugRoute: typeof PublicNewsSlugRoute
   PublicResearchSlugRoute: typeof PublicResearchSlugRoute
   PublicTeachingSlugRoute: typeof PublicTeachingSlugRoute
+  PublicBlogIndexRoute: typeof PublicBlogIndexRoute
   PublicEventsIndexRoute: typeof PublicEventsIndexRoute
+  PublicNewsIndexRoute: typeof PublicNewsIndexRoute
   PublicResearchIndexRoute: typeof PublicResearchIndexRoute
   PublicTeachingIndexRoute: typeof PublicTeachingIndexRoute
 }
 
 const PublicRouteRouteChildren: PublicRouteRouteChildren = {
   PublicIndexRoute: PublicIndexRoute,
+  PublicBlogSlugRoute: PublicBlogSlugRoute,
   PublicEventsSlugRoute: PublicEventsSlugRoute,
+  PublicNewsSlugRoute: PublicNewsSlugRoute,
   PublicResearchSlugRoute: PublicResearchSlugRoute,
   PublicTeachingSlugRoute: PublicTeachingSlugRoute,
+  PublicBlogIndexRoute: PublicBlogIndexRoute,
   PublicEventsIndexRoute: PublicEventsIndexRoute,
+  PublicNewsIndexRoute: PublicNewsIndexRoute,
   PublicResearchIndexRoute: PublicResearchIndexRoute,
   PublicTeachingIndexRoute: PublicTeachingIndexRoute,
 }
@@ -888,6 +1029,9 @@ interface AdminRouteRouteChildren {
   AdminVenuesIndexRoute: typeof AdminVenuesIndexRoute
   AdminWorkTypesIndexRoute: typeof AdminWorkTypesIndexRoute
   AdminWorksIndexRoute: typeof AdminWorksIndexRoute
+  AdminPostsKindPostIdRoute: typeof AdminPostsKindPostIdRoute
+  AdminPostsKindNewRoute: typeof AdminPostsKindNewRoute
+  AdminPostsKindIndexRoute: typeof AdminPostsKindIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
@@ -918,6 +1062,9 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminVenuesIndexRoute: AdminVenuesIndexRoute,
   AdminWorkTypesIndexRoute: AdminWorkTypesIndexRoute,
   AdminWorksIndexRoute: AdminWorksIndexRoute,
+  AdminPostsKindPostIdRoute: AdminPostsKindPostIdRoute,
+  AdminPostsKindNewRoute: AdminPostsKindNewRoute,
+  AdminPostsKindIndexRoute: AdminPostsKindIndexRoute,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(

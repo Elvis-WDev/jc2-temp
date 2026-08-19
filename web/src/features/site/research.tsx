@@ -1,19 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
-import { X } from 'lucide-react'
 import { queryKeys } from '@/lib/api/query-keys'
 import { cn } from '@/lib/utils'
 import {
   getPageContent,
   getSite,
   listResearch,
-  type ResearchFacets,
+  type PublicWorkSummary,
   type ResearchQuery,
 } from './api'
-import {
-  ResearchFilters,
-  type FiltrosResearch,
-} from './components/research-filters'
 import { RichText } from './components/rich-text'
 import { SectionBackground } from './components/section-background'
 import { SitePagination } from './components/site-pagination'
@@ -22,20 +17,59 @@ import { useSectionBackground } from './use-section-background'
 import { resumirHtml, titulo, useSiteMeta } from './use-site-meta'
 
 /**
- * Listado publico de trabajos.
+ * Listado publico de trabajos, agrupado por tipo.
  *
- * **Todo el estado vive en la direccion**: busqueda, tipo, estado, etiqueta, ano, orden
- * y pagina. Copiar el enlace reproduce exactamente lo que se esta viendo, el boton de
- * volver funciona y recargar no pierde nada. Es el mismo criterio que ya siguen las
- * tablas del panel.
+ * Se lee como un archivo, de arriba abajo: cada tipo abre su apartado y dentro van sus
+ * trabajos, del mas reciente al mas antiguo. No hay filtros ni selector de orden; el
+ * orden de los apartados es el que el titular da a los tipos en el panel.
  *
- * Los filtros se resuelven en el servidor (PERF-001) y los recuentos de cada opcion
- * son las facetas, calculadas sobre el mismo conjunto filtrado.
+ * **Sigue paginando en el servidor** (PERF-001). Los trabajos llegan ya ordenados por
+ * tipo, asi que agrupar es recorrerlos y abrir un apartado cada vez que cambia: si un
+ * tipo se parte entre dos paginas, repite su rotulo en la siguiente.
  */
 
-type Orden = 'newest' | 'oldest' | 'title' | 'relevance'
-
 const route = getRouteApi('/_public/research/')
+
+/**
+ * La columna del contenido.
+ *
+ * El margen va FUERA de la caja centrada, igual que en la cabecera de la pagina. Con el
+ * margen dentro, la caja se centra a su ancho maximo y el texto queda desplazado hacia la
+ * derecha por el ancho del canalon: el listado entero aparecia 24px mas a la derecha que
+ * el titulo de la pagina, y se notaba.
+ */
+function Columna({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div className='px-site-margin lg:px-site-gutter'>
+      <div className={cn('mx-auto max-w-site', className)}>{children}</div>
+    </div>
+  )
+}
+
+type Grupo = { codigo: string; titulo: string; works: PublicWorkSummary[] }
+
+function agruparPorTipo(items: PublicWorkSummary[]): Grupo[] {
+  const grupos: Grupo[] = []
+  for (const work of items) {
+    const ultimo = grupos[grupos.length - 1]
+    if (ultimo !== undefined && ultimo.codigo === work.type.code) {
+      ultimo.works.push(work)
+    } else {
+      grupos.push({
+        codigo: work.type.code,
+        titulo: work.type.pluralLabel,
+        works: [work],
+      })
+    }
+  }
+  return grupos
+}
 
 export function SiteResearch() {
   const busqueda = route.useSearch()
@@ -53,7 +87,9 @@ export function SiteResearch() {
     staleTime: 5 * 60_000,
   })
 
-  const consulta: ResearchQuery = busqueda
+  // Lo unico que viaja en la direccion es la pagina: sin filtros no hay mas estado que
+  // conservar al copiar el enlace.
+  const consulta: ResearchQuery = { sort: 'type', page: busqueda.page }
   const {
     data: resultado,
     isPending,
@@ -64,13 +100,6 @@ export function SiteResearch() {
     staleTime: 60_000,
   })
 
-  /** Un cambio de filtro o de orden devuelve siempre a la primera pagina. */
-  const cambiarFiltros = (
-    cambio: Partial<FiltrosResearch & { sort: Orden }>
-  ) => {
-    void navigate({ search: (previa) => ({ ...previa, ...cambio, page: 1 }) })
-  }
-
   useSiteMeta({
     title: titulo(page?.pageTitle ?? 'Research', site?.siteName),
     description: resumirHtml(page?.introHtml ?? null),
@@ -78,83 +107,26 @@ export function SiteResearch() {
     imageUrl: site?.meta.ogImageUrl ?? null,
   })
 
-  const filtrosActivos = describirFiltros(busqueda, resultado?.facets)
-  const filtrarVisible = site?.sections['research.filters'] !== false
+  const grupos = agruparPorTipo(resultado?.items ?? [])
+  const sinNada = resultado !== undefined && resultado.items.length === 0
+  const hayAviso = isPending || isError || sinNada
 
   return (
     <>
-      <Cabecera
-        page={page ?? null}
-        total={resultado?.pagination.totalItems ?? null}
-      />
+      <Cabecera page={page ?? null} />
 
-      <section className='w-full px-site-margin py-site-section lg:px-site-gutter'>
-        <div className='mx-auto grid max-w-site grid-cols-1 gap-site-gutter lg:grid-cols-12'>
-          {filtrarVisible && resultado !== undefined && (
-            <ResearchFilters
-              facets={resultado.facets}
-              filtros={busqueda}
-              onChange={cambiarFiltros}
-            />
-          )}
-
-          <main
-            className={
-              filtrarVisible
-                ? 'flex flex-col gap-8 lg:col-span-9'
-                : 'lg:col-span-12'
-            }
-          >
-            <div className='flex flex-wrap items-center justify-between gap-4 border-b border-site-outline-variant pb-4'>
-              <div className='flex flex-wrap items-center gap-2'>
-                <span className='text-site-meta text-site-on-surface-variant'>
-                  {resultado === undefined
-                    ? 'Loading...'
-                    : `${resultado.pagination.totalItems} ${
-                        resultado.pagination.totalItems === 1
-                          ? 'result'
-                          : 'results'
-                      }`}
-                </span>
-                {filtrosActivos.map((filtro) => (
-                  <button
-                    key={filtro.clave}
-                    type='button'
-                    onClick={() => {
-                      cambiarFiltros(filtro.quitar)
-                    }}
-                    className='inline-flex items-center gap-1 rounded-site bg-site-surface-container px-2 py-1 text-[10px] tracking-wider text-site-on-surface uppercase hover:text-site-error'
-                  >
-                    {filtro.etiqueta}
-                    <X aria-hidden className='size-3' />
-                    <span className='sr-only'>Remove filter</span>
-                  </button>
-                ))}
-              </div>
-
-              <div className='flex items-center gap-4'>
-                <OrdenarPor
-                  valor={busqueda.sort}
-                  onChange={(sort) => {
-                    cambiarFiltros({ sort })
-                  }}
-                />
-                {filtrosActivos.length > 0 && (
-                  <button
-                    type='button'
-                    onClick={() => {
-                      void navigate({
-                        search: { sort: busqueda.sort, page: 1 },
-                      })
-                    }}
-                    className='text-site-meta text-site-on-surface-variant underline decoration-dotted transition-colors hover:text-site-primary'
-                  >
-                    Clear all
-                  </button>
-                )}
-              </div>
-            </div>
-
+      {/* El margen lateral NO va en la seccion: cada rotulo es una banda de color a
+          todo el ancho de la pagina, y con el margen aqui no podria llegar a los
+          bordes. Lo llevan dentro los bloques que si deben alinearse con el resto. */}
+      {/* Sin relleno arriba: la primera banda arranca pegada a la cabecera. Con el
+          relleno de seccion aqui quedaba una franja blanca de 80px entre las dos, que
+          se leia como un hueco y no como aire. Abajo si se conserva, para que el
+          listado no acabe pegado al pie. */}
+      <section className='w-full pb-site-section'>
+        {hayAviso && (
+          // El aviso si necesita aire: pegado a la cabecera se leeria como parte de
+          // ella. Va aqui y no en la seccion para que no lo herede el listado.
+          <Columna className='flex flex-col gap-6 pt-site-section'>
             {isPending && (
               <p className='text-site-on-surface-variant'>Loading...</p>
             )}
@@ -165,51 +137,61 @@ export function SiteResearch() {
               </p>
             )}
 
-            {resultado !== undefined && resultado.items.length === 0 && (
-              // ERS §55: el vacio se explica y se ofrece la salida.
-              <div className='flex flex-col items-start gap-4 py-12'>
-                <p className='font-site-display text-site-headline-sm text-site-primary'>
-                  No work matches the filters you chose.
-                </p>
-                {filtrosActivos.length > 0 && (
-                  <button
-                    type='button'
-                    onClick={() => {
-                      void navigate({
-                        search: { sort: busqueda.sort, page: 1 },
-                      })
-                    }}
-                    className='text-site-label text-site-primary uppercase underline underline-offset-4'
-                  >
-                    Clear the filters
-                  </button>
-                )}
-              </div>
+            {sinNada && (
+              // ERS §55: un listado vacio se explica, no se deja en blanco.
+              <p className='font-site-display text-site-headline-sm text-site-primary'>
+                No work published yet.
+              </p>
             )}
+          </Columna>
+        )}
 
-            {resultado !== undefined && resultado.items.length > 0 && (
-              <>
-                <div className='flex flex-col gap-6'>
-                  {resultado.items.map((work) => (
-                    <WorkCard
-                      key={work.id}
-                      work={work}
-                      ownerName={site?.owner.fullName ?? null}
-                    />
-                  ))}
-                </div>
+        {grupos.map((grupo, indice) => (
+          <div
+            // Un mismo tipo puede abrir dos apartados si viene partido de la pagina
+            // anterior, asi que el codigo por si solo no distingue.
+            key={`${grupo.codigo}-${String(indice)}`}
+            className='mb-16 last:mb-0'
+          >
+            {/* El mismo tono que la cabecera y el pie (`primary-container`), no el
+                `primary` de los titulos: son las tres bandas de cromo del sitio y
+                tienen que leerse como el mismo material. */}
+            <div className='w-full bg-site-primary-container py-8 lg:py-10'>
+              {/* La banda llega a los bordes; el texto se queda en la misma columna que
+                  las fichas, para que no baile respecto a lo que hay debajo. */}
+              <Columna>
+                {/* Misma letra que el titulo de la pagina —Playfair, 700— pero un
+                    escalon por debajo: 48px en los dos hacia que el rotulo de la
+                    seccion compitiera con el titulo de la pagina. */}
+                <h2 className='font-site-display text-site-display-sm text-balance text-site-on-primary'>
+                  {grupo.titulo}
+                </h2>
+              </Columna>
+            </div>
 
-                <SitePagination
-                  pagination={resultado.pagination}
-                  onPage={(page) => {
-                    void navigate({ search: (previa) => ({ ...previa, page }) })
-                    window.scrollTo({ top: 0, behavior: 'smooth' })
-                  }}
+            <Columna className='flex flex-col gap-6 pt-10'>
+              {grupo.works.map((work) => (
+                <WorkCard
+                  key={work.id}
+                  work={work}
+                  ownerName={site?.owner.fullName ?? null}
                 />
-              </>
-            )}
-          </main>
-        </div>
+              ))}
+            </Columna>
+          </div>
+        ))}
+
+        {resultado !== undefined && resultado.items.length > 0 && (
+          <Columna className='pt-16'>
+            <SitePagination
+              pagination={resultado.pagination}
+              onPage={(pagina) => {
+                void navigate({ search: () => ({ page: pagina }) })
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }}
+            />
+          </Columna>
+        )}
       </section>
     </>
   )
@@ -217,14 +199,14 @@ export function SiteResearch() {
 
 function Cabecera({
   page,
-  total,
 }: {
   page: {
     pageTitle: string | null
     eyebrow: string | null
     introHtml: string | null
+    heroUrl: string | null
+    heroAlt: string | null
   } | null
-  total: number | null
 }) {
   // Sobre una foto oscurecida el texto oscuro no se lee: la cabecera entera se invierte.
   const sobreImagen = useSectionBackground('research.header') !== null
@@ -272,139 +254,20 @@ function Cabecera({
             />
           </div>
 
-          {total !== null && (
-            <div className='flex justify-start md:col-span-4 md:justify-end'>
-              <div className='flex flex-col items-start gap-2 md:items-end'>
-                <span
-                  className={cn(
-                    'text-site-meta tracking-widest uppercase',
-                    sobreImagen
-                      ? 'text-site-on-primary/70'
-                      : 'text-site-on-surface-variant'
-                  )}
-                >
-                  Archive
-                </span>
-                <span
-                  className={cn(
-                    'text-site-label',
-                    sobreImagen
-                      ? 'text-site-on-primary'
-                      : 'text-site-on-surface'
-                  )}
-                >
-                  {total} {total === 1 ? 'work' : 'works'}
-                </span>
-              </div>
+          {/* La ilustracion de la cabecera, elegida en Contenido de paginas. Sin
+              descripcion escrita va como decorativa: un `alt` inventado le cuenta a un
+              lector de pantalla algo que nadie ha comprobado. */}
+          {page?.heroUrl != null && (
+            <div className='flex md:col-span-4 md:justify-end'>
+              <img
+                src={page.heroUrl}
+                alt={page.heroAlt ?? ''}
+                className='w-full rounded-site shadow-xl md:max-w-[420px]'
+              />
             </div>
           )}
         </div>
       </section>
     </>
   )
-}
-
-const ORDENES = [
-  { valor: 'newest', etiqueta: 'Newest first' },
-  { valor: 'oldest', etiqueta: 'Oldest first' },
-  { valor: 'title', etiqueta: 'Title' },
-  { valor: 'relevance', etiqueta: 'Relevance' },
-] as const
-
-function OrdenarPor({
-  valor,
-  onChange,
-}: {
-  valor: Orden
-  onChange: (valor: Orden) => void
-}) {
-  return (
-    <label className='flex items-center gap-2 text-site-meta text-site-on-surface-variant'>
-      <span className='sr-only sm:not-sr-only'>Sort</span>
-      <select
-        aria-label='Sort results'
-        value={valor}
-        onChange={(evento) => {
-          onChange(evento.target.value as Orden)
-        }}
-        className='cursor-pointer rounded-site border border-site-outline-variant bg-site-surface px-2 py-1 text-site-on-surface focus-visible:border-site-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-site-primary'
-      >
-        {ORDENES.map((orden) => (
-          <option key={orden.valor} value={orden.valor}>
-            {orden.etiqueta}
-          </option>
-        ))}
-      </select>
-    </label>
-  )
-}
-
-/**
- * Los filtros puestos, con su nombre legible y como quitarlos.
- *
- * Las etiquetas salen de las facetas para que digan lo mismo que la barra lateral: un
- * codigo como `working_paper` no le dice nada a quien lee.
- */
-function describirFiltros(
-  busqueda: FiltrosResearch,
-  facets: ResearchFacets | undefined
-): Array<{
-  clave: string
-  etiqueta: string
-  quitar: Partial<FiltrosResearch>
-}> {
-  const activos: Array<{
-    clave: string
-    etiqueta: string
-    quitar: Partial<FiltrosResearch>
-  }> = []
-
-  if (busqueda.q !== undefined && busqueda.q !== '') {
-    activos.push({
-      clave: 'q',
-      etiqueta: `"${busqueda.q}"`,
-      quitar: { q: undefined },
-    })
-  }
-  if (busqueda.type !== undefined) {
-    const tipo = facets?.types.find((opcion) => opcion.code === busqueda.type)
-    activos.push({
-      clave: 'type',
-      etiqueta: tipo?.label ?? busqueda.type,
-      quitar: { type: undefined },
-    })
-  }
-  if (busqueda.status !== undefined) {
-    const estado = facets?.statuses.find(
-      (opcion) => opcion.value === busqueda.status
-    )
-    activos.push({
-      clave: 'status',
-      etiqueta: estado?.label ?? busqueda.status,
-      quitar: { status: undefined },
-    })
-  }
-  if (busqueda.tag !== undefined) {
-    const tag = facets?.tags.find((opcion) => opcion.slug === busqueda.tag)
-    activos.push({
-      clave: 'tag',
-      etiqueta: tag?.name ?? busqueda.tag,
-      quitar: { tag: undefined },
-    })
-  }
-  if (busqueda.year_from !== undefined || busqueda.year_to !== undefined) {
-    activos.push({
-      clave: 'anio',
-      etiqueta:
-        busqueda.year_from !== undefined &&
-        busqueda.year_from === busqueda.year_to
-          ? String(busqueda.year_from)
-          : busqueda.year_to !== undefined
-            ? `up to ${busqueda.year_to}`
-            : `from ${String(busqueda.year_from)}`,
-      quitar: { year_from: undefined, year_to: undefined },
-    })
-  }
-
-  return activos
 }

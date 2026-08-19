@@ -1,5 +1,7 @@
 import {
   BookMarked,
+  Newspaper,
+  PenLine,
   Building2,
   CalendarDays,
   CircleDot,
@@ -81,6 +83,15 @@ export const sidebarData: SidebarData = {
     {
       title: 'Events',
       items: [{ title: 'Events', url: '/admin/events', icon: CalendarDays }],
+    },
+    {
+      // Dos entradas y una sola pantalla: para el titular son dos cosas distintas, y en
+      // el codigo son la misma tabla con el filtro puesto.
+      title: 'News & blog',
+      items: [
+        { title: 'News', url: '/admin/posts/news', icon: Newspaper },
+        { title: 'Blog', url: '/admin/posts/blog', icon: PenLine },
+      ],
     },
     {
       title: 'Website',

@@ -138,7 +138,15 @@ function absoluta(url: string | null): string | null {
   return url.startsWith('http') ? url : `${window.location.origin}${url}`
 }
 
-/** El texto plano de un HTML ya saneado, recortado, para una meta descripcion. */
+/**
+ * El texto plano de un HTML ya saneado, recortado.
+ *
+ * Lo usan la meta descripcion y el resumen que se despliega en una ficha. El corte busca
+ * el ultimo espacio antes del limite: partir una palabra por la mitad se lee como un
+ * error de la pagina, no como un recorte. Si no hay ningun espacio —una palabra
+ * larguisima, o un texto sin espacios— se corta en seco, que es mejor que devolver algo
+ * mas largo de lo pedido.
+ */
 export function resumirHtml(html: string | null, limite = 200): string | null {
   if (html === null) return null
 
@@ -147,9 +155,13 @@ export function resumirHtml(html: string | null, limite = 200): string | null {
   const texto = (contenedor.textContent ?? '').replace(/\s+/g, ' ').trim()
 
   if (texto === '') return null
-  return texto.length <= limite
-    ? texto
-    : `${texto.slice(0, limite - 1).trimEnd()}…`
+  if (texto.length <= limite) return texto
+
+  const cortado = texto.slice(0, limite - 1)
+  const ultimoEspacio = cortado.lastIndexOf(' ')
+  const base = ultimoEspacio > 0 ? cortado.slice(0, ultimoEspacio) : cortado
+
+  return `${base.trimEnd()}…`
 }
 
 /** "Investigacion · Juan Castro". Sin nombre del sitio todavia, solo la seccion. */

@@ -1,30 +1,36 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { SiteContentUseCases } from '../site/SiteContentUseCases.js'
-import type { PublicResearchUseCases } from '../research/PublicResearchUseCases.js'
-import type { PublicTeachingUseCases } from '../teaching/PublicTeachingUseCases.js'
-import type { PublicEventUseCases } from '../events/EventUseCases.js'
+import type { PostUseCases } from '../posts/PostUseCases.js'
 import type { GetPublicProfile, PublicProfile } from './GetPublicProfile.js'
 import { GetHomePage } from './GetHomePage.js'
 
 /**
  * La portada leia sus textos con `getPage`, que es la version del panel y devuelve la
  * pagina este publicada o no. Resultado: ocultar la portada no ocultaba nada.
+ *
+ * Desde que la portada habla de la persona y no de su produccion, aqui ya no se prueban
+ * destacados, carrusel ni eventos: no viajan.
  */
 
-const PERFIL = { person: { fullName: 'Quien sea' }, primaryAffiliation: null, links: [] }
+const PERFIL = {
+  person: { fullName: 'Quien sea' },
+  primaryAffiliation: null,
+  affiliations: [],
+  links: [],
+}
 
 const AJUSTES = { siteName: 'Sitio', footerText: 'Pie' }
 
 /** Todas encendidas, salvo lo que cada prueba diga. */
 const TODAS_VISIBLES = {
-  pages: { home: true },
+  pages: { home: true, news: true, blog: true },
   sections: {
     'home.hero': true,
-    'home.carousel': true,
+    'home.about': true,
     'home.research_areas': true,
-    'home.featured_works': true,
-    'home.featured_courses': true,
-    'home.events': true,
+    'home.appointments': true,
+    'home.latest_news': true,
+    'home.latest_blog': true,
   },
 }
 
@@ -43,9 +49,13 @@ const PAGINA = {
 function portada(
   paginaVisible: boolean,
   secciones = TODAS_VISIBLES,
-  eventos = {
-    list: () => Promise.resolve({ items: [{ id: 'e-1' }], typeLabels: {} }),
-  } as unknown as PublicEventUseCases,
+  entradas = {
+    listPublished: (_p: unknown, filtros: { kind: string | null }) =>
+      Promise.resolve({
+        items: [{ id: `post-${filtros.kind ?? 'x'}` }],
+        kindLabels: { news: 'News', personal: 'Blog' },
+      }),
+  } as unknown as PostUseCases,
 ) {
   // La referencia se guarda aparte: leerla desde el objeto haria que la comprobacion
   // pasara por un metodo desligado de su dueno.
@@ -61,12 +71,7 @@ function portada(
     caso: new GetHomePage(
       { execute: () => Promise.resolve(PERFIL as unknown as PublicProfile) } as GetPublicProfile,
       siteContent,
-      {
-        listFeatured: () => Promise.resolve([{ id: 'w-1' }]),
-        listCarousel: () => Promise.resolve([{ id: 'w-2' }]),
-      } as unknown as PublicResearchUseCases,
-      { listFeatured: () => Promise.resolve([{ id: 'c-1' }]) } as unknown as PublicTeachingUseCases,
-      eventos,
+      entradas,
     ),
   }
 }
@@ -87,13 +92,12 @@ describe('portada publica', () => {
   })
 
   it('pero ocultar los textos no vacia la portada entera', async () => {
-    // Lo que se oculta es lo que el titular escribio, no su perfil ni sus destacados.
+    // Lo que se oculta es lo que el titular escribio, no su perfil ni su trayectoria.
     const { caso } = portada(false)
     const home = await caso.execute()
 
     expect(home.profile.person.fullName).toBe('Quien sea')
-    expect(home.featuredWorks).toHaveLength(1)
-    expect(home.featuredCourses).toHaveLength(1)
+    expect(home.latestPosts.news).toHaveLength(1)
   })
 
   it('lee la pagina con la version publica, nunca con la del panel', async () => {
@@ -108,80 +112,56 @@ describe('portada publica', () => {
     const { caso } = portada(true)
     const home = await caso.execute()
 
-    expect(home.sections).toMatchObject({ hero: true, featured_works: true })
+    expect(home.sections).toMatchObject({ hero: true, about: true, appointments: true })
   })
 
   it('una seccion apagada no se consulta siquiera', async () => {
     // No es solo que no se pinte: no se va a la base de datos a por ella.
     const { caso } = portada(true, {
-      pages: { home: true },
-      sections: { ...TODAS_VISIBLES.sections, 'home.featured_works': false },
+      pages: TODAS_VISIBLES.pages,
+      sections: {
+        ...TODAS_VISIBLES.sections,
+        'home.latest_news': false,
+        'home.latest_blog': false,
+      },
     })
     const home = await caso.execute()
 
-    expect(home.featuredWorks).toEqual([])
-    expect(home.sections.featured_works).toBe(false)
+    expect(home.latestPosts).toEqual({ news: [], blog: [] })
+    expect(home.sections.latest_news).toBe(false)
   })
+})
 
-  it('el carrusel es una seleccion aparte de los destacados', async () => {
+describe('lo ultimo de noticias y blog', () => {
+  it('trae los dos grupos por separado', async () => {
+    // Separados y no mezclados: son dos cosas distintas y cada grupo lleva a su pagina.
     const { caso } = portada(true)
     const home = await caso.execute()
 
-    expect(home.carouselWorks.map((w) => w.id)).toEqual(['w-2'])
-    expect(home.featuredWorks.map((w) => w.id)).toEqual(['w-1'])
+    expect(home.latestPosts.news.map((p) => p.id)).toEqual(['post-news'])
+    expect(home.latestPosts.blog.map((p) => p.id)).toEqual(['post-personal'])
   })
 
-  it('con el carrusel apagado, ni se consulta', async () => {
+  it('cada banda tiene su interruptor: apagar News no apaga Blog', async () => {
     const { caso } = portada(true, {
-      pages: { home: true },
-      sections: { ...TODAS_VISIBLES.sections, 'home.carousel': false },
+      pages: TODAS_VISIBLES.pages,
+      sections: { ...TODAS_VISIBLES.sections, 'home.latest_news': false },
     })
     const home = await caso.execute()
 
-    expect(home.carouselWorks).toEqual([])
+    expect(home.latestPosts.news).toEqual([])
+    expect(home.latestPosts.blog).toHaveLength(1)
   })
 
-  it('trae los eventos, sin interruptor propio', async () => {
-    // La seccion se ensena si hay algo que ensenar: lo que el titular controla es
-    // publicar o retirar un evento, no un interruptor mas.
-    const { caso } = portada(true)
+  it('apagar la pagina de News la retira tambien de la portada', async () => {
+    // Enlazar desde aqui a una seccion que el menu no ensena llevaria a un 404.
+    const { caso } = portada(true, {
+      pages: { home: true, news: false, blog: true },
+      sections: TODAS_VISIBLES.sections,
+    })
     const home = await caso.execute()
 
-    expect(home.events).toHaveLength(1)
-  })
-
-  it('sin nada por venir, cae en los ultimos celebrados', async () => {
-    // Fuera de temporada una seccion en blanco no dice nada, y la historia si.
-    const pedidos: Array<boolean | null> = []
-    const eventos = {
-      list: (_pagina: unknown, filtros: { upcoming: boolean | null }) => {
-        pedidos.push(filtros.upcoming)
-        return Promise.resolve({
-          items: filtros.upcoming === true ? [] : [{ id: 'e-viejo' }],
-          typeLabels: {},
-        })
-      },
-    } as unknown as PublicEventUseCases
-
-    const { caso } = portada(true, TODAS_VISIBLES, eventos)
-    const home = await caso.execute()
-
-    expect(pedidos).toEqual([true, false])
-    expect(home.events).toHaveLength(1)
-  })
-
-  it('con proximos, no pregunta por los viejos', async () => {
-    const pedidos: Array<boolean | null> = []
-    const eventos = {
-      list: (_pagina: unknown, filtros: { upcoming: boolean | null }) => {
-        pedidos.push(filtros.upcoming)
-        return Promise.resolve({ items: [{ id: 'e-proximo' }], typeLabels: {} })
-      },
-    } as unknown as PublicEventUseCases
-
-    const { caso } = portada(true, TODAS_VISIBLES, eventos)
-    await caso.execute()
-
-    expect(pedidos).toEqual([true])
+    expect(home.latestPosts.news).toEqual([])
+    expect(home.latestPosts.blog).toHaveLength(1)
   })
 })

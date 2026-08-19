@@ -24,17 +24,31 @@ const REPOSITORIO = readFileSync(
   'utf8',
 )
 
-/** Los modelos que apuntan a `MediaAsset`, leidos de sus relaciones inversas. */
-function modelosConArchivo(): string[] {
-  const bloque = /model MediaAsset \{([\s\S]*?)\n\}/.exec(ESQUEMA)?.[1]
-  if (bloque === undefined) throw new Error('No se encontro el modelo MediaAsset')
-
-  const modelos = new Set<string>()
-  for (const linea of bloque.split('\n')) {
-    const modelo = /^\s+\w+\s+(\w+)\[\]/.exec(linea)?.[1]
-    if (modelo !== undefined) modelos.add(modelo)
+/**
+ * Cada columna que apunta a `MediaAsset`, como `SiteSettings.footerMediaId`.
+ *
+ * Por columna y no por modelo: mirando solo el modelo, anadir un archivo a uno que ya
+ * tenia otro se colaba. Paso de verdad con la imagen del pie —`SiteSettings` ya estaba
+ * en la lista por el emblema y por la de OpenGraph— y la prueba no dijo nada.
+ */
+function camposDeArchivo(): string[] {
+  const campos = new Set<string>()
+  for (const coincidencia of ESQUEMA.matchAll(/model (\w+) \{([\s\S]*?)\n\}/g)) {
+    const modelo = coincidencia[1] ?? ''
+    if (modelo === 'MediaAsset') continue
+    for (const linea of (coincidencia[2] ?? '').split('\n')) {
+      // `photoMediaId String? @map("photo_media_id") @db.Uuid`, y tambien los
+      // obligatorios como `WorkFile.mediaId`, que no llevan interrogacion.
+      const campo = /^\s+(\w*[Mm]ediaId)\s+String\??\s/.exec(linea)?.[1]
+      if (campo !== undefined) campos.add(`${modelo}.${campo}`)
+    }
   }
-  return [...modelos].sort()
+  return [...campos].sort()
+}
+
+/** Los modelos que apuntan a `MediaAsset`, deducidos de sus columnas. */
+function modelosConArchivo(): string[] {
+  return [...new Set(camposDeArchivo().map(modeloDe))].sort()
 }
 
 /** El cuerpo de una funcion del repositorio, para mirar que consulta. */
@@ -43,6 +57,16 @@ function cuerpo(nombre: string): string {
   const encontrado = patron.exec(REPOSITORIO)?.[0]
   if (encontrado === undefined) throw new Error(`No se encontro ${nombre}`)
   return encontrado
+}
+
+/** `SiteSettings.footerMediaId` -> `SiteSettings`. */
+function modeloDe(campo: string): string {
+  return campo.slice(0, campo.indexOf('.'))
+}
+
+/** `SiteSettings.footerMediaId` -> `footerMediaId`. */
+function columna(campo: string): string {
+  return campo.slice(campo.indexOf('.') + 1)
 }
 
 /** `Person` -> `prisma.person.count`. */
@@ -74,6 +98,8 @@ describe('referencias a archivos', () => {
       'PageSection',
       'Person',
       'PersonLink',
+      'Post',
+      'PostFile',
       'SiteSettings',
       'Work',
       'WorkFile',
@@ -92,6 +118,24 @@ describe('referencias a archivos', () => {
     const faltan = modelosConArchivo()
       .filter((m) => !(m in NO_SE_SIRVEN_EN_PUBLICO))
       .filter((m) => !texto.includes(consulta(m)))
+
+    expect(faltan).toEqual([])
+  })
+
+  it('countReferences nombra cada columna, no solo cada modelo', () => {
+    // Un modelo puede tener dos archivos —`SiteSettings` tiene tres— y mirar solo el
+    // modelo dejaba pasar el segundo.
+    const texto = cuerpo('countReferences')
+    const faltan = camposDeArchivo().filter((campo) => !texto.includes(columna(campo)))
+
+    expect(faltan).toEqual([])
+  })
+
+  it('isPubliclyReachable nombra cada columna que el sitio entrega', () => {
+    const texto = cuerpo('isPubliclyReachable')
+    const faltan = camposDeArchivo()
+      .filter((campo) => !(modeloDe(campo) in NO_SE_SIRVEN_EN_PUBLICO))
+      .filter((campo) => !texto.includes(columna(campo)))
 
     expect(faltan).toEqual([])
   })

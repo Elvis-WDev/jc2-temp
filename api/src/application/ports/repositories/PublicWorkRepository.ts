@@ -1,7 +1,7 @@
 import type { PaginationQuery } from '../../../shared/http/pagination.js'
 import type { WorkRecord } from './WorkRepository.js'
 
-export type ResearchSort = 'newest' | 'oldest' | 'title' | 'relevance'
+export type ResearchSort = 'newest' | 'oldest' | 'title' | 'relevance' | 'type'
 
 export interface PublicWorkFilters {
   q: string | null
@@ -21,6 +21,8 @@ export interface PublicWorkSummary {
   subtitle: string | null
   workTypeCode: string
   workTypeLabel: string
+  /** "Journal Articles": el rotulo del grupo cuando el listado se agrupa por tipo. */
+  workTypePluralLabel: string
   academicStatus: string
   /** Etiqueta legible: el filtro publico ya no traduce codigos por su cuenta. */
   academicStatusLabel: string
@@ -68,9 +70,4 @@ export interface PublicWorkRepository {
 
   /** Detalle completo. Devuelve null si no esta publicado. */
   findPublished(idOrSlug: string): Promise<WorkRecord | null>
-
-  listFeatured(limit: number): Promise<PublicWorkSummary[]>
-
-  /** Los elegidos para el carrusel de la portada, en su orden. */
-  listCarousel(limit: number): Promise<PublicWorkSummary[]>
 }

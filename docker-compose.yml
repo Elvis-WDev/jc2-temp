@@ -40,6 +40,12 @@ services:
       BETTER_AUTH_URL: ${PUBLIC_BASE_URL}
       CORS_ORIGIN: ${PUBLIC_BASE_URL}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+    # Una base en la MISMA maquina no se alcanza por `localhost`: dentro de un
+    # contenedor eso es el propio contenedor. Con esto, `host.docker.internal` en
+    # DATABASE_URL apunta al anfitrion sin tener que editar este fichero, que va
+    # versionado. Para una base remota no estorba: es una entrada mas en /etc/hosts.
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
 
   api:
     build:
@@ -84,6 +90,12 @@ services:
       - jc2-storage:/data/storage
     expose:
       - '4000'
+    # Una base en la MISMA maquina no se alcanza por `localhost`: dentro de un
+    # contenedor eso es el propio contenedor. Con esto, `host.docker.internal` en
+    # DATABASE_URL apunta al anfitrion sin tener que editar este fichero, que va
+    # versionado. Para una base remota no estorba: es una entrada mas en /etc/hosts.
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
 
   web:
     build:

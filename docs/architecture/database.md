@@ -20,6 +20,10 @@
 - Production migration credentials should be limited after initial provisioning.
 - Use PostgreSQL in production. Do not silently fall back to SQLite.
 - Avoid data loss on redeploy. Application containers must not own production database storage.
+- **Before generating a migration, read [migraciones.md](migraciones.md).** Parts of this
+  schema are hand-written SQL that Prisma does not know about, so it proposes dropping
+  them; those lines must be removed before applying. Doing otherwise has already cost the
+  RN-006 constraints once.
 
 ## Indexing
 

@@ -22,9 +22,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ConfigDrawer } from '@/components/config-drawer'
-import { ImagePicker } from '@/components/image-picker'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { ImagePicker } from '@/components/media-picker'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
@@ -91,6 +91,9 @@ function Campos({ ajustes }: { ajustes: SiteSettings }) {
   const [ogImageMediaId, setOgImageMediaId] = useState<string | null>(
     ajustes.ogImageMediaId
   )
+  const [footerMediaId, setFooterMediaId] = useState<string | null>(
+    ajustes.footerMediaId
+  )
   const [logoMediaId, setLogoMediaId] = useState<string | null>(
     ajustes.logoMediaId
   )
@@ -122,6 +125,7 @@ function Campos({ ajustes }: { ajustes: SiteSettings }) {
         footerText: vacioANull(values.footerText),
         ogImageMediaId,
         logoMediaId,
+        footerMediaId,
       }),
     invalidates: [queryKeys.siteSettings],
     success: 'Settings saved.',
@@ -239,6 +243,17 @@ function Campos({ ajustes }: { ajustes: SiteSettings }) {
                 it the site name is shown. It has to be marked as public.
               </p>
               <ImagePicker value={logoMediaId} onChange={setLogoMediaId} />
+            </div>
+
+            <div className='grid gap-2 sm:col-span-2'>
+              <Label>Footer image</Label>
+              <p className='text-sm text-muted-foreground'>
+                Opens the first column of your site footer. Separate from the
+                emblem on purpose: the header asks for a small mark and here
+                something else may fit, like your institution&apos;s crest. It
+                has to be marked as public.
+              </p>
+              <ImagePicker value={footerMediaId} onChange={setFooterMediaId} />
             </div>
           </CardContent>
         </Card>

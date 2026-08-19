@@ -29,6 +29,24 @@ export interface ValidationSchemas<P, Q, B> {
   body?: ZodType<B>
 }
 
+/**
+ * Las claves del cuerpo que el esquema no declaro.
+ *
+ * Zod las descarta en silencio, asi que sin esto un `PATCH` con un campo mal escrito
+ * —o con uno que se gestiona por otra ruta, como `isFeatured`— respondia 200 y no
+ * guardaba nada. Quien integre contra la API se queda creyendo que funciono.
+ *
+ * Solo el primer nivel: es donde ocurre el caso real. Las transformaciones que hay en
+ * los cuerpos son de campo (una fecha que pasa a `Date`), y esas no cambian las claves.
+ */
+function clavesNoDeclaradas(crudo: unknown, validado: unknown): string[] {
+  if (crudo === null || typeof crudo !== 'object' || Array.isArray(crudo)) return []
+  if (validado === null || typeof validado !== 'object' || Array.isArray(validado)) return []
+
+  const declaradas = validado as Record<string, unknown>
+  return Object.keys(crudo as Record<string, unknown>).filter((clave) => !(clave in declaradas))
+}
+
 export function zodIssuesToFields(error: ZodError): FieldErrors {
   const fields: FieldErrors = {}
   for (const issue of error.issues) {
@@ -49,6 +67,26 @@ export function validate<P = unknown, Q = unknown, B = unknown>(
         query: schemas.query ? schemas.query.parse(req.query) : req.query,
         body: schemas.body ? schemas.body.parse(req.body) : req.body,
       }
+      // La regla vive aqui y no en cada esquema: son 42 rutas con cuerpo, y una nueva
+      // heredaria el silencio con solo olvidarse de un `.strict()`. Las consultas se
+      // quedan fuera a proposito: una direccion puede traer parametros de terceros
+      // —campanas, rastreadores— y rechazarlos romperia enlaces que ya circulan.
+      if (schemas.body !== undefined) {
+        const sobrantes = clavesNoDeclaradas(req.body, validated.body)
+        if (sobrantes.length > 0) {
+          next(
+            new ValidationError(
+              'The request payload has fields this endpoint does not accept.',
+              Object.fromEntries(
+                sobrantes.map((clave) => [clave, 'This endpoint does not accept this field.']),
+              ),
+              'UNKNOWN_FIELDS',
+            ),
+          )
+          return
+        }
+      }
+
       req.validated = validated
       next()
     } catch (error) {

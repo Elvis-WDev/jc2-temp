@@ -5,8 +5,8 @@ import { ChevronDown, Database, FileText, Link2, Loader2 } from 'lucide-react'
 import { queryKeys } from '@/lib/api/query-keys'
 import { cn } from '@/lib/utils'
 import { getWork, type PublicWorkSummary } from '../api'
+import { resumirHtml } from '../use-site-meta'
 import { coautores, referencia } from '../work-format'
-import { RichText } from './rich-text'
 
 /**
  * Una publicacion en el listado.
@@ -15,6 +15,11 @@ import { RichText } from './rich-text'
  * engorda con textos que casi nadie abre (PERF-002) y, a cambio, quien lo abre recibe
  * ademas los enlaces a codigo y datos, la cita y el BibTeX, que tampoco caben en un
  * resumen de listado.
+ *
+ * Y al desplegarlo no se vuelca el abstract entero: un parrafo academico de dos mil
+ * caracteres dentro de una tarjeta empuja el resto del listado fuera de la pantalla y
+ * nadie lo lee ahi. Se ensena un extracto y, al lado, el enlace a la ficha, que es donde
+ * el texto completo se lee comodo.
  */
 export function WorkCard({
   work,
@@ -34,6 +39,9 @@ export function WorkCard({
     staleTime: 5 * 60_000,
   })
 
+  // Unas cinco lineas en la tarjeta: lo justo para saber de que va sin tener que bajar.
+  const extracto = resumirHtml(ficha?.abstractHtml ?? null, 420)
+
   // Todos los enlaces de la ficha menos el que ya esta arriba como DOI. No se
   // excluye ningun tipo por su codigo: los tipos los crea el titular.
   const enlacesExtra = (ficha?.links ?? []).filter(
@@ -48,19 +56,18 @@ export function WorkCard({
         className='absolute top-0 bottom-0 left-0 w-1 origin-top scale-y-0 bg-site-primary-container transition-transform duration-300 ease-out group-hover:scale-y-100'
       />
 
+      {/* El tipo no se repite en la ficha: el listado va agrupado y la banda de encima
+          ya lo dice. Decirlo otra vez en cada tarjeta es ruido entre el lector y el
+          titulo, que es lo que viene a leer. */}
       <div className='flex flex-wrap items-center gap-3'>
-        <span className='text-site-label tracking-widest text-site-on-surface-variant uppercase'>
-          {work.type.label}
-        </span>
         {work.year !== null && (
           <>
-            <Punto />
             <span className='text-site-meta text-site-on-surface-variant'>
               {work.year}
             </span>
+            <Punto />
           </>
         )}
-        <Punto />
         <span className='text-site-label tracking-widest text-site-on-tertiary-fixed-variant uppercase'>
           {work.academicStatusLabel}
         </span>
@@ -158,11 +165,11 @@ export function WorkCard({
         <div className='mt-3 w-full border border-site-outline-variant/30 bg-site-surface-container-lowest p-4 text-site-on-surface-variant'>
           {ficha === undefined ? (
             <p>Loading the abstract...</p>
-          ) : ficha.abstractHtml === null ? (
+          ) : extracto === null ? (
             // ERS §55: mejor decir que no hay que dejar un panel vacio.
             <p>This work has no published abstract.</p>
           ) : (
-            <RichText html={ficha.abstractHtml} />
+            <p className='leading-relaxed'>{extracto}</p>
           )}
         </div>
       )}

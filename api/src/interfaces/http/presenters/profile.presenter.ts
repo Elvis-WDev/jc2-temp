@@ -48,7 +48,27 @@ export interface PublicProfileDto {
     institution: string
     department: string | null
   } | null
+  /** La trayectoria, de lo vigente a lo mas antiguo. Ya viene ordenada del servidor. */
+  affiliations: PublicAffiliationDto[]
   links: Array<{ type: string; label: string | null; url: string; iconKey: string | null }>
+}
+
+/**
+ * Un cargo, tal como se lee en la portada.
+ *
+ * Sin identificadores y sin `sortOrder`: son de la edicion, no de la lectura. `isCurrent`
+ * si viaja, porque es lo que decide si se escribe «2019 — presente» o un rango cerrado, y
+ * eso no se puede deducir de una fecha de fin vacia: un cargo puede seguir vigente sin
+ * que nadie sepa cuando acabara.
+ */
+export interface PublicAffiliationDto {
+  title: string
+  institution: string
+  department: string | null
+  type: string | null
+  startDate: string | null
+  endDate: string | null
+  isCurrent: boolean
 }
 
 export function toPublicProfileDto(profile: PublicProfile, baseUrl: string): PublicProfileDto {
@@ -83,7 +103,21 @@ export function toPublicProfileDto(profile: PublicProfile, baseUrl: string): Pub
             institution: profile.primaryAffiliation.institutionName,
             department: profile.primaryAffiliation.departmentName,
           },
+    affiliations: profile.affiliations.map(toPublicAffiliationDto),
     links: profile.links.map(toPublicLinkDto),
+  }
+}
+
+function toPublicAffiliationDto(afiliacion: AffiliationRecord): PublicAffiliationDto {
+  return {
+    title: afiliacion.title,
+    institution: afiliacion.institutionName,
+    department: afiliacion.departmentName,
+    type: afiliacion.affiliationType,
+    // El dia que se escribio, no un instante: la columna es `date`.
+    startDate: toCalendarDate(afiliacion.startDate),
+    endDate: toCalendarDate(afiliacion.endDate),
+    isCurrent: afiliacion.isCurrent,
   }
 }
 

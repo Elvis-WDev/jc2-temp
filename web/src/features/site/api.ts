@@ -37,6 +37,22 @@ export interface PublicProfile {
     institution: string
     department: string | null
   } | null
+  /**
+   * La trayectoria, de lo vigente a lo mas antiguo. Ya viene ordenada del servidor.
+   *
+   * `isCurrent` viaja aparte de las fechas porque es lo que decide si se escribe
+   * «2019 — presente» o un rango cerrado: un cargo puede seguir vigente sin que nadie
+   * sepa cuando acabara, asi que una fecha de fin vacia no significa lo mismo.
+   */
+  affiliations: Array<{
+    title: string
+    institution: string
+    department: string | null
+    type: string | null
+    startDate: string | null
+    endDate: string | null
+    isCurrent: boolean
+  }>
   links: Array<{
     type: string
     label: string | null
@@ -61,7 +77,8 @@ export interface PublicWorkSummary {
   slug: string
   title: string
   subtitle: string | null
-  type: { code: string; label: string }
+  /** `pluralLabel` es el rotulo del grupo cuando el listado se agrupa por tipo. */
+  type: { code: string; label: string; pluralLabel: string }
   academicStatus: string
   academicStatusLabel: string
   year: number | null
@@ -151,7 +168,7 @@ export interface ResearchQuery {
   tag?: string
   year_from?: number
   year_to?: number
-  sort?: 'newest' | 'oldest' | 'title' | 'relevance'
+  sort?: 'newest' | 'oldest' | 'title' | 'relevance' | 'type'
   page?: number
 }
 
@@ -180,17 +197,14 @@ export interface PublicHome {
   profile: PublicProfile
   /** Vacia si el titular oculto los textos de la portada. */
   page: PublicPageContent | null
-  /** Los que encabezan la portada. Seleccion aparte de los destacados. */
-  carouselWorks: PublicWorkSummary[]
-  featuredWorks: PublicWorkSummary[]
-  featuredCourses: PublicCourseSummary[]
   /**
-   * Los proximos; y si no hay ninguno por venir, los ultimos celebrados.
+   * Lo ultimo de News y de Blog, cada uno por su lado.
    *
-   * Vacio solo si no hay ningun evento publicado, o si la seccion esta apagada.
+   * Un grupo llega vacio si su pagina esta apagada o si no hay nada publicado, que es la
+   * misma condicion con la que se decide el menu del sitio.
    */
-  events: PublicEvent[]
-  /** Que bloques se pintan, ya resueltos: `hero`, `carousel`, `featured_works`... */
+  latestPosts: { news: PublicPost[]; blog: PublicPost[] }
+  /** Que bloques se pintan, ya resueltos: `hero`, `about`, `appointments`... */
   sections: Record<string, boolean>
 }
 
@@ -205,6 +219,8 @@ export interface PublicSite {
   footerText: string | null
   contactEmail: string | null
   logoUrl: string | null
+  /** Imagen de la primera columna del pie. */
+  footerImageUrl: string | null
   meta: {
     title: string | null
     description: string | null
@@ -213,13 +229,15 @@ export interface PublicSite {
   /**
    * Que paginas se ven. Con esto se construye el menu.
    *
-   * Eventos ademas necesita tener algo publicado: un menu que lleva a una pagina vacia
-   * estorba tanto como uno que lleva a una pagina oculta.
+   * Eventos, noticias y blog ademas necesitan tener algo publicado: un menu que lleva a
+   * una pagina vacia estorba tanto como uno que lleva a una pagina oculta.
    */
   pages: {
     research: boolean
     teaching: boolean
     events: boolean
+    news: boolean
+    blog: boolean
   }
   /** Que bloques se pintan: `research.filters`, `home.hero`... */
   sections: Record<string, boolean>
@@ -228,6 +246,14 @@ export interface PublicSite {
    * Las que no aparecen aqui se pintan con su color liso.
    */
   sectionBackgrounds: Record<string, { url: string; overlay: number }>
+  /**
+   * El rotulo de las secciones donde el titular escribio uno. Las que no aparecen
+   * usan el de la plantilla.
+   */
+  sectionHeadings: Record<
+    string,
+    { title: string | null; aside: string | null }
+  >
   owner: {
     fullName: string
     publicEmail: string | null
@@ -420,4 +446,56 @@ export function listEvents(
 
 export function getEvent(idOrSlug: string): Promise<PublicEvent> {
   return get<PublicEvent>(`/api/public/events/${idOrSlug}`)
+}
+
+/**
+ * Una noticia o una entrada de blog.
+ *
+ * Las dos comparten forma porque comparten tabla: lo que cambia es cuanto se rellena.
+ * Una noticia trae titulo, resumen e imagen; una entrada de blog trae ademas el cuerpo
+ * y sus adjuntos. Aqui no viene el estado editorial ni el orden interno: lo que llega
+ * ya paso por RN-001 y por la lista blanca del presenter.
+ */
+export interface PublicPost {
+  id: string
+  slug: string
+  kind: string
+  /** El nombre del catalogo, no el codigo interno. */
+  kindLabel: string
+  title: string
+  summary: string | null
+  /** HTML ya saneado en el servidor (ERS §37): aqui no se vuelve a sanear. */
+  contentHtml: string | null
+  imageUrl: string | null
+  imageAlt: string | null
+  publishedAt: string | null
+  /** Solo los descargables: los privados no se nombran siquiera. */
+  files: Array<{
+    label: string | null
+    url: string
+    /** El tipo real. Lo que se puede escuchar se reproduce; el resto se descarga. */
+    mimeType: string
+  }>
+}
+
+export interface PostsQuery {
+  kind?: string
+  page?: number
+  page_size?: number
+}
+
+export function listPosts(
+  query: PostsQuery
+): Promise<{ items: PublicPost[]; pagination: Pagination }> {
+  return getWithMeta<PublicPost[], { pagination: Pagination }>(
+    '/api/public/posts',
+    query
+  ).then((respuesta) => ({
+    items: respuesta.data,
+    pagination: respuesta.meta.pagination,
+  }))
+}
+
+export function getPost(idOrSlug: string): Promise<PublicPost> {
+  return get<PublicPost>(`/api/public/posts/${idOrSlug}`)
 }

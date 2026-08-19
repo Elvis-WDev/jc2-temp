@@ -1,4 +1,4 @@
-import { generateSlug, withSuffix } from '../../../domain/research/Slug.js'
+import { escribirConSlugLibre, generateSlug } from '../../../domain/research/Slug.js'
 import { NotFoundError, ValidationError } from '../../../shared/errors/AppError.js'
 import { paginate, type Paginated, type PaginationQuery } from '../../../shared/http/pagination.js'
 import type { AuditLogger } from '../../ports/AuditLogger.js'
@@ -53,19 +53,31 @@ export class EventUseCases {
     }
   }
 
-  private async slugLibre(base: string, exceptId?: string): Promise<string> {
-    for (let intento = 1; intento <= 50; intento += 1) {
-      const candidato = withSuffix(base, intento)
-      if (!(await this.repo.slugExists(candidato, exceptId))) return candidato
-    }
-    throw new ValidationError('Could not derive a free identifier.', {}, 'EVENT_SLUG_EXHAUSTED')
+  /** Escribe con un slug libre, reintentando si otra peticion se lo lleva antes. */
+  private conSlugLibre<T>(
+    base: string,
+    exceptId: string | undefined,
+    escribir: (slug: string) => Promise<T>,
+  ): Promise<T> {
+    return escribirConSlugLibre({
+      base,
+      exceptId,
+      existe: (slug, except) => this.repo.slugExists(slug, except),
+      escribir,
+      // Un evento prefiere fallar a quedarse con un identificador ilegible.
+      agotado: () => {
+        throw new ValidationError('Could not derive a free identifier.', {}, 'EVENT_SLUG_EXHAUSTED')
+      },
+    })
   }
 
   async create(input: EventWriteInput, actor: EventActor): Promise<EventRecord> {
     this.assertFechas(input.startsAt, input.endsAt)
 
     const base = generateSlug(input.slug === '' ? input.title : input.slug)
-    const creado = await this.repo.create({ ...input, slug: await this.slugLibre(base) })
+    const creado = await this.conSlugLibre(base, undefined, (slug) =>
+      this.repo.create({ ...input, slug }),
+    )
 
     await this.audit.record({
       userId: actor.userId,
@@ -89,12 +101,12 @@ export class EventUseCases {
 
     // RN-010 aplicada al evento: en borrador el identificador sigue al titulo; una vez
     // publicado se queda, para que los enlaces compartidos no dejen de funcionar.
-    const slug =
+    const actualizado =
       actual.editorialStatus === 'published' || input.title === undefined
-        ? actual.slug
-        : await this.slugLibre(generateSlug(input.title), id)
-
-    const actualizado = await this.repo.update(id, { ...input, slug })
+        ? await this.repo.update(id, { ...input, slug: actual.slug })
+        : await this.conSlugLibre(generateSlug(input.title), id, (slug) =>
+            this.repo.update(id, { ...input, slug }),
+          )
 
     await this.audit.record({
       userId: actor.userId,

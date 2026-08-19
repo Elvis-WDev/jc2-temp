@@ -47,10 +47,6 @@ export async function listTags(
   return { items: data, meta }
 }
 
-export function getTag(id: string): Promise<Tag> {
-  return get<Tag>(`/api/admin/tags/${id}`)
-}
-
 /**
  * Categorias que ya se han usado. La categoria se escribe a mano al crear la etiqueta,
  * asi que el filtro no puede tener una lista fija: la saca de lo que existe.

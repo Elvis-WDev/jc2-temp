@@ -287,15 +287,4 @@ export class PrismaPublicCourseRepository implements PublicCourseRepository {
 
     return fila === null ? null : mapCourse(fila)
   }
-
-  async listFeatured(limit: number): Promise<PublicCourseSummary[]> {
-    const filas = await prisma.course.findMany({
-      where: { ...SOLO_CURSOS_PUBLICADOS, isFeatured: true },
-      orderBy: [{ featuredOrder: { sort: 'asc', nulls: 'last' } }, { title: 'asc' }],
-      take: limit,
-      select: SELECT_RESUMEN,
-    })
-
-    return filas.map(mapResumen)
-  }
 }

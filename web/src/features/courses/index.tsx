@@ -19,7 +19,6 @@ import {
   deleteCourse,
   listCourses,
   publishCourse,
-  setCourseFeatured,
   type Course,
   type EditorialStatus,
 } from './api'
@@ -70,16 +69,6 @@ export function Courses() {
     },
   })
 
-  const { mutate: alternarDestacado } = useToastMutation({
-    mutationFn: (curso: Course) =>
-      setCourseFeatured(curso.id, !curso.isFeatured, curso.featuredOrder),
-    invalidates: refresca,
-    success: (curso) =>
-      curso.isFeatured
-        ? 'Course featured on the home page.'
-        : 'Course removed from the home page.',
-  })
-
   const borrar = useToastMutation({
     mutationFn: (id: string) => deleteCourse(id),
     invalidates: refresca,
@@ -105,12 +94,9 @@ export function Courses() {
           publicar(curso.id)
         },
         onArchive: setArchivando,
-        onToggleFeatured: (curso) => {
-          alternarDestacado(curso)
-        },
         onDelete: setBorrando,
       }),
-    [navigate, publicar, alternarDestacado]
+    [navigate, publicar]
   )
 
   const hayFiltro =

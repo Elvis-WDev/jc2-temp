@@ -1,5 +1,9 @@
 import { normalizeDoi } from '../../../domain/research/Doi.js'
-import { generateSlug, resolveSlugOnUpdate, withSuffix } from '../../../domain/research/Slug.js'
+import {
+  escribirConSlugLibre,
+  generateSlug,
+  resolveSlugOnUpdate,
+} from '../../../domain/research/Slug.js'
 import {
   assertAuthorOrderIsContiguous,
   assertCanBeFeatured,
@@ -17,9 +21,6 @@ import type {
   WorkRepository,
   WorkWriteInput,
 } from '../../ports/repositories/WorkRepository.js'
-
-/** Intentos maximos para desambiguar un slug antes de rendirse. */
-const MAX_INTENTOS_SLUG = 50
 
 export interface WorkActor {
   userId: string | null
@@ -53,14 +54,20 @@ export class WorkUseCases {
     return work
   }
 
-  /** Busca un slug libre anadiendo sufijo numerico: `mi-titulo`, `mi-titulo-2`... */
-  private async slugLibre(base: string, exceptId?: string): Promise<string> {
-    for (let intento = 1; intento <= MAX_INTENTOS_SLUG; intento += 1) {
-      const candidato = withSuffix(base, intento)
-      if (!(await this.repo.slugExists(candidato, exceptId))) return candidato
-    }
-    // Con 50 titulos identicos, el determinismo deja de importar mas que no fallar.
-    return `${base.slice(0, 190)}-${Date.now().toString(36)}`
+  /** Escribe con un slug libre, reintentando si otra peticion se lo lleva antes. */
+  private conSlugLibre<T>(
+    base: string,
+    exceptId: string | undefined,
+    escribir: (slug: string) => Promise<T>,
+  ): Promise<T> {
+    return escribirConSlugLibre({
+      base,
+      exceptId,
+      existe: (slug, except) => this.repo.slugExists(slug, except),
+      escribir,
+      // Con 50 titulos identicos, el determinismo deja de importar mas que no fallar.
+      agotado: () => escribir(`${base.slice(0, 190)}-${Date.now().toString(36)}`),
+    })
   }
 
   private normalizar(input: Partial<WorkWriteInput>): Partial<WorkWriteInput> {
@@ -81,9 +88,12 @@ export class WorkUseCases {
 
   async create(input: WorkWriteInput, actor: WorkActor): Promise<WorkRecord> {
     const normalizado = this.normalizar(input)
-    const slug = await this.slugLibre(generateSlug(input.slug === '' ? input.title : input.slug))
 
-    const creado = await this.repo.create({ ...input, ...normalizado, slug })
+    const creado = await this.conSlugLibre(
+      generateSlug(input.slug === '' ? input.title : input.slug),
+      undefined,
+      (slug) => this.repo.create({ ...input, ...normalizado, slug }),
+    )
 
     await this.audit.record({
       userId: actor.userId,
@@ -113,9 +123,13 @@ export class WorkUseCases {
       yaPublicado: actual.editorialStatus === 'published',
     })
 
-    const slug = slugDeseado === actual.slug ? actual.slug : await this.slugLibre(slugDeseado, id)
-
-    const actualizado = await this.repo.update(id, { ...normalizado, slug })
+    // Sin cambio de slug no hay nada que disputar: se escribe directo.
+    const actualizado =
+      slugDeseado === actual.slug
+        ? await this.repo.update(id, { ...normalizado, slug: actual.slug })
+        : await this.conSlugLibre(slugDeseado, id, (slug) =>
+            this.repo.update(id, { ...normalizado, slug }),
+          )
 
     await this.audit.record({
       userId: actor.userId,

@@ -39,6 +39,7 @@ export function toPublicSiteDto(site: PublicSite, baseUrl: string) {
     footerText: site.footerText,
     contactEmail: site.contactEmail,
     logoUrl: mediaUrl(baseUrl, site.logoMediaId),
+    footerImageUrl: mediaUrl(baseUrl, site.footerMediaId),
     meta: {
       title: site.meta.title,
       description: site.meta.description,
@@ -47,6 +48,7 @@ export function toPublicSiteDto(site: PublicSite, baseUrl: string) {
     pages: site.pages,
     sections: site.sections,
     sectionBackgrounds: fondosDeSeccion(site.sectionBackgrounds, baseUrl),
+    sectionHeadings: site.sectionHeadings,
     owner: {
       fullName: site.owner.fullName,
       publicEmail: site.owner.publicEmail,

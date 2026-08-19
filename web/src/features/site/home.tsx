@@ -1,22 +1,27 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { ArrowUpRight } from 'lucide-react'
+import { FileDown } from 'lucide-react'
 import { queryKeys } from '@/lib/api/query-keys'
 import { cn } from '@/lib/utils'
 import { getHome, getSite, type PublicHome, type PublicSite } from './api'
-import { EventGrid } from './components/event-grid'
+import { PostCard } from './components/post-card'
 import { RichText } from './components/rich-text'
 import { SectionBackground } from './components/section-background'
-import { SiteButton } from './components/site-button'
-import { SiteCard, SiteChip } from './components/site-card'
+import { SiteButton, SiteButtonLink } from './components/site-button'
 import { SectionHeading, SiteSection } from './components/site-section'
-import { WorkCarousel } from './components/work-carousel'
-import { useSectionBackground } from './use-section-background'
+import { BLOG, NOTICIAS, type PaginaDeEntradas } from './post-pages'
+import {
+  useSectionBackground,
+  useSectionHeading,
+} from './use-section-background'
 import { useSiteMeta } from './use-site-meta'
-import { coautores } from './work-format'
 
 /**
- * Portada del sitio publico, con el diseno de `docs/design/plantillas-webprincipal/`.
+ * Portada del sitio publico: quien es el titular, no que ha publicado.
+ *
+ * Nacio como escaparate del trabajo academico —carrusel de publicaciones, destacados,
+ * docencia y agenda— y eso ya lo cuentan Research, Teaching y Events, cada una en su
+ * pagina. Aqui quedan las bandas que responden a una sola pregunta.
  *
  * Una sola peticion (ERS §30, PERF-003). Las secciones que el titular apaga en
  * Configuracion del sitio no se pintan, y las que estan encendidas pero vacias
@@ -68,38 +73,42 @@ export function SiteHome() {
 
   return (
     <>
-      {/* Sin separador debajo del hero: el friso esta dibujado para fondo claro, y
-          entre dos bandas oscuras —el hero con imagen y el carrusel— aparecia como una
-          franja blanca que parecia un hueco. Las demas paginas si lo llevan, porque
-          alli separa bandas claras. */}
-      {seVe('hero') && <Hero home={home} />}
+      {seVe('hero') && (
+        <Hero home={home} researchVisible={site?.pages.research === true} />
+      )}
+      {seVe('about') && <Biografia home={home} />}
       {seVe('research_areas') && <Dominios home={home} />}
-      {seVe('carousel') && (
-        <WorkCarousel
-          works={home.carouselWorks}
-          ownerName={home.profile.fullName}
+      {seVe('appointments') && <Trayectoria home={home} />}
+      {seVe('latest_news') && (
+        <GrupoDeEntradas
+          pagina={NOTICIAS}
+          entradas={home.latestPosts.news}
+          tone='raised'
         />
       )}
-      {seVe('featured_works') && <TrabajosDestacados home={home} />}
-      {seVe('featured_courses') && <Docencia home={home} />}
-      {seVe('events') && (
-        <EventosDePortada
-          home={home}
-          agendaVisible={site?.pages.events === true}
+      {seVe('latest_blog') && (
+        <GrupoDeEntradas
+          pagina={BLOG}
+          entradas={home.latestPosts.blog}
+          tone='sunken'
         />
       )}
     </>
   )
 }
 
-function Hero({ home }: { home: PublicHome }) {
+function Hero({
+  home,
+  researchVisible,
+}: {
+  home: PublicHome
+  researchVisible: boolean
+}) {
   const { profile, page } = home
   // El antetitulo lo escribe el titular; si lo deja vacio, el departamento de su
   // afiliacion principal dice lo mismo sin que tenga que teclearlo dos veces.
   const antetitulo =
     page?.eyebrow ?? profile.primaryAffiliation?.department ?? null
-  const hayDestacados =
-    home.sections.featured_works !== false && home.featuredWorks.length > 0
   // Sobre una foto oscurecida el texto oscuro no se lee: la banda entera se invierte.
   const sobreImagen = useSectionBackground('home.hero') !== null
 
@@ -160,15 +169,33 @@ function Hero({ home }: { home: PublicHome }) {
             </p>
           )}
 
-          {(hayDestacados || profile.cvUrl !== null) && (
+          {(profile.cvUrl !== null || researchVisible) && (
             <div className='flex flex-wrap gap-4 pt-4'>
-              {hayDestacados && (
-                <SiteButton href='#works'>Selected work</SiteButton>
-              )}
+              {/* El CV se elige en Perfil academico. Sin uno marcado visible en el
+                  sitio no hay boton: mejor que uno que lleve a un 404. */}
               {profile.cvUrl !== null && (
-                <SiteButton href={profile.cvUrl} variant='outline'>
-                  View CV
+                <SiteButton href={profile.cvUrl} download>
+                  <FileDown aria-hidden className='size-4' />
+                  CV
                 </SiteButton>
+              )}
+              {/* Solo si esa pagina esta encendida en Configuracion del sitio, igual
+                  que el enlace de la cabecera. */}
+              {researchVisible && (
+                <SiteButtonLink
+                  to='/research'
+                  variant='outline'
+                  // El boton de borde es azul oscuro, que sobre una foto oscurecida
+                  // apenas se distingue. Con imagen detras se invierte, como ya hace
+                  // el resto del texto de la banda. El de al lado no lo necesita: es
+                  // solido y su relleno le da el contraste.
+                  className={cn(
+                    sobreImagen &&
+                      'border-site-on-primary text-site-on-primary hover:bg-site-on-primary/10'
+                  )}
+                >
+                  Research
+                </SiteButtonLink>
               )}
             </div>
           )}
@@ -203,6 +230,12 @@ function Hero({ home }: { home: PublicHome }) {
  */
 function Dominios({ home }: { home: PublicHome }) {
   const sobreImagen = useSectionBackground('home.research_areas') !== null
+  // El titular puede renombrar la banda desde Contenido de paginas; si no lo hace,
+  // queda el rotulo de la plantilla.
+  const rotulo = useSectionHeading('home.research_areas', {
+    title: 'Research lines',
+    aside: 'Main areas',
+  })
 
   // Vacia cuando el titular oculta la portada en Contenido de paginas.
   if (home.page === null || home.page.secondaryHtml === null) return null
@@ -210,8 +243,8 @@ function Dominios({ home }: { home: PublicHome }) {
   return (
     <SiteSection tone='raised' backgroundKey='home.research_areas'>
       <SectionHeading
-        title='Research lines'
-        aside='Main areas'
+        title={rotulo.title}
+        aside={rotulo.aside}
         dark={sobreImagen}
       />
       <RichText
@@ -239,180 +272,198 @@ function Dominios({ home }: { home: PublicHome }) {
   )
 }
 
-function TrabajosDestacados({ home }: { home: PublicHome }) {
-  // Las tarjetas son opacas: sobre una foto siguen leyendose igual. Solo el encabezado,
-  // que va directo sobre la banda, tiene que cambiar de color.
-  const sobreImagen = useSectionBackground('home.featured_works') !== null
+/**
+ * Quien es: la entradilla de la portada y la biografia larga.
+ *
+ * La biografia se escribe en Perfil academico y hasta ahora no se pintaba en ninguna
+ * pagina: se guardaba y se tiraba. La entradilla es el `introMarkdown` de la portada,
+ * que vivia dentro de la banda de Docencia y se habria quedado huerfano al retirarla.
+ */
+function Biografia({ home }: { home: PublicHome }) {
+  const { profile, page } = home
+  const sobreImagen = useSectionBackground('home.about') !== null
+  const rotulo = useSectionHeading('home.about', { title: 'About' })
+
+  // Nada que contar: ni entradilla ni biografia. La banda no se pinta en lugar de
+  // dejar un encabezado sobre el vacio.
+  if (page?.introHtml == null && profile.fullBioHtml === null) return null
 
   return (
-    <SiteSection id='works' tone='sunken' backgroundKey='home.featured_works'>
+    <SiteSection tone='raised' backgroundKey='home.about'>
       <SectionHeading
+        title={rotulo.title}
+        aside={rotulo.aside}
         dark={sobreImagen}
-        title='Selected publications'
-        aside={
-          home.featuredWorks.length > 0
-            ? `${home.featuredWorks.length} works`
-            : undefined
-        }
       />
 
-      {home.featuredWorks.length === 0 ? (
-        // ERS §55: una seccion vacia se explica, no se deja en blanco.
-        <p className='text-site-on-surface-variant'>No featured work yet.</p>
-      ) : (
-        <div className='grid gap-8 lg:grid-cols-2'>
-          {home.featuredWorks.map((trabajo) => (
-            <SiteCard
-              key={trabajo.id}
-              className='flex flex-col justify-between p-8'
-            >
-              <div>
-                <div className='mb-4 flex flex-wrap items-center gap-3'>
-                  {trabajo.year !== null && (
-                    <SiteChip tone='accent'>{trabajo.year}</SiteChip>
-                  )}
-                  <span className='truncate text-site-meta text-site-on-surface-variant'>
-                    {trabajo.venue ?? trabajo.type.label}
-                  </span>
-                </div>
+      <div className='grid gap-12 md:grid-cols-12'>
+        {page?.introHtml != null && (
+          <RichText
+            html={page.introHtml}
+            className={cn(
+              'text-site-body-lg leading-relaxed font-light italic md:col-span-5',
+              sobreImagen
+                ? 'text-site-on-primary/85'
+                : 'text-site-on-surface-variant'
+            )}
+          />
+        )}
 
-                <h3 className='mb-4 font-site-display text-site-headline-sm text-site-primary transition-colors group-hover:text-site-on-tertiary-fixed-variant'>
-                  {trabajo.title}
-                </h3>
-
-                {trabajo.subtitle !== null && (
-                  <p className='mb-6 text-site-on-surface-variant'>
-                    {trabajo.subtitle}
-                  </p>
-                )}
-              </div>
-
-              <div className='flex items-center justify-between gap-4 border-t border-site-outline-variant/20 pt-4'>
-                <span className='text-site-meta text-site-on-surface-variant'>
-                  {coautores(trabajo.authors, home.profile.fullName)}
-                </span>
-                {trabajo.doiUrl !== null && (
-                  <a
-                    href={trabajo.doiUrl}
-                    className='flex items-center gap-1 text-site-label text-site-primary uppercase transition-colors hover:text-site-on-tertiary-fixed-variant'
-                  >
-                    DOI <ArrowUpRight className='size-4' />
-                  </a>
-                )}
-              </div>
-            </SiteCard>
-          ))}
-        </div>
-      )}
+        {profile.fullBioHtml !== null && (
+          <RichText
+            html={profile.fullBioHtml}
+            className={cn(
+              // Sin entradilla ocupa el ancho entero: dejar media banda vacia se leeria
+              // como que falta algo.
+              page?.introHtml == null ? 'md:col-span-12' : 'md:col-span-7',
+              '[&_p]:mb-4',
+              sobreImagen
+                ? 'text-site-on-primary/85'
+                : 'text-site-on-surface-variant'
+            )}
+          />
+        )}
+      </div>
     </SiteSection>
   )
 }
 
-function Docencia({ home }: { home: PublicHome }) {
+/** Un rango de anos, con «presente» cuando el cargo sigue vigente. */
+function periodo(
+  afiliacion: PublicHome['profile']['affiliations'][number]
+): string {
+  const anio = (fecha: string | null) =>
+    fecha === null ? null : fecha.slice(0, 4)
+  const desde = anio(afiliacion.startDate)
+  // `isCurrent` y no «sin fecha de fin»: un cargo puede seguir vigente sin que nadie
+  // sepa cuando acabara, y son dos cosas distintas.
+  const hasta = afiliacion.isCurrent ? 'Present' : anio(afiliacion.endDate)
+
+  if (desde === null) return hasta ?? ''
+  if (hasta === null || hasta === desde) return desde
+  return `${desde} — ${hasta}`
+}
+
+/**
+ * La trayectoria: donde esta y donde ha estado.
+ *
+ * El orden llega resuelto del servidor —vigente primero y dentro de eso lo mas
+ * reciente—, asi que aqui no se reordena nada.
+ */
+function Trayectoria({ home }: { home: PublicHome }) {
+  const sobreImagen = useSectionBackground('home.appointments') !== null
+  const rotulo = useSectionHeading('home.appointments', {
+    title: 'Appointments',
+  })
+  const { affiliations } = home.profile
+
+  if (affiliations.length === 0) return null
+
   return (
-    <section className='relative overflow-hidden bg-site-primary py-site-section text-site-on-primary'>
-      {/* Ya es una banda oscura con texto claro: la imagen entra sin invertir nada. */}
-      <SectionBackground clave='home.featured_courses' />
-      {/* Sesgo decorativo de la plantilla, con degradado en vez de imagen. */}
-      <div
-        aria-hidden
-        className='pointer-events-none absolute top-0 -right-[10%] h-full w-[50%] skew-x-12 bg-gradient-to-l from-site-on-primary/5 to-transparent'
+    <SiteSection tone='sunken' backgroundKey='home.appointments'>
+      <SectionHeading
+        title={rotulo.title}
+        aside={rotulo.aside}
+        dark={sobreImagen}
       />
 
-      <div className='relative z-10 mx-auto grid max-w-site grid-cols-1 items-center gap-12 px-site-margin lg:grid-cols-12 lg:px-site-gutter'>
-        <div className='space-y-6 border-l-4 border-site-on-tertiary-container ps-6 md:ps-8 lg:col-span-5'>
-          <h2 className='font-site-display text-site-headline-md text-site-on-primary'>
-            Teaching
-          </h2>
-          <RichText
-            html={home.page?.introHtml ?? null}
-            className='text-site-body-lg leading-relaxed font-light text-site-on-primary/80 italic'
-          />
-        </div>
+      <ol className='flex flex-col'>
+        {affiliations.map((afiliacion, indice) => (
+          <li
+            key={`${afiliacion.institution}-${afiliacion.title}-${String(indice)}`}
+            className={cn(
+              'grid gap-2 border-t py-6 md:grid-cols-12 md:gap-8',
+              sobreImagen
+                ? 'border-site-on-primary/10'
+                : 'border-site-outline-variant/20',
+              // La primera no lleva filete arriba: el encabezado ya trae el suyo.
+              indice === 0 && 'border-t-0 pt-0'
+            )}
+          >
+            <span
+              className={cn(
+                'text-site-meta tracking-widest uppercase md:col-span-3',
+                sobreImagen
+                  ? 'text-site-on-primary/70'
+                  : 'text-site-on-surface-variant'
+              )}
+            >
+              {periodo(afiliacion)}
+            </span>
 
-        <div className='lg:col-span-6 lg:col-start-7'>
-          <h3 className='mb-6 text-site-label tracking-widest text-site-on-primary/60 uppercase'>
-            Current courses
-          </h3>
-
-          {home.featuredCourses.length === 0 ? (
-            <p className='text-site-on-primary/70'>No featured courses yet.</p>
-          ) : (
-            <ul className='space-y-4'>
-              {home.featuredCourses.map((curso) => (
-                <li
-                  key={curso.id}
-                  className='-mx-4 flex items-center justify-between border-b border-site-on-primary/10 px-4 py-4 transition-colors hover:bg-site-on-primary/5'
-                >
-                  <div>
-                    <h4 className='text-site-body-lg text-site-on-primary'>
-                      {curso.title}
-                    </h4>
-                    <p className='text-site-on-primary/70'>
-                      {periodo(curso.currentOffering)}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </section>
+            <div className='md:col-span-9'>
+              <h3
+                className={cn(
+                  'font-site-display text-site-headline-sm',
+                  sobreImagen ? 'text-site-on-primary' : 'text-site-primary'
+                )}
+              >
+                {afiliacion.title}
+              </h3>
+              <p
+                className={cn(
+                  sobreImagen
+                    ? 'text-site-on-primary/85'
+                    : 'text-site-on-surface-variant'
+                )}
+              >
+                {[afiliacion.institution, afiliacion.department]
+                  .filter((parte) => parte !== null && parte !== '')
+                  .join(' · ')}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </SiteSection>
   )
 }
 
 /**
- * Los eventos, en rejilla, al final de la portada.
+ * Una banda con lo ultimo de un tipo.
  *
- * Muestra los proximos; y si no hay ninguno por venir, los ultimos celebrados, para que
- * la seccion no quede vacia mientras haya historia que ensenar. Eso lo resuelve la API.
- *
- * Sin ningun evento publicado no se pinta. No hace falta apagarla, aunque tambien se
- * pueda desde Contenido de paginas.
+ * Se pinta una por tipo y no una sola con los dos: son dos bloques distintos de la
+ * pagina, cada uno con su fondo, su rotulo y su interruptor. Si su grupo llega vacio no
+ * se pinta, que es lo que pasa cuando su pagina esta apagada o no hay nada publicado.
  */
-function EventosDePortada({
-  home,
-  agendaVisible,
+function GrupoDeEntradas({
+  pagina,
+  entradas,
+  tone,
 }: {
-  home: PublicHome
-  agendaVisible: boolean
+  pagina: PaginaDeEntradas
+  entradas: PublicHome['latestPosts']['news']
+  tone: 'raised' | 'sunken'
 }) {
-  const sobreImagen = useSectionBackground('home.events') !== null
+  const clave = `home.latest_${pagina.pageKey}`
+  const sobreImagen = useSectionBackground(clave) !== null
+  const rotulo = useSectionHeading(clave, { title: pagina.titulo })
 
-  if (home.events.length === 0) return null
-
-  const hayProximos = home.events.some(
-    (evento) => new Date(evento.startsAt) >= new Date()
-  )
+  if (entradas.length === 0) return null
 
   return (
-    <SiteSection tone='raised' backgroundKey='home.events'>
+    <SiteSection tone={tone} backgroundKey={clave}>
       <SectionHeading
+        title={rotulo.title}
         dark={sobreImagen}
-        title={hayProximos ? 'Upcoming events' : 'Past events'}
+        // El aside del encabezado ya viene en versalitas: aqui basta con hacerlo enlace,
+        // sin un boton que compita con el titulo de la banda.
         aside={
-          // No se enlaza lo que no se puede abrir: con la pagina oculta, /events da 404.
-          agendaVisible ? (
-            <Link to='/events' className='hover:underline'>
-              See the full agenda
-            </Link>
-          ) : undefined
+          <Link
+            to={pagina.ruta}
+            className='underline-offset-4 transition-colors hover:underline'
+          >
+            See all
+          </Link>
         }
       />
-
-      <EventGrid events={home.events} />
+      <div className='flex flex-col gap-6'>
+        {entradas.map((entrada) => (
+          <PostCard key={entrada.id} post={entrada} pagina={pagina} />
+        ))}
+      </div>
     </SiteSection>
   )
-}
-
-function periodo(
-  edicion: PublicHome['featuredCourses'][number]['currentOffering']
-): string {
-  if (edicion === null) return 'No published offerings'
-  return [edicion.institution, edicion.term, edicion.academicYear]
-    .filter(Boolean)
-    .join(' · ')
 }
 
 /**

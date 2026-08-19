@@ -67,9 +67,12 @@ async function main(): Promise<void> {
     orderBy: { code: 'asc' },
   })
 
+  // Con desempate por codigo: dos estados pueden compartir `sortOrder`, y sin un
+  // segundo criterio Postgres los devuelve en cualquier orden. El fichero cambiaba de
+  // una regeneracion a otra sin que hubiera cambiado ningun dato.
   const academicStatuses = await prisma.academicStatus.findMany({
     select: { code: true, label: true, tone: true, sortOrder: true, isActive: true },
-    orderBy: { sortOrder: 'asc' },
+    orderBy: [{ sortOrder: 'asc' }, { code: 'asc' }],
   })
 
   const tags = await prisma.tag.findMany({
@@ -147,7 +150,7 @@ async function main(): Promise<void> {
 
   // --- Revistas -------------------------------------------------------------
   const venues = await prisma.venue.findMany({
-    orderBy: { name: 'asc' },
+    orderBy: [{ name: 'asc' }, { id: 'asc' }],
     select: {
       name: true,
       abbreviation: true,
@@ -167,7 +170,7 @@ async function main(): Promise<void> {
 
   // --- Publicaciones --------------------------------------------------------
   const works = await prisma.work.findMany({
-    orderBy: [{ publicationYear: 'desc' }, { title: 'asc' }],
+    orderBy: [{ publicationYear: 'desc' }, { title: 'asc' }, { slug: 'asc' }],
     select: {
       title: true,
       subtitle: true,
@@ -264,9 +267,49 @@ async function main(): Promise<void> {
     },
   })
 
+  // --- Trayectoria del titular ---------------------------------------------
+  //
+  // Se relacionan por nombre de institucion y de departamento, como todo lo demas.
+  // Solo las del titular: las de un coautor no salen en ninguna pagina.
+  const afiliaciones = await prisma.affiliation.findMany({
+    where: { person: { isSiteOwner: true } },
+    orderBy: [{ isCurrent: 'desc' }, { startDate: 'desc' }, { title: 'asc' }],
+    select: {
+      title: true,
+      affiliationType: true,
+      startDate: true,
+      endDate: true,
+      isPrimary: true,
+      isCurrent: true,
+      descriptionMarkdown: true,
+      sortOrder: true,
+      institution: { select: { name: true } },
+      department: { select: { name: true } },
+    },
+  })
+
+  // --- Noticias y entradas de blog ------------------------------------------
+  const posts = await prisma.post.findMany({
+    orderBy: [{ kind: 'asc' }, { publishedAt: 'desc' }, { slug: 'asc' }],
+    select: {
+      kind: true,
+      title: true,
+      slug: true,
+      summary: true,
+      contentMarkdown: true,
+      imageAlt: true,
+      displayOrder: true,
+      editorialStatus: true,
+      // `publishedAt` si viaja, al reves que en el resto: es lo que ordena el listado y
+      // lo que se lee bajo el titulo. Sin ella todas las entradas nacerian con la fecha
+      // del despliegue y el archivo quedaria plano.
+      publishedAt: true,
+    },
+  })
+
   // --- Eventos --------------------------------------------------------------
   const events = await prisma.event.findMany({
-    orderBy: { startsAt: 'desc' },
+    orderBy: [{ startsAt: 'desc' }, { slug: 'asc' }],
     select: {
       title: true,
       slug: true,
@@ -303,7 +346,7 @@ async function main(): Promise<void> {
   })
 
   const sections = await prisma.pageSection.findMany({
-    orderBy: [{ pageKey: 'asc' }, { sortOrder: 'asc' }],
+    orderBy: [{ pageKey: 'asc' }, { sortOrder: 'asc' }, { sectionKey: 'asc' }],
     select: {
       pageKey: true,
       sectionKey: true,
@@ -313,12 +356,15 @@ async function main(): Promise<void> {
     },
   })
 
+  // `publicBaseUrl` no se lleva: es propia de cada instalacion y la fija PUBLIC_BASE_URL
+  // en `site-settings.seed`. El seeder de contenido ya la descartaba al escribir; no
+  // seleccionarla evita que la direccion de la maquina de desarrollo aparezca siquiera
+  // en un fichero versionado.
   const settings = await prisma.siteSettings.findFirst({
     select: {
       siteName: true,
       defaultLocale: true,
       timezone: true,
-      publicBaseUrl: true,
       contactEmail: true,
       metaTitleDefault: true,
       metaDescriptionDefault: true,
@@ -349,8 +395,10 @@ export const CONTENIDO = ${literal(
       instituciones,
       venues,
       works,
+      afiliaciones,
       courses,
       events,
+      posts,
       pages,
       sections,
       settings,
@@ -376,8 +424,10 @@ export const CONTENIDO = ${literal(
     instituciones: instituciones.length,
     revistas: venues.length,
     trabajos: works.length,
+    afiliaciones: afiliaciones.length,
     cursos: courses.length,
     eventos: events.length,
+    entradas: posts.length,
     paginas: pages.length,
     secciones: sections.length,
   }

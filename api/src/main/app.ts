@@ -65,6 +65,7 @@ export function createApp(container: Container): Express {
       site: container.site,
       sitemap: container.sitemap,
       events: container.publicEvents,
+      posts: container.publicPosts,
     }),
   )
   app.use(
@@ -79,6 +80,7 @@ export function createApp(container: Container): Express {
       tags: container.tags,
       venues: container.venues,
       events: container.events,
+      posts: container.posts,
       citations: container.citations,
       catalog: container.catalog,
     }),

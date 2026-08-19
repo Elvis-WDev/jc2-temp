@@ -22,6 +22,18 @@ describe('resumen para la meta descripcion', () => {
     expect(largo?.endsWith('…')).toBe(true)
   })
 
+  it('corta por el ultimo espacio, no a mitad de palabra', () => {
+    // Con el limite en 12 caben "uno dos tre"; la palabra partida se descarta entera,
+    // porque un "tre…" se lee como un fallo de la pagina y no como un recorte.
+    expect(resumirHtml('<p>uno dos tres cuatro cinco</p>', 12)).toBe('uno dos…')
+  })
+
+  it('un texto sin espacios se corta en seco antes que pasarse del limite', () => {
+    const resumen = resumirHtml(`<p>${'a'.repeat(400)}</p>`, 50)
+
+    expect(resumen).toHaveLength(50)
+  })
+
   it('sin contenido devuelve vacio, no una cadena en blanco', () => {
     expect(resumirHtml(null)).toBeNull()
     expect(resumirHtml('<p>   </p>')).toBeNull()

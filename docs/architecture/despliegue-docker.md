@@ -50,8 +50,9 @@ los enlaces canonicos y las direcciones de los archivos publicos. Si no coincide
 inicia sesion.
 
 **La base es externa.** Desde un contenedor `localhost` es el propio contenedor: para una
-base en la misma maquina se usa `host.docker.internal` (con `extra_hosts`) o la IP de la
-interfaz del anfitrion. Con TLS, `?sslmode=require`.
+base en la misma maquina se usa `host.docker.internal`, que el compose ya resuelve —lleva
+`extra_hosts` en `migrate` y en `api`—, o la IP de la interfaz del anfitrion. Con TLS,
+`?sslmode=require`.
 
 ## El volumen de archivos
 
@@ -65,7 +66,14 @@ el sistema incoherente; ver `backups.md`.
 ## El contenido inicial
 
 El primer despliegue deja el sitio con contenido: 16 publicaciones, 10 personas, 6
-revistas, 2 instituciones, 3 cursos, 5 eventos y los textos de las cuatro paginas.
+revistas, 2 instituciones, 3 cursos, 5 eventos, la trayectoria del titular, 3 noticias,
+2 entradas de blog y los textos de las seis paginas.
+
+**Las noticias y las entradas de blog son de relleno**, escritas para que el sitio no
+nazca con dos paginas vacias. Estan publicadas, asi que salen en el menu y en el sitemap
+desde el primer minuto: conviene revisarlas o borrarlas desde el panel antes de anunciar
+la direccion. Borrar una no la resucita en el siguiente despliegue —este seeder solo
+siembra una base vacia—.
 
 Lo trae `src/infrastructure/database/seed/contenido.seed.ts`, que lee un fichero de datos
 **generado**:
@@ -177,11 +185,13 @@ El log dice donde se paro, y el sitio exacto importa:
 | Lo que se ve | Que pasa |
 |---|---|
 | No llega a listar las migraciones. `P1001: Can't reach database server` | La base no es alcanzable desde el contenedor. Recuerda que `localhost` es el propio contenedor. |
-| Lista las 16 y falla con `permission denied for schema public` | Conecta, pero el usuario no puede crear objetos. Ver abajo. |
+| Lista las migraciones y falla con `permission denied for schema public` | Conecta, pero el usuario no puede crear objetos. Ver abajo. |
 | `P3009: migrate found failed migrations` | Un intento anterior dejo una migracion a medias. Hay que resolverla antes de reintentar. |
 
-**Prisma no lista las migraciones hasta despues de conectar.** Si en el log aparecen las
-16 con su `migration.sql`, la conexion funciona y el problema es otro.
+**Prisma no lista las migraciones hasta despues de conectar.** Si en el log aparecen
+todas con su `migration.sql`, la conexion funciona y el problema es otro. El numero no se
+escribe aqui a proposito: crece con cada cambio de esquema y un numero desactualizado en
+una guia de incidencias hace dudar de lo que se esta viendo.
 
 ### La contrasena llega cortada
 

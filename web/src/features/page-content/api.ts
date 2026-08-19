@@ -8,7 +8,14 @@ import { get, patch } from '@/lib/api/client'
  * decide cuáles se ven.
  */
 
-export const PAGE_KEYS = ['home', 'research', 'teaching', 'events'] as const
+export const PAGE_KEYS = [
+  'home',
+  'research',
+  'teaching',
+  'events',
+  'news',
+  'blog',
+] as const
 export type PageKey = (typeof PAGE_KEYS)[number]
 
 export const NOMBRE_DE_PAGINA: Record<PageKey, string> = {
@@ -16,6 +23,8 @@ export const NOMBRE_DE_PAGINA: Record<PageKey, string> = {
   research: 'Research',
   teaching: 'Teaching',
   events: 'Events',
+  news: 'News',
+  blog: 'Blog',
 }
 
 export const QUE_MUESTRA: Record<PageKey, string> = {
@@ -23,10 +32,22 @@ export const QUE_MUESTRA: Record<PageKey, string> = {
   research: 'The listing of your work.',
   teaching: 'The listing of your courses.',
   events: 'The agenda of seminars and conferences.',
+  news: 'Short announcements: grants, awards, appointments.',
+  blog: 'Longer writing, outside the academic record.',
 }
 
 /** La unica que no se puede ocultar. La API lo rechaza tambien. */
 export const PAGINA_SIEMPRE_VISIBLE: PageKey = 'home'
+
+/**
+ * Las paginas cuya cabecera pinta una imagen al lado del texto.
+ *
+ * Solo se ofrece el campo donde el sitio lo dibuja. Antes se ofrecia en todas y no se
+ * pintaba en ninguna: se guardaba la imagen y no aparecia nunca. La portada no entra
+ * porque su retrato sale del perfil; Eventos tampoco, de momento, porque su cabecera no
+ * la dibuja.
+ */
+export const PAGINAS_CON_IMAGEN: readonly PageKey[] = ['research', 'teaching']
 
 /**
  * Como se llama cada seccion en pantalla, y que es.
@@ -37,46 +58,57 @@ export const PAGINA_SIEMPRE_VISIBLE: PageKey = 'home'
  */
 export const NOMBRE_DE_SECCION: Record<
   string,
-  { titulo: string; que: string; admiteFondo?: boolean }
+  {
+    titulo: string
+    que: string
+    admiteFondo?: boolean
+    /**
+     * Si se puede reescribir el rotulo de la banda. Fuera quedan las que lo calculan
+     * —«Upcoming events» pasa a «Past events» segun lo que haya publicado—, porque
+     * escribirlo obligaria a decidir cual de los dos gana.
+     */
+    admiteTitulo?: boolean
+  }
 > = {
   'home.hero': {
     titulo: 'Introduction',
     que: 'Your name, your photo, your summary and the CV.',
     admiteFondo: true,
   },
-  'home.carousel': {
-    titulo: 'Carousel',
-    que: 'The publications that head the home page.',
+  'home.about': {
+    titulo: 'About',
+    que: 'The intro of this page and your full biography, from Academic profile.',
     admiteFondo: true,
+    admiteTitulo: true,
   },
   'home.research_areas': {
     titulo: 'Research lines',
     que: 'The secondary text of this page, in several columns.',
     admiteFondo: true,
+    admiteTitulo: true,
   },
-  'home.featured_works': {
-    titulo: 'Selected publications',
-    que: 'The work you mark as featured.',
+  'home.appointments': {
+    titulo: 'Appointments',
+    que: 'Your posts and institutions, with their dates. You manage them in Affiliations.',
     admiteFondo: true,
+    admiteTitulo: true,
   },
-  'home.featured_courses': {
-    titulo: 'Teaching',
-    que: 'The courses you mark as featured.',
+  'home.latest_news': {
+    titulo: 'Latest news',
+    que: 'The three most recent news items. It does not appear if News is switched off.',
     admiteFondo: true,
+    admiteTitulo: true,
   },
-  'home.events': {
-    titulo: 'Events',
-    que: 'The grid of events at the end of the home page.',
+  'home.latest_blog': {
+    titulo: 'Latest from the blog',
+    que: 'The three most recent entries. It does not appear if Blog is switched off.',
     admiteFondo: true,
+    admiteTitulo: true,
   },
   'research.header': {
     titulo: 'Header',
     que: 'The title and intro of this page.',
     admiteFondo: true,
-  },
-  'research.filters': {
-    titulo: 'Filters',
-    que: 'The sidebar with type, status, topic and year.',
   },
   'teaching.header': {
     titulo: 'Header',
@@ -92,6 +124,16 @@ export const NOMBRE_DE_SECCION: Record<
     que: 'The title and intro of this page.',
     admiteFondo: true,
   },
+  'news.header': {
+    titulo: 'Header',
+    que: 'The title and intro of this page.',
+    admiteFondo: true,
+  },
+  'blog.header': {
+    titulo: 'Header',
+    que: 'The title and intro of this page.',
+    admiteFondo: true,
+  },
 }
 
 export interface PageSection {
@@ -99,6 +141,10 @@ export interface PageSection {
   pageKey: PageKey
   sectionKey: string
   isVisible: boolean
+  /** Rotulo de la banda. `null` significa el que trae la plantilla. */
+  heading: string | null
+  /** El texto pequeno a su derecha. `null` significa el de la plantilla. */
+  headingAside: string | null
   /** Fondo de la banda. Sin imagen la seccion se pinta con su color liso. */
   backgroundMediaId: string | null
   /** Capa oscura sobre la imagen, de 0 a 100. */
@@ -136,11 +182,13 @@ export function listPageSections(pageKey: PageKey): Promise<PageSection[]> {
   return get<PageSection[]>('/api/admin/page-sections', { page: pageKey })
 }
 
-/** No se crean ni se borran: solo se ajusta lo que se ve y con que fondo. */
+/** No se crean ni se borran: solo se ajusta lo que se ve, su rotulo y su fondo. */
 export function updatePageSection(
   id: string,
   cambio: {
     isVisible?: boolean
+    heading?: string | null
+    headingAside?: string | null
     backgroundMediaId?: string | null
     backgroundOverlay?: number
   }
