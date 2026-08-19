@@ -9,6 +9,7 @@ import {
   type PublicWorkSummary,
   type ResearchQuery,
 } from './api'
+import { ImagenDeCabecera } from './components/hero-image'
 import { RichText } from './components/rich-text'
 import { SectionBackground } from './components/section-background'
 import { SitePagination } from './components/site-pagination'
@@ -222,7 +223,7 @@ function Cabecera({
         <SectionBackground clave='research.header' />
 
         <div className='relative z-10 mx-auto grid max-w-site grid-cols-1 items-end gap-site-gutter md:grid-cols-12'>
-          <div className='flex flex-col gap-6 md:col-span-8'>
+          <div className='flex flex-col gap-6 md:col-span-7'>
             {page?.eyebrow != null && (
               <p
                 className={cn(
@@ -254,17 +255,8 @@ function Cabecera({
             />
           </div>
 
-          {/* La ilustracion de la cabecera, elegida en Contenido de paginas. Sin
-              descripcion escrita va como decorativa: un `alt` inventado le cuenta a un
-              lector de pantalla algo que nadie ha comprobado. */}
           {page?.heroUrl != null && (
-            <div className='flex md:col-span-4 md:justify-end'>
-              <img
-                src={page.heroUrl}
-                alt={page.heroAlt ?? ''}
-                className='w-full rounded-site shadow-xl md:max-w-[420px]'
-              />
-            </div>
+            <ImagenDeCabecera url={page.heroUrl} alt={page.heroAlt} />
           )}
         </div>
       </section>

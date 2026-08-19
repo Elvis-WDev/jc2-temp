@@ -140,6 +140,30 @@ describe('cabecera de Research', () => {
     await expect.element(imagen).toHaveAttribute('src', '/api/public/media/abc')
   })
 
+  it('la ilustracion va sin sombra y centrada, no pegada al pie del texto', async () => {
+    // La cabecera ya es una banda con su propio color: una sombra ahi hace que la
+    // imagen parezca pegada encima en lugar de formar parte de ella. Y se centra por su
+    // cuenta, porque la rejilla alinea el texto de otra forma en cada pagina.
+    getPageContent.mockResolvedValue({
+      ...PAGINA,
+      heroUrl: '/api/public/media/abc',
+      heroAlt: 'Una ilustracion',
+    })
+    const screen = await pintar()
+
+    const imagen = screen.getByRole('img', { name: 'Una ilustracion' })
+    await expect.element(imagen).toBeVisible()
+
+    const marco = document.querySelector(
+      'img[alt="Una ilustracion"]'
+    )?.parentElement
+
+    expect(
+      document.querySelector('img[alt="Una ilustracion"]')?.className
+    ).not.toMatch(/shadow/)
+    expect(marco?.className).toMatch(/self-center/)
+  })
+
   it('sin descripcion escrita, la imagen es decorativa', async () => {
     getPageContent.mockResolvedValue({
       ...PAGINA,
