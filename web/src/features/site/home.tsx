@@ -5,6 +5,7 @@ import { queryKeys } from '@/lib/api/query-keys'
 import { cn } from '@/lib/utils'
 import { getHome, getSite, type PublicHome, type PublicSite } from './api'
 import { PostCard } from './components/post-card'
+import { PostCarousel } from './components/post-carousel'
 import { RichText } from './components/rich-text'
 import { SectionBackground } from './components/section-background'
 import { SiteButton, SiteButtonLink } from './components/site-button'
@@ -116,11 +117,13 @@ export function SiteHome() {
     seVe('appointments') && home.profile.affiliations.length > 0
       ? 'appointments'
       : null,
-    seVe('latest_news') && home.latestPosts.news.length > 0
-      ? 'latest_news'
-      : null,
     seVe('latest_blog') && home.latestPosts.blog.length > 0
       ? 'latest_blog'
+      : null,
+    // Las noticias cierran la portada, y en carrusel: es lo ultimo que pasa y lo que
+    // conviene que quede a la vista al final del recorrido.
+    seVe('latest_news') && home.latestPosts.news.length > 0
+      ? 'latest_news'
       : null,
   ].filter((banda): banda is string => banda !== null)
 
@@ -142,18 +145,19 @@ export function SiteHome() {
       {bandas.includes('appointments') && (
         <Trayectoria home={home} tone={tono('appointments')} />
       )}
-      {bandas.includes('latest_news') && (
-        <GrupoDeEntradas
-          pagina={NOTICIAS}
-          entradas={home.latestPosts.news}
-          tone={tono('latest_news')}
-        />
-      )}
       {bandas.includes('latest_blog') && (
         <GrupoDeEntradas
           pagina={BLOG}
           entradas={home.latestPosts.blog}
           tone={tono('latest_blog')}
+        />
+      )}
+      {bandas.includes('latest_news') && (
+        <GrupoDeEntradas
+          pagina={NOTICIAS}
+          entradas={home.latestPosts.news}
+          tone={tono('latest_news')}
+          carrusel
         />
       )}
     </>
@@ -493,10 +497,18 @@ function GrupoDeEntradas({
   pagina,
   entradas,
   tone,
+  carrusel = false,
 }: {
   pagina: PaginaDeEntradas
   entradas: PublicHome['latestPosts']['news']
   tone: Tono
+  /**
+   * De una en una y con flechas, en lugar de una lista.
+   *
+   * Lo llevan las noticias, que son breves y se leen de un vistazo. El blog se queda en
+   * lista: su resumen es mas largo y verlos juntos ayuda a elegir cual abrir.
+   */
+  carrusel?: boolean
 }) {
   const clave = `home.latest_${pagina.pageKey}`
   const invertido = useBandaInvertida(clave, tone)
@@ -520,11 +532,19 @@ function GrupoDeEntradas({
           </Link>
         }
       />
-      <div className='flex flex-col gap-6'>
-        {entradas.map((entrada) => (
-          <PostCard key={entrada.id} post={entrada} pagina={pagina} />
-        ))}
-      </div>
+      {carrusel ? (
+        <PostCarousel
+          entradas={entradas}
+          pagina={pagina}
+          invertido={invertido}
+        />
+      ) : (
+        <div className='flex flex-col gap-6'>
+          {entradas.map((entrada) => (
+            <PostCard key={entrada.id} post={entrada} pagina={pagina} />
+          ))}
+        </div>
+      )}
     </SiteSection>
   )
 }

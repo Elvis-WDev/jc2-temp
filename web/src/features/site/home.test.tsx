@@ -473,3 +473,66 @@ describe('el turno de colores de las bandas', () => {
     expect({ repetida, turno }).toEqual({ repetida: -1, turno })
   })
 })
+
+describe('las noticias, en carrusel', () => {
+  it('cierran la portada, debajo del blog', async () => {
+    getHome.mockResolvedValue(HOME_LLENO)
+    const screen = await pintar()
+    await expect.element(screen.getByText('News')).toBeVisible()
+
+    const rotulos = [...document.querySelectorAll('section h2')].map(
+      (h) => h.textContent
+    )
+
+    expect(rotulos[rotulos.length - 1]).toBe('News')
+    expect(rotulos.indexOf('Blog')).toBeLessThan(rotulos.indexOf('News'))
+  })
+
+  it('se pasan con las flechas y no solas', async () => {
+    // Un carrusel que gira por su cuenta obliga a leer a la velocidad que decide la
+    // web (ERS §41): aqui manda quien lee.
+    getHome.mockResolvedValue({
+      ...HOME_LLENO,
+      latestPosts: {
+        ...HOME_LLENO.latestPosts,
+        news: [
+          HOME_LLENO.latestPosts.news[0]!,
+          { ...HOME_LLENO.latestPosts.news[0]!, id: 'n2', slug: 'otra' },
+        ],
+      },
+    })
+    const screen = await pintar()
+
+    await expect
+      .element(screen.getByRole('button', { name: 'Siguiente' }))
+      .toBeVisible()
+    // En la primera no hay nada anterior a lo que ir.
+    await expect
+      .element(screen.getByRole('button', { name: 'Anterior' }))
+      .toBeDisabled()
+  })
+
+  it('con una sola noticia no ofrece flechas', async () => {
+    // Es una tarjeta grande, no un carrusel de uno.
+    getHome.mockResolvedValue(HOME_LLENO)
+    const screen = await pintar()
+    await expect.element(screen.getByText('News')).toBeVisible()
+
+    await expect
+      .element(screen.getByRole('button', { name: 'Siguiente' }))
+      .not.toBeInTheDocument()
+  })
+
+  it('el blog se queda en lista', async () => {
+    getHome.mockResolvedValue(HOME_LLENO)
+    const screen = await pintar()
+    await expect.element(screen.getByText('Blog')).toBeVisible()
+
+    const carruseles = document.querySelectorAll(
+      '[aria-roledescription="carousel"]'
+    )
+
+    expect(carruseles).toHaveLength(1)
+    expect(carruseles[0]?.getAttribute('aria-label')).toBe('News')
+  })
+})
