@@ -204,12 +204,12 @@ export interface PublicHome {
   /** Vacia si el titular oculto los textos de la portada. */
   page: PublicPageContent | null
   /**
-   * Lo ultimo de News y de Blog, cada uno por su lado.
+   * Lo ultimo de News, para el carrusel que cierra la portada.
    *
-   * Un grupo llega vacio si su pagina esta apagada o si no hay nada publicado, que es la
-   * misma condicion con la que se decide el menu del sitio.
+   * Vacio si la pagina de News esta apagada o si no hay nada publicado, que es la misma
+   * condicion con la que se decide el menu del sitio.
    */
-  latestPosts: { news: PublicPost[]; blog: PublicPost[] }
+  latestNews: PublicPost[]
   /** Que bloques se pintan, ya resueltos: `hero`, `about`, `appointments`... */
   sections: Record<string, boolean>
 }

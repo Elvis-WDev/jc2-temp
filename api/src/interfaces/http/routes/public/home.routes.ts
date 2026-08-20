@@ -35,14 +35,9 @@ export function createPublicHomeRouter(deps: PublicHomeRouterDeps): Router {
         // La misma ficha que sirve `/api/public/posts`: la portada ensena un resumen de
         // cada una, pero componer aqui un DTO mas pequeno seria una lista blanca mas que
         // mantener al dia, y son tres entradas.
-        latestPosts: {
-          news: home.latestPosts.news.map((entrada) =>
-            toPublicPostDto(entrada, deps.publicBaseUrl, home.postKindLabels),
-          ),
-          blog: home.latestPosts.blog.map((entrada) =>
-            toPublicPostDto(entrada, deps.publicBaseUrl, home.postKindLabels),
-          ),
-        },
+        latestNews: home.latestNews.map((entrada) =>
+          toPublicPostDto(entrada, deps.publicBaseUrl, home.postKindLabels),
+        ),
         sections: home.sections,
       }
     }),

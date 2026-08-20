@@ -11,7 +11,7 @@ import { SectionBackground } from './components/section-background'
 import { SiteButton, SiteButtonLink } from './components/site-button'
 import { SectionHeading, SiteSection } from './components/site-section'
 import { fondoDeCabecera } from './page-heroes'
-import { BLOG, NOTICIAS, type PaginaDeEntradas } from './post-pages'
+import { NOTICIAS, type PaginaDeEntradas } from './post-pages'
 import {
   useSectionBackground,
   useSectionHeading,
@@ -108,24 +108,12 @@ export function SiteHome() {
   // Que bandas se pintan, en orden. Una encendida pero vacia no cuenta: no se dibuja, y
   // dejarle su turno de color descuadraria las de debajo.
   const bandas = [
-    seVe('about') &&
-    (home.page?.introHtml != null || home.profile.fullBioHtml !== null)
-      ? 'about'
-      : null,
     seVe('research_areas') && home.page?.secondaryHtml != null
       ? 'research_areas'
       : null,
-    seVe('appointments') && home.profile.affiliations.length > 0
-      ? 'appointments'
-      : null,
-    seVe('latest_blog') && home.latestPosts.blog.length > 0
-      ? 'latest_blog'
-      : null,
     // Las noticias cierran la portada, y en carrusel: es lo ultimo que pasa y lo que
     // conviene que quede a la vista al final del recorrido.
-    seVe('latest_news') && home.latestPosts.news.length > 0
-      ? 'latest_news'
-      : null,
+    seVe('latest_news') && home.latestNews.length > 0 ? 'latest_news' : null,
   ].filter((banda): banda is string => banda !== null)
 
   const turno = turnoDeColores(bandas.length)
@@ -137,26 +125,13 @@ export function SiteHome() {
       {seVe('hero') && (
         <Hero home={home} researchVisible={site?.pages.research === true} />
       )}
-      {bandas.includes('about') && (
-        <Biografia home={home} tone={tono('about')} />
-      )}
       {bandas.includes('research_areas') && (
         <Dominios home={home} tone={tono('research_areas')} />
-      )}
-      {bandas.includes('appointments') && (
-        <Trayectoria home={home} tone={tono('appointments')} />
-      )}
-      {bandas.includes('latest_blog') && (
-        <GrupoDeEntradas
-          pagina={BLOG}
-          entradas={home.latestPosts.blog}
-          tone={tono('latest_blog')}
-        />
       )}
       {bandas.includes('latest_news') && (
         <GrupoDeEntradas
           pagina={NOTICIAS}
-          entradas={home.latestPosts.news}
+          entradas={home.latestNews}
           tone={tono('latest_news')}
           carrusel
         />
@@ -404,153 +379,6 @@ function RedesAcademicas({
 }
 
 /**
- * Quien es: la entradilla de la portada y la biografia larga.
- *
- * La biografia se escribe en Perfil academico y hasta ahora no se pintaba en ninguna
- * pagina: se guardaba y se tiraba. La entradilla es el `introMarkdown` de la portada,
- * que vivia dentro de la banda de Docencia y se habria quedado huerfano al retirarla.
- */
-function Biografia({ home, tone }: { home: PublicHome; tone: Tono }) {
-  const { profile, page } = home
-  const invertido = useBandaInvertida('home.about', tone)
-  const rotulo = useSectionHeading('home.about', { title: 'About' })
-
-  // Nada que contar: ni entradilla ni biografia. La banda no se pinta en lugar de
-  // dejar un encabezado sobre el vacio.
-  if (page?.introHtml == null && profile.fullBioHtml === null) return null
-
-  return (
-    <SiteSection tone={tone} backgroundKey='home.about'>
-      <SectionHeading
-        title={rotulo.title}
-        aside={rotulo.aside}
-        dark={invertido}
-      />
-
-      <div className='grid gap-12 md:grid-cols-12'>
-        {page?.introHtml != null && (
-          <RichText
-            html={page.introHtml}
-            className={cn(
-              'text-site-body-lg leading-relaxed font-light italic md:col-span-5',
-              invertido
-                ? 'text-site-on-primary/85'
-                : 'text-site-on-surface-variant'
-            )}
-          />
-        )}
-
-        {profile.fullBioHtml !== null && (
-          <RichText
-            html={profile.fullBioHtml}
-            className={cn(
-              // Sin entradilla ocupa el ancho entero: dejar media banda vacia se leeria
-              // como que falta algo.
-              page?.introHtml == null ? 'md:col-span-12' : 'md:col-span-7',
-              '[&_p]:mb-4',
-              invertido
-                ? 'text-site-on-primary/85'
-                : 'text-site-on-surface-variant'
-            )}
-          />
-        )}
-      </div>
-    </SiteSection>
-  )
-}
-
-/** Un rango de anos, con «presente» cuando el cargo sigue vigente. */
-function periodo(
-  afiliacion: PublicHome['profile']['affiliations'][number]
-): string {
-  const anio = (fecha: string | null) =>
-    fecha === null ? null : fecha.slice(0, 4)
-  const desde = anio(afiliacion.startDate)
-  // `isCurrent` y no «sin fecha de fin»: un cargo puede seguir vigente sin que nadie
-  // sepa cuando acabara, y son dos cosas distintas.
-  const hasta = afiliacion.isCurrent ? 'Present' : anio(afiliacion.endDate)
-
-  if (desde === null) return hasta ?? ''
-  if (hasta === null || hasta === desde) return desde
-  return `${desde} — ${hasta}`
-}
-
-/**
- * La trayectoria: donde esta y donde ha estado.
- *
- * El orden llega resuelto del servidor —vigente primero y dentro de eso lo mas
- * reciente—, asi que aqui no se reordena nada.
- */
-function Trayectoria({ home, tone }: { home: PublicHome; tone: Tono }) {
-  const invertido = useBandaInvertida('home.appointments', tone)
-  const rotulo = useSectionHeading('home.appointments', {
-    title: 'Appointments',
-  })
-  const { affiliations } = home.profile
-
-  if (affiliations.length === 0) return null
-
-  return (
-    <SiteSection tone={tone} backgroundKey='home.appointments'>
-      <SectionHeading
-        title={rotulo.title}
-        aside={rotulo.aside}
-        dark={invertido}
-      />
-
-      <ol className='flex flex-col'>
-        {affiliations.map((afiliacion, indice) => (
-          <li
-            key={`${afiliacion.institution}-${afiliacion.title}-${String(indice)}`}
-            className={cn(
-              'grid gap-2 border-t py-6 md:grid-cols-12 md:gap-8',
-              invertido
-                ? 'border-site-on-primary/10'
-                : 'border-site-outline-variant/20',
-              // La primera no lleva filete arriba: el encabezado ya trae el suyo.
-              indice === 0 && 'border-t-0 pt-0'
-            )}
-          >
-            <span
-              className={cn(
-                'text-site-meta tracking-widest uppercase md:col-span-3',
-                invertido
-                  ? 'text-site-on-primary/70'
-                  : 'text-site-on-surface-variant'
-              )}
-            >
-              {periodo(afiliacion)}
-            </span>
-
-            <div className='md:col-span-9'>
-              <h3
-                className={cn(
-                  'font-site-display text-site-headline-sm',
-                  invertido ? 'text-site-on-primary' : 'text-site-primary'
-                )}
-              >
-                {afiliacion.title}
-              </h3>
-              <p
-                className={cn(
-                  invertido
-                    ? 'text-site-on-primary/85'
-                    : 'text-site-on-surface-variant'
-                )}
-              >
-                {[afiliacion.institution, afiliacion.department]
-                  .filter((parte) => parte !== null && parte !== '')
-                  .join(' · ')}
-              </p>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </SiteSection>
-  )
-}
-
-/**
  * Una banda con lo ultimo de un tipo.
  *
  * Se pinta una por tipo y no una sola con los dos: son dos bloques distintos de la
@@ -564,7 +392,7 @@ function GrupoDeEntradas({
   carrusel = false,
 }: {
   pagina: PaginaDeEntradas
-  entradas: PublicHome['latestPosts']['news']
+  entradas: PublicHome['latestNews']
   tone: Tono
   /**
    * De una en una y con flechas, en lugar de una lista.

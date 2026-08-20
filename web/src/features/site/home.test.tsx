@@ -103,31 +103,22 @@ const HOME: PublicHome = {
     ],
   },
   page: PAGINA,
-  latestPosts: {
-    news: [
-      {
-        id: 'n1',
-        slug: 'una-beca',
-        kind: 'news',
-        kindLabel: 'News',
-        title: 'Una beca para el departamento',
-        summary: 'Cuatro anos.',
-        contentHtml: null,
-        imageUrl: null,
-        imageAlt: null,
-        publishedAt: '2026-05-04T00:00:00.000Z',
-        files: [],
-      },
-    ],
-    blog: [],
-  },
-  sections: {
-    hero: true,
-    about: true,
-    research_areas: true,
-    appointments: true,
-    latest: true,
-  },
+  latestNews: [
+    {
+      id: 'n1',
+      slug: 'una-beca',
+      kind: 'news',
+      kindLabel: 'News',
+      title: 'Una beca para el departamento',
+      summary: 'Cuatro anos.',
+      contentHtml: null,
+      imageUrl: null,
+      imageAlt: null,
+      publishedAt: '2026-05-04T00:00:00.000Z',
+      files: [],
+    },
+  ],
+  sections: { hero: true, research_areas: true, latest_news: true },
 }
 
 function pintar() {
@@ -314,83 +305,6 @@ describe('portada publica', () => {
   })
 })
 
-describe('quien es', () => {
-  it('pinta la biografia larga, que hasta ahora no salia en ninguna pagina', async () => {
-    getHome.mockResolvedValue({
-      ...HOME,
-      profile: { ...HOME.profile, fullBioHtml: '<p>Se doctoro en 2015.</p>' },
-    })
-    const screen = await pintar()
-
-    await expect.element(screen.getByText('Se doctoro en 2015.')).toBeVisible()
-  })
-
-  it('sin biografia ni entradilla, la banda no se pinta', async () => {
-    // Un encabezado sobre el vacio no informa de nada.
-    const screen = await pintar()
-    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
-
-    await expect.element(screen.getByText('About')).not.toBeInTheDocument()
-  })
-
-  it('apagada desde el panel, no aparece aunque haya biografia', async () => {
-    getHome.mockResolvedValue({
-      ...HOME,
-      profile: { ...HOME.profile, fullBioHtml: '<p>Se doctoro en 2015.</p>' },
-      sections: { ...HOME.sections, about: false },
-    })
-    const screen = await pintar()
-    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
-
-    await expect
-      .element(screen.getByText('Se doctoro en 2015.'))
-      .not.toBeInTheDocument()
-  })
-})
-
-describe('trayectoria', () => {
-  it('un cargo vigente se lee «presente», y uno terminado como rango cerrado', async () => {
-    // `isCurrent` y no «sin fecha de fin»: un cargo puede seguir vigente sin que nadie
-    // sepa cuando acabara, y son dos cosas distintas.
-    const screen = await pintar()
-
-    await expect.element(screen.getByText('2019 — Present')).toBeVisible()
-    await expect.element(screen.getByText('2015 — 2019')).toBeVisible()
-  })
-
-  it('el orden es el que manda el servidor, no el del alfabeto', async () => {
-    const screen = await pintar()
-    await expect
-      .element(screen.getByText('Investigadora posdoctoral'))
-      .toBeVisible()
-
-    // Se lee del DOM, no de la lista de la API: lo que importa es que la banda no
-    // reordene por su cuenta lo que el servidor ya ordeno.
-    const cargos = screen
-      .getByRole('heading', { level: 3 })
-      .elements()
-      .map((el) => el.textContent)
-
-    expect(cargos.slice(0, 2)).toEqual([
-      'Profesora titular',
-      'Investigadora posdoctoral',
-    ])
-  })
-
-  it('sin afiliaciones, la banda no se pinta', async () => {
-    getHome.mockResolvedValue({
-      ...HOME,
-      profile: { ...HOME.profile, affiliations: [] },
-    })
-    const screen = await pintar()
-    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
-
-    await expect
-      .element(screen.getByText('Appointments'))
-      .not.toBeInTheDocument()
-  })
-})
-
 describe('lo ultimo', () => {
   it('ensena las noticias y lleva a su pagina', async () => {
     const screen = await pintar()
@@ -403,19 +317,8 @@ describe('lo ultimo', () => {
       .toHaveAttribute('href', '/news')
   })
 
-  it('el grupo vacio no deja un encabezado suelto', async () => {
-    // Blog llega vacio: su banda no existe, en lugar de un titulo sobre nada.
-    const screen = await pintar()
-    await expect.element(screen.getByText('News')).toBeVisible()
-
-    await expect.element(screen.getByText('Blog')).not.toBeInTheDocument()
-  })
-
-  it('con las dos vacias, no se pinta nada', async () => {
-    getHome.mockResolvedValue({
-      ...HOME,
-      latestPosts: { news: [], blog: [] },
-    })
+  it('sin noticias no se pinta nada', async () => {
+    getHome.mockResolvedValue({ ...HOME, latestNews: [] })
     const screen = await pintar()
     await expect.element(screen.getByText('Juana Castro')).toBeVisible()
 
@@ -425,15 +328,10 @@ describe('lo ultimo', () => {
   })
 })
 
-/** Con las seis bandas visibles: es donde el turno se puede comprobar entero. */
+/** Con las tres bandas visibles: es donde el turno se puede comprobar entero. */
 const HOME_LLENO: PublicHome = {
   ...HOME,
-  profile: { ...HOME.profile, fullBioHtml: '<p>Se doctoro en 2015.</p>' },
   page: { ...PAGINA, secondaryHtml: '<h3>Diseno de mecanismos</h3>' },
-  latestPosts: {
-    news: HOME.latestPosts.news,
-    blog: [{ ...HOME.latestPosts.news[0]!, id: 'b1', slug: 'una-entrada' }],
-  },
 }
 
 describe('el turno de colores de las bandas', () => {
@@ -450,12 +348,12 @@ describe('el turno de colores de las bandas', () => {
   it('ninguna banda repite el color de la de arriba', async () => {
     getHome.mockResolvedValue(HOME_LLENO)
     const screen = await pintar()
-    await expect.element(screen.getByText('Appointments')).toBeVisible()
+    await expect.element(screen.getByText('Research lines')).toBeVisible()
 
     const turno = bandas()
     const repetida = turno.findIndex((c, i) => i > 0 && c === turno[i - 1])
 
-    expect(turno).toHaveLength(6)
+    expect(turno).toHaveLength(3)
     expect({ repetida, turno }).toEqual({ repetida: -1, turno })
   })
 
@@ -464,17 +362,17 @@ describe('el turno de colores de las bandas', () => {
     // lleva el mismo— lo resuelve el filete del pie, no el color.
     getHome.mockResolvedValue(HOME_LLENO)
     const screen = await pintar()
-    await expect.element(screen.getByText('Appointments')).toBeVisible()
+    await expect.element(screen.getByText('Research lines')).toBeVisible()
 
     expect(bandas().slice(0, 3)).toEqual(['fondo', 'solido', 'fondo'])
   })
 
   it('una banda que no se pinta no gasta su turno', async () => {
-    // Sin trayectoria, la banda desaparece: las de debajo corren el turno en lugar de
-    // quedarse dos seguidas del mismo color.
+    // Sin texto secundario, la banda de lineas de investigacion desaparece: las de
+    // debajo corren el turno en lugar de quedarse dos seguidas del mismo color.
     getHome.mockResolvedValue({
       ...HOME_LLENO,
-      profile: { ...HOME_LLENO.profile, affiliations: [] },
+      page: { ...PAGINA, secondaryHtml: null },
     })
     const screen = await pintar()
     await expect.element(screen.getByText('News')).toBeVisible()
@@ -482,13 +380,13 @@ describe('el turno de colores de las bandas', () => {
     const turno = bandas()
     const repetida = turno.findIndex((c, i) => i > 0 && c === turno[i - 1])
 
-    expect(turno).toHaveLength(5)
+    expect(turno).toHaveLength(2)
     expect({ repetida, turno }).toEqual({ repetida: -1, turno })
   })
 })
 
 describe('las noticias, en carrusel', () => {
-  it('cierran la portada, debajo del blog', async () => {
+  it('cierran la portada', async () => {
     getHome.mockResolvedValue(HOME_LLENO)
     const screen = await pintar()
     await expect.element(screen.getByText('News')).toBeVisible()
@@ -498,7 +396,6 @@ describe('las noticias, en carrusel', () => {
     )
 
     expect(rotulos[rotulos.length - 1]).toBe('News')
-    expect(rotulos.indexOf('Blog')).toBeLessThan(rotulos.indexOf('News'))
   })
 
   it('se pasan con las flechas y no solas', async () => {
@@ -506,13 +403,10 @@ describe('las noticias, en carrusel', () => {
     // web (ERS §41): aqui manda quien lee.
     getHome.mockResolvedValue({
       ...HOME_LLENO,
-      latestPosts: {
-        ...HOME_LLENO.latestPosts,
-        news: [
-          HOME_LLENO.latestPosts.news[0]!,
-          { ...HOME_LLENO.latestPosts.news[0]!, id: 'n2', slug: 'otra' },
-        ],
-      },
+      latestNews: [
+        HOME_LLENO.latestNews[0]!,
+        { ...HOME_LLENO.latestNews[0]!, id: 'n2', slug: 'otra' },
+      ],
     })
     const screen = await pintar()
 
@@ -534,19 +428,6 @@ describe('las noticias, en carrusel', () => {
     await expect
       .element(screen.getByRole('button', { name: 'Siguiente' }))
       .not.toBeInTheDocument()
-  })
-
-  it('el blog se queda en lista', async () => {
-    getHome.mockResolvedValue(HOME_LLENO)
-    const screen = await pintar()
-    await expect.element(screen.getByText('Blog')).toBeVisible()
-
-    const carruseles = document.querySelectorAll(
-      '[aria-roledescription="carousel"]'
-    )
-
-    expect(carruseles).toHaveLength(1)
-    expect(carruseles[0]?.getAttribute('aria-label')).toBe('News')
   })
 })
 

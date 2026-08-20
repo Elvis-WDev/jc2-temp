@@ -12,13 +12,13 @@ export interface HomePage {
   /** Vacio si el titular oculto los textos de la portada. */
   page: PageContentRecord | null
   /**
-   * Lo ultimo de News y de Blog, cada uno por su lado.
+   * Lo ultimo de News, para el carrusel que cierra la portada.
    *
-   * Separados y no mezclados en una sola lista: son dos cosas distintas y cada grupo
-   * lleva a su pagina. Un grupo llega vacio si su pagina esta apagada o si no hay nada
-   * publicado, que es la misma condicion con la que se decide el menu del sitio.
+   * Vacio si la pagina de News esta apagada o si no hay nada publicado, que es la misma
+   * condicion con la que se decide el menu del sitio. El blog se retiro de la portada:
+   * tiene su propia pagina y en el menu.
    */
-  latestPosts: { news: PostRecord[]; blog: PostRecord[] }
+  latestNews: PostRecord[]
   postKindLabels: Record<string, string>
   /** Que bloques se pintan, ya resuelto: `hero`, `about`, `appointments`... */
   sections: Record<string, boolean>
@@ -53,32 +53,25 @@ export class GetHomePage {
     const visibilidad = await this.siteContent.getVisibility()
     const seVe = (seccion: string) => visibilidad.sections[`home.${seccion}`] ?? true
 
-    // Apagar la pagina apaga lo suyo tambien en la portada: enlazar desde aqui a una
-    // seccion que el menu no ensena llevaria a un 404.
-    const seVePagina = (pagina: string) => visibilidad.pages[pagina] ?? true
-    // Una banda por tipo, con su propio interruptor: son dos bloques distintos en la
-    // pagina, y un interruptor compartido obligaria a apagar los dos para apagar uno.
-    const ultimas = (tipo: string, pagina: string) =>
-      seVe(`latest_${pagina}`) && seVePagina(pagina)
-        ? this.posts.listPublished({ page: 1, page_size: LIMITE_ENTRADAS }, { kind: tipo })
-        : Promise.resolve({ items: [], kindLabels: {} })
-
-    const [profile, page, news, blog] = await Promise.all([
+    const [profile, page, news] = await Promise.all([
       this.profile.execute(),
       // `findPublishedPage`, no `getPage`: con `getPage` el interruptor "visible en la
       // web" de la portada no hacia nada, y sus textos se servian igual estando oculta.
-      seVe('hero') || seVe('about') || seVe('research_areas')
+      seVe('hero') || seVe('research_areas')
         ? this.siteContent.findPublishedPage('home')
         : Promise.resolve(null),
-      ultimas('news', 'news'),
-      ultimas('personal', 'blog'),
+      // Apagar la pagina de News la retira tambien de la portada: enlazar desde aqui a
+      // una seccion que el menu no ensena llevaria a un 404.
+      seVe('latest_news') && (visibilidad.pages.news ?? true)
+        ? this.posts.listPublished({ page: 1, page_size: LIMITE_ENTRADAS }, { kind: 'news' })
+        : Promise.resolve({ items: [], kindLabels: {} }),
     ])
 
     return {
       profile,
       page,
-      latestPosts: { news: news.items, blog: blog.items },
-      postKindLabels: { ...news.kindLabels, ...blog.kindLabels },
+      latestNews: news.items,
+      postKindLabels: news.kindLabels,
       sections: Object.fromEntries(
         Object.entries(visibilidad.sections)
           .filter(([clave]) => clave.startsWith('home.'))

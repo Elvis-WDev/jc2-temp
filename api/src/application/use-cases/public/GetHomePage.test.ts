@@ -26,11 +26,8 @@ const TODAS_VISIBLES = {
   pages: { home: true, news: true, blog: true },
   sections: {
     'home.hero': true,
-    'home.about': true,
     'home.research_areas': true,
-    'home.appointments': true,
     'home.latest_news': true,
-    'home.latest_blog': true,
   },
 }
 
@@ -92,12 +89,12 @@ describe('portada publica', () => {
   })
 
   it('pero ocultar los textos no vacia la portada entera', async () => {
-    // Lo que se oculta es lo que el titular escribio, no su perfil ni su trayectoria.
+    // Lo que se oculta es lo que el titular escribio, no su perfil ni sus noticias.
     const { caso } = portada(false)
     const home = await caso.execute()
 
     expect(home.profile.person.fullName).toBe('Quien sea')
-    expect(home.latestPosts.news).toHaveLength(1)
+    expect(home.latestNews).toHaveLength(1)
   })
 
   it('lee la pagina con la version publica, nunca con la del panel', async () => {
@@ -112,45 +109,28 @@ describe('portada publica', () => {
     const { caso } = portada(true)
     const home = await caso.execute()
 
-    expect(home.sections).toMatchObject({ hero: true, about: true, appointments: true })
+    expect(home.sections).toMatchObject({ hero: true, research_areas: true })
   })
 
   it('una seccion apagada no se consulta siquiera', async () => {
     // No es solo que no se pinte: no se va a la base de datos a por ella.
     const { caso } = portada(true, {
       pages: TODAS_VISIBLES.pages,
-      sections: {
-        ...TODAS_VISIBLES.sections,
-        'home.latest_news': false,
-        'home.latest_blog': false,
-      },
-    })
-    const home = await caso.execute()
-
-    expect(home.latestPosts).toEqual({ news: [], blog: [] })
-    expect(home.sections.latest_news).toBe(false)
-  })
-})
-
-describe('lo ultimo de noticias y blog', () => {
-  it('trae los dos grupos por separado', async () => {
-    // Separados y no mezclados: son dos cosas distintas y cada grupo lleva a su pagina.
-    const { caso } = portada(true)
-    const home = await caso.execute()
-
-    expect(home.latestPosts.news.map((p) => p.id)).toEqual(['post-news'])
-    expect(home.latestPosts.blog.map((p) => p.id)).toEqual(['post-personal'])
-  })
-
-  it('cada banda tiene su interruptor: apagar News no apaga Blog', async () => {
-    const { caso } = portada(true, {
-      pages: TODAS_VISIBLES.pages,
       sections: { ...TODAS_VISIBLES.sections, 'home.latest_news': false },
     })
     const home = await caso.execute()
 
-    expect(home.latestPosts.news).toEqual([])
-    expect(home.latestPosts.blog).toHaveLength(1)
+    expect(home.latestNews).toEqual([])
+    expect(home.sections.latest_news).toBe(false)
+  })
+})
+
+describe('lo ultimo de noticias', () => {
+  it('trae las noticias para el carrusel', async () => {
+    const { caso } = portada(true)
+    const home = await caso.execute()
+
+    expect(home.latestNews.map((p) => p.id)).toEqual(['post-news'])
   })
 
   it('apagar la pagina de News la retira tambien de la portada', async () => {
@@ -161,7 +141,6 @@ describe('lo ultimo de noticias y blog', () => {
     })
     const home = await caso.execute()
 
-    expect(home.latestPosts.news).toEqual([])
-    expect(home.latestPosts.blog).toHaveLength(1)
+    expect(home.latestNews).toEqual([])
   })
 })
