@@ -134,7 +134,30 @@ describe('tarjeta de una publicacion', () => {
     await expect.element(screen.getByText('Full page')).toBeVisible()
   })
 
+  it('el PDF se descarga, no se abre en una pestana', async () => {
+    // El servidor sirve el PDF para verse en el navegador, asi que sin `download` se
+    // abriria en lugar de guardarse.
+    const screen = await pintar()
+
+    const boton = screen.getByRole('link', {
+      name: /download the pdf of asimetria/i,
+    })
+    await expect.element(boton).toBeVisible()
+    await expect.element(boton).toHaveAttribute('download')
+    await expect.element(boton).toHaveAttribute('href', '/api/public/media/abc')
+  })
+
+  it('el boton dice de que publicacion es', async () => {
+    // «Descargar PDF» repetido dieciseis veces en un listado no dice cual es cual.
+    const screen = await pintar()
+
+    await expect
+      .element(screen.getByRole('link', { name: /download the pdf of/i }))
+      .toBeVisible()
+  })
+
   it('sin PDF publico no se ofrece el boton', async () => {
+    // Mejor ninguno que uno que lleve a un 404.
     const screen = await pintar({ ...TRABAJO, pdfUrl: null })
     await expect.element(screen.getByText(/Asimetria/)).toBeVisible()
 

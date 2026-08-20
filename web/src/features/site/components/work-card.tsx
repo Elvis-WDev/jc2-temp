@@ -1,6 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { FileText, Link2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { FileDown, Link2 } from 'lucide-react'
 import { type PublicWorkSummary } from '../api'
 import { coautores, referencia } from '../work-format'
 
@@ -55,15 +54,37 @@ export function WorkCard({
         )}
       </div>
 
-      <h2 className='mt-2 font-site-display text-site-headline-sm text-site-on-surface'>
-        <Link
-          to='/research/$slug'
-          params={{ slug: work.slug }}
-          className='transition-colors hover:text-site-primary'
-        >
-          {work.title}
-        </Link>
-      </h2>
+      {/* El PDF va aqui, al final del titulo y anclado a la derecha, porque es lo que se
+          busca de una publicacion. `items-start`: con un titulo de dos lineas, centrarlo
+          lo dejaria colgando a media altura. */}
+      <div className='mt-2 flex items-start justify-between gap-4'>
+        <h2 className='font-site-display text-site-headline-sm text-site-on-surface'>
+          <Link
+            to='/research/$slug'
+            params={{ slug: work.slug }}
+            className='transition-colors hover:text-site-primary'
+          >
+            {work.title}
+          </Link>
+        </h2>
+
+        {work.pdfUrl !== null && (
+          <a
+            href={work.pdfUrl}
+            // Se guarda, no se hojea: el PDF se sirve para verse en el navegador, asi
+            // que sin esto se abriria en una pestana en lugar de descargarse.
+            download
+            // El titulo va en el nombre accesible: «Descargar PDF» repetido dieciseis
+            // veces en un listado no dice cual es cual.
+            aria-label={`Download the PDF of ${work.title}`}
+            title='Download the PDF'
+            className='flex shrink-0 items-center gap-1.5 rounded-site border border-site-primary px-3 py-1.5 text-site-label text-site-primary uppercase transition-colors hover:bg-site-primary hover:text-site-on-primary'
+          >
+            <FileDown aria-hidden className='size-4' />
+            PDF
+          </a>
+        )}
+      </div>
 
       {work.subtitle !== null && (
         <p className='mt-1 text-site-on-surface-variant'>{work.subtitle}</p>
@@ -80,15 +101,6 @@ export function WorkCard({
       )}
 
       <div className='mt-4 flex flex-wrap items-center gap-4 border-t border-site-outline-variant/50 pt-4'>
-        {work.pdfUrl !== null && (
-          <Accion
-            href={work.pdfUrl}
-            icono={<FileText className='size-4' />}
-            destacada
-          >
-            PDF
-          </Accion>
-        )}
         {work.doiUrl !== null && (
           <Accion href={work.doiUrl} icono={<Link2 className='size-4' />}>
             DOI
@@ -125,23 +137,16 @@ function Punto() {
 function Accion({
   href,
   icono,
-  destacada = false,
   children,
 }: {
   href: string
   icono: React.ReactNode
-  destacada?: boolean
   children: React.ReactNode
 }) {
   return (
     <a
       href={href}
-      className={cn(
-        'flex items-center gap-1.5 text-site-label uppercase transition-colors',
-        destacada
-          ? 'text-site-primary hover:text-site-on-tertiary-fixed-variant'
-          : 'text-site-on-surface-variant hover:text-site-primary'
-      )}
+      className='flex items-center gap-1.5 text-site-label text-site-on-surface-variant uppercase transition-colors hover:text-site-primary'
     >
       {icono}
       {children}
