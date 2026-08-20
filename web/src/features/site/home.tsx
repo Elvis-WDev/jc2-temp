@@ -18,7 +18,7 @@ import {
 } from './use-section-background'
 import { useSiteMeta } from './use-site-meta'
 
-type Tono = 'brand' | 'default'
+type Tono = 'brand' | 'default' | 'blank'
 
 /**
  * El turno de colores de las bandas.
@@ -37,6 +37,15 @@ type Tono = 'brand' | 'default'
  * acabar en oscuro dejaria el hero y la primera banda iguales— sino con el filete que
  * lleva el pie en su borde superior.
  */
+/**
+ * Las bandas que no entran en el turno, con el color que llevan siempre.
+ *
+ * El carrusel de noticias va sobre blanco: se decidio asi para que la portada y la
+ * imagen se lean sobre un fondo limpio, sin el hueso del resto de la pagina. Al quedar
+ * fuera del turno, las demas siguen alternando entre ellas sin contarla.
+ */
+const TONO_FIJO: Partial<Record<string, Tono>> = { latest_news: 'blank' }
+
 function turnoDeColores(cuantas: number): Tono[] {
   // Desde arriba: el hero se queda con el fondo de la pagina, asi que la primera banda
   // que viene detras es la del solido.
@@ -116,9 +125,10 @@ export function SiteHome() {
     seVe('latest_news') && home.latestNews.length > 0 ? 'latest_news' : null,
   ].filter((banda): banda is string => banda !== null)
 
-  const turno = turnoDeColores(bandas.length)
+  const alternan = bandas.filter((banda) => TONO_FIJO[banda] === undefined)
+  const turno = turnoDeColores(alternan.length)
   const tono = (banda: string): Tono =>
-    turno[bandas.indexOf(banda)] ?? 'default'
+    TONO_FIJO[banda] ?? turno[alternan.indexOf(banda)] ?? 'default'
 
   return (
     <>

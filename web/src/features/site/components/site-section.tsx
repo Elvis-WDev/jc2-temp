@@ -20,7 +20,7 @@ type SeccionProps = {
    * publicacion en Research. Con el, el texto de la banda se invierte: sobre ese fondo
    * el oscuro no se lee.
    */
-  tone?: 'default' | 'raised' | 'sunken' | 'brand'
+  tone?: 'default' | 'raised' | 'sunken' | 'brand' | 'blank'
   id?: string
   /**
    * Clave de la seccion en `page_sections` (`home.featured_works`).
@@ -36,6 +36,8 @@ const FONDOS: Record<NonNullable<SeccionProps['tone']>, string> = {
   raised: 'bg-site-surface-container-lowest',
   sunken: 'bg-site-surface-container-low',
   brand: 'bg-site-primary-container text-site-on-primary',
+  // Blanco de verdad, no el hueso del fondo de la pagina.
+  blank: 'bg-site-surface-container-lowest',
 }
 
 export function SiteSection({

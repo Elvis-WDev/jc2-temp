@@ -52,7 +52,14 @@ export function PostCarousel({
   }
 
   return (
-    <div aria-roledescription='carousel' aria-label={pagina.titulo}>
+    <div
+      aria-roledescription='carousel'
+      aria-label={pagina.titulo}
+      // El carril de las flechas: en pantalla ancha el contenido se estrecha para
+      // dejarles sitio propio. Colgarlas fuera del contenedor dependeria del margen que
+      // quede a los lados, que cambia con la ventana, y acababan encima del texto.
+      className='relative md:px-14'
+    >
       <div
         ref={pista}
         tabIndex={0}
@@ -88,14 +95,44 @@ export function PostCarousel({
             aria-label={`${String(indice + 1)} de ${String(entradas.length)}`}
             className='w-full shrink-0 snap-start pe-px'
           >
-            <Diapositiva entrada={entrada} pagina={pagina} />
+            <Diapositiva
+              entrada={entrada}
+              pagina={pagina}
+              invertido={invertido}
+            />
           </div>
         ))}
       </div>
 
       {hayVarias && (
-        <div className='mt-8 flex items-center justify-between gap-4'>
-          <div className='flex items-center gap-2'>
+        <>
+          {/* A los lados de la diapositiva y no debajo: es donde se buscan cuando lo que
+              se ve es una sola pieza a lo ancho. En pantalla estrecha no caben sin
+              taparla, y ahi se pasa arrastrando, que es el gesto natural. */}
+          <Flecha
+            etiqueta='Anterior'
+            posicion='start-0'
+            invertido={invertido}
+            deshabilitada={actual === 0}
+            onClick={() => {
+              irA(actual - 1)
+            }}
+          >
+            <ChevronLeft className='size-5' />
+          </Flecha>
+          <Flecha
+            etiqueta='Siguiente'
+            posicion='end-0'
+            invertido={invertido}
+            deshabilitada={actual === entradas.length - 1}
+            onClick={() => {
+              irA(actual + 1)
+            }}
+          >
+            <ChevronRight className='size-5' />
+          </Flecha>
+
+          <div className='mt-10 flex items-center justify-center gap-2'>
             {entradas.map((entrada, indice) => (
               <button
                 key={entrada.id}
@@ -106,84 +143,72 @@ export function PostCarousel({
                   irA(indice)
                 }}
                 className={cn(
-                  'h-1.5 rounded-full transition-all',
-                  indice === actual ? 'w-8' : 'w-4',
+                  'size-2.5 rounded-full transition-colors',
                   indice === actual
                     ? 'bg-site-on-tertiary-container'
                     : invertido
-                      ? 'bg-site-on-primary/30 hover:bg-site-on-primary/60'
+                      ? 'bg-site-on-primary/25 hover:bg-site-on-primary/50'
                       : 'bg-site-primary/20 hover:bg-site-primary/40'
                 )}
               />
             ))}
           </div>
-
-          <div className='flex items-center gap-2'>
-            <Flecha
-              etiqueta='Anterior'
-              invertido={invertido}
-              deshabilitada={actual === 0}
-              onClick={() => {
-                irA(actual - 1)
-              }}
-            >
-              <ChevronLeft className='size-5' />
-            </Flecha>
-            <Flecha
-              etiqueta='Siguiente'
-              invertido={invertido}
-              deshabilitada={actual === entradas.length - 1}
-              onClick={() => {
-                irA(actual + 1)
-              }}
-            >
-              <ChevronRight className='size-5' />
-            </Flecha>
-          </div>
-        </div>
+        </>
       )}
     </div>
   )
 }
 
 /**
- * Una noticia ocupando el ancho de la banda.
+ * Una noticia ocupando el ancho de la banda: el texto a la izquierda y la portada a la
+ * derecha.
  *
- * La imagen va a un lado y el texto al otro; sin imagen el texto ocupa las dos
- * columnas, en lugar de dejar la mitad en blanco. La tarjeta es opaca a proposito: sobre
- * el solido de la banda o sobre una foto se sigue leyendo igual, sin invertir nada.
+ * Sin tarjeta alrededor del texto: la banda ya es lisa y encerrarlo en un recuadro sobre
+ * un fondo del mismo color solo anadiria un borde que no separa nada.
+ *
+ * Sin portada, el texto ocupa el ancho entero en lugar de dejar media diapositiva en
+ * blanco. Eso hace que unas diapositivas midan mas que otras; se prefiere a reservar un
+ * hueco gris en todas, que es lo que se veria mientras no haya ninguna imagen subida.
  */
 function Diapositiva({
   entrada,
   pagina,
+  invertido,
 }: {
   entrada: PublicPost
   pagina: PaginaDeEntradas
+  invertido: boolean
 }) {
-  return (
-    <article className='grid items-center gap-8 bg-site-surface-bright p-8 md:grid-cols-12 md:p-10'>
-      {entrada.imageUrl !== null && (
-        <img
-          src={entrada.imageUrl}
-          alt={entrada.imageAlt ?? ''}
-          className='h-56 w-full rounded-site object-cover md:col-span-5 md:h-64'
-        />
-      )}
+  const conPortada = entrada.imageUrl !== null
 
+  return (
+    <article className='grid items-center gap-10 md:grid-cols-12 lg:gap-16'>
       <div
         className={cn(
-          'flex flex-col gap-4',
-          entrada.imageUrl === null ? 'md:col-span-12' : 'md:col-span-7'
+          'flex flex-col gap-5',
+          conPortada ? 'md:col-span-6' : 'md:col-span-12'
         )}
       >
         {entrada.publishedAt !== null && (
-          <span className='flex items-center gap-1.5 text-site-meta text-site-on-surface-variant'>
+          <span
+            className={cn(
+              'flex items-center gap-1.5 text-site-meta',
+              invertido
+                ? 'text-site-on-primary/70'
+                : 'text-site-on-surface-variant'
+            )}
+          >
             <CalendarDays aria-hidden className='size-4' />
             {fechaLarga(entrada.publishedAt)}
           </span>
         )}
 
-        <h3 className='font-site-display text-site-headline-sm text-balance text-site-on-surface md:text-site-headline-md'>
+        <h3
+          className={cn(
+            'font-site-display text-site-headline-sm text-balance md:text-site-headline-md',
+            invertido ? 'text-site-on-primary' : 'text-site-on-surface'
+          )}
+        >
           <Link
             to={pagina.rutaDeFicha}
             params={{ slug: entrada.slug }}
@@ -194,7 +219,14 @@ function Diapositiva({
         </h3>
 
         {entrada.summary !== null && (
-          <p className='text-site-body-lg text-site-on-surface-variant'>
+          <p
+            className={cn(
+              'max-w-prose text-site-body-lg leading-relaxed',
+              invertido
+                ? 'text-site-on-primary/85'
+                : 'text-site-on-surface-variant'
+            )}
+          >
             {entrada.summary}
           </p>
         )}
@@ -202,11 +234,26 @@ function Diapositiva({
         <Link
           to={pagina.rutaDeFicha}
           params={{ slug: entrada.slug }}
-          className='text-site-label tracking-wider text-site-primary uppercase underline-offset-4 hover:underline'
+          className={cn(
+            'text-site-label tracking-wider uppercase underline-offset-4 hover:underline',
+            invertido ? 'text-site-on-primary' : 'text-site-primary'
+          )}
         >
           Read it
         </Link>
       </div>
+
+      {conPortada && (
+        <div className='md:col-span-6'>
+          <img
+            src={entrada.imageUrl as string}
+            alt={entrada.imageAlt ?? ''}
+            // `cover`: la portada llena su hueco sin deformarse, sea cual sea la forma
+            // del archivo que se suba.
+            className='aspect-[4/3] w-full rounded-site object-cover'
+          />
+        </div>
+      )}
     </article>
   )
 }
@@ -215,12 +262,15 @@ function Flecha({
   etiqueta,
   deshabilitada,
   invertido,
+  posicion,
   onClick,
   children,
 }: {
   etiqueta: string
   deshabilitada: boolean
   invertido: boolean
+  /** Donde se ancla dentro del carrusel: a un lado o al otro. */
+  posicion: string
   onClick: () => void
   children: React.ReactNode
 }) {
@@ -231,7 +281,9 @@ function Flecha({
       disabled={deshabilitada}
       onClick={onClick}
       className={cn(
-        'flex size-10 items-center justify-center rounded-full border transition-colors disabled:opacity-30',
+        'absolute top-1/2 z-10 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border bg-site-surface-container-lowest transition-colors md:flex',
+        'disabled:opacity-30',
+        posicion,
         invertido
           ? 'border-site-on-primary/20 text-site-on-primary hover:bg-site-on-primary hover:text-site-primary disabled:hover:bg-transparent disabled:hover:text-site-on-primary'
           : 'border-site-primary/20 text-site-primary hover:bg-site-primary hover:text-site-on-primary disabled:hover:bg-transparent disabled:hover:text-site-primary'

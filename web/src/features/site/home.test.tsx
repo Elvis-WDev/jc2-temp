@@ -340,11 +340,16 @@ describe('el turno de colores de las bandas', () => {
   // carga, asi que `getComputedStyle` devolvia transparente para todas y la comprobacion
   // se cumplia sin comprobar nada. Lo que se fija aqui es el turno; que ese solido se
   // vea como se espera es cosa del barrido en el navegador.
-  const SOLIDO = 'bg-site-primary-container'
   const bandas = () =>
-    [...document.querySelectorAll('section')].map((seccion) =>
-      seccion.className.includes(SOLIDO) ? 'solido' : 'fondo'
-    )
+    [...document.querySelectorAll('section')].map((seccion) => {
+      if (seccion.className.includes('bg-site-primary-container'))
+        return 'solido'
+      // El carrusel de noticias va sobre blanco y fuera del turno: no es el hueso del
+      // fondo de la pagina, asi que cuenta como un tercer tono.
+      if (seccion.className.includes('bg-site-surface-container-lowest'))
+        return 'blanco'
+      return 'fondo'
+    })
 
   it('ninguna banda repite el color de la de arriba', async () => {
     getHome.mockResolvedValue(HOME_LLENO)
@@ -365,7 +370,7 @@ describe('el turno de colores de las bandas', () => {
     const screen = await pintar()
     await expect.element(screen.getByText('Research lines')).toBeVisible()
 
-    expect(bandas().slice(0, 3)).toEqual(['fondo', 'solido', 'fondo'])
+    expect(bandas().slice(0, 3)).toEqual(['fondo', 'solido', 'blanco'])
   })
 
   it('una banda que no se pinta no gasta su turno', async () => {
