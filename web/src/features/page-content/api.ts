@@ -40,14 +40,18 @@ export const QUE_MUESTRA: Record<PageKey, string> = {
 export const PAGINA_SIEMPRE_VISIBLE: PageKey = 'home'
 
 /**
- * Las paginas cuya cabecera pinta una imagen al lado del texto.
+ * Las paginas que pintan la imagen que se elige aqui.
  *
  * Solo se ofrece el campo donde el sitio lo dibuja. Antes se ofrecia en todas y no se
- * pintaba en ninguna: se guardaba la imagen y no aparecia nunca. La portada no entra
- * porque su retrato sale del perfil; Eventos tampoco, de momento, porque su cabecera no
- * la dibuja.
+ * pintaba en ninguna: se guardaba la imagen y no aparecia nunca. En Research y Teaching
+ * va al lado del texto de la cabecera; en la portada, centrada en su propia banda. En
+ * Eventos, News y Blog no se ofrece porque ninguna la dibuja.
  */
-export const PAGINAS_CON_IMAGEN: readonly PageKey[] = ['research', 'teaching']
+export const PAGINAS_CON_IMAGEN: readonly PageKey[] = [
+  'home',
+  'research',
+  'teaching',
+]
 
 /**
  * Como se llama cada seccion en pantalla, y que es.
@@ -75,10 +79,10 @@ export const NOMBRE_DE_SECCION: Record<
     que: 'Your name, your photo, your summary and the CV.',
     admiteFondo: true,
   },
-  'home.research_areas': {
-    titulo: 'Research lines',
-    que: 'The secondary text of this page, in several columns.',
-    admiteFondo: true,
+  'home.image': {
+    titulo: 'Image',
+    que: 'A picture on its own band, centred. You choose it in the Image field of this page.',
+    admiteFondo: false,
     admiteTitulo: true,
   },
   'home.latest_news': {

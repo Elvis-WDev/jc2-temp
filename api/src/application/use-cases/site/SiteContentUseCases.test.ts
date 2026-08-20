@@ -57,7 +57,7 @@ describe('la misma pagina para el panel', () => {
 const SECCION: PageSectionRecord = {
   id: 's-1',
   pageKey: 'research',
-  sectionKey: 'research_areas',
+  sectionKey: 'image',
   isVisible: true,
   heading: null,
   headingAside: null,
@@ -79,7 +79,7 @@ describe('el rotulo de una banda', () => {
       { ...SECCION, pageKey: 'home', heading: 'Lineas de trabajo', headingAside: 'Areas' },
     ]).getVisibility()
 
-    expect(headings['home.research_areas']).toEqual({
+    expect(headings['home.image']).toEqual({
       title: 'Lineas de trabajo',
       aside: 'Areas',
     })
@@ -96,7 +96,7 @@ describe('el rotulo de una banda', () => {
       { ...SECCION, pageKey: 'home', heading: 'Solo el titulo' },
     ]).getVisibility()
 
-    expect(headings['home.research_areas']).toEqual({ title: 'Solo el titulo', aside: null })
+    expect(headings['home.image']).toEqual({ title: 'Solo el titulo', aside: null })
   })
 
   it('borrarlo devuelve el de la plantilla, no un hueco en blanco', async () => {

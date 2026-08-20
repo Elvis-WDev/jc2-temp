@@ -145,10 +145,10 @@ beforeEach(() => {
   })
 })
 
-// La banda de lineas solo existe si hay texto secundario: sin el, no se pinta.
-const CON_LINEAS: PublicHome = {
+// La banda de la imagen solo existe si hay una elegida: sin ella, no se pinta.
+const CON_IMAGEN: PublicHome = {
   ...HOME,
-  page: { ...PAGINA, secondaryHtml: '<h3>Diseno de mecanismos</h3>' },
+  page: { ...PAGINA, heroUrl: '/api/public/media/ilustracion' },
 }
 
 describe('portada publica', () => {
@@ -223,62 +223,52 @@ describe('portada publica', () => {
       .not.toBeInTheDocument()
   })
 
-  it('la banda de lineas de investigacion usa el rotulo de la plantilla', async () => {
-    getHome.mockResolvedValue(CON_LINEAS)
+  it('la imagen de la portada se pinta centrada en su banda', async () => {
+    getHome.mockResolvedValue(CON_IMAGEN)
     const screen = await pintar()
+    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
 
-    await expect.element(screen.getByText('Research lines')).toBeVisible()
-    // Sin rotulo a la derecha: el titulo se basta.
-    await expect.element(screen.getByText('Main areas')).not.toBeInTheDocument()
+    const imagen = document.querySelector(
+      'img[src="/api/public/media/ilustracion"]'
+    )
+
+    expect(imagen).not.toBeNull()
+    expect(imagen?.parentElement?.className).toMatch(/justify-center/)
   })
 
-  it('si el titular escribe otro rotulo, manda el suyo', async () => {
-    getHome.mockResolvedValue(CON_LINEAS)
+  it('sin imagen elegida la banda no existe, en vez de una franja vacia', async () => {
+    const screen = await pintar()
+    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
+
+    expect(document.querySelectorAll('section')).toHaveLength(2)
+  })
+
+  it('sin rotulo escrito queda solo la imagen', async () => {
+    // Es para lo que se pidio la banda: una imagen, sin encabezado que la anuncie.
+    getHome.mockResolvedValue(CON_IMAGEN)
+    const screen = await pintar()
+    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
+
+    const banda = [...document.querySelectorAll('section')][1]
+
+    expect(banda?.querySelector('h2')).toBeNull()
+  })
+
+  it('si el titular escribe un rotulo, sale encima', async () => {
+    getHome.mockResolvedValue(CON_IMAGEN)
     getSite.mockResolvedValue({
       siteName: 'Sitio',
       meta: { title: null, description: null, ogImageUrl: null },
-      pages: {
-        research: true,
-        teaching: true,
-        events: false,
-        blog: true,
-      },
+      pages: { research: true, teaching: true, events: false, blog: true },
       sections: {},
       sectionBackgrounds: {},
       sectionHeadings: {
-        'home.research_areas': { title: 'Lineas de trabajo', aside: 'Temas' },
+        'home.image': { title: 'En el laboratorio', aside: null },
       },
     })
     const screen = await pintar()
 
-    await expect.element(screen.getByText('Lineas de trabajo')).toBeVisible()
-    await expect.element(screen.getByText('Temas')).toBeVisible()
-    await expect
-      .element(screen.getByText('Research lines'))
-      .not.toBeInTheDocument()
-  })
-
-  it('escrito a medias, lo que falta simplemente no sale', async () => {
-    getHome.mockResolvedValue(CON_LINEAS)
-    getSite.mockResolvedValue({
-      siteName: 'Sitio',
-      meta: { title: null, description: null, ogImageUrl: null },
-      pages: {
-        research: true,
-        teaching: true,
-        events: false,
-        blog: true,
-      },
-      sections: {},
-      sectionBackgrounds: {},
-      sectionHeadings: {
-        'home.research_areas': { title: 'Lineas de trabajo', aside: null },
-      },
-    })
-    const screen = await pintar()
-
-    await expect.element(screen.getByText('Lineas de trabajo')).toBeVisible()
-    await expect.element(screen.getByText('Main areas')).not.toBeInTheDocument()
+    await expect.element(screen.getByText('En el laboratorio')).toBeVisible()
   })
 
   it('con los textos de la portada ocultos, el resto sigue en pie', async () => {
@@ -329,7 +319,7 @@ describe('lo ultimo', () => {
 /** Con las tres bandas visibles: es donde el turno se puede comprobar entero. */
 const HOME_LLENO: PublicHome = {
   ...HOME,
-  page: { ...PAGINA, secondaryHtml: '<h3>Diseno de mecanismos</h3>' },
+  page: { ...PAGINA, heroUrl: '/api/public/media/ilustracion' },
 }
 
 describe('el turno de colores de las bandas', () => {
@@ -351,7 +341,7 @@ describe('el turno de colores de las bandas', () => {
   it('ninguna banda repite el color de la de arriba', async () => {
     getHome.mockResolvedValue(HOME_LLENO)
     const screen = await pintar()
-    await expect.element(screen.getByText('Research lines')).toBeVisible()
+    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
 
     const turno = bandas()
     const repetida = turno.findIndex((c, i) => i > 0 && c === turno[i - 1])
@@ -365,17 +355,17 @@ describe('el turno de colores de las bandas', () => {
     // lleva el mismo— lo resuelve el filete del pie, no el color.
     getHome.mockResolvedValue(HOME_LLENO)
     const screen = await pintar()
-    await expect.element(screen.getByText('Research lines')).toBeVisible()
+    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
 
     expect(bandas().slice(0, 3)).toEqual(['fondo', 'solido', 'blanco'])
   })
 
   it('una banda que no se pinta no gasta su turno', async () => {
-    // Sin texto secundario, la banda de lineas de investigacion desaparece: las de
-    // debajo corren el turno en lugar de quedarse dos seguidas del mismo color.
+    // Sin imagen elegida, esa banda desaparece: las de debajo corren el turno en lugar
+    // de quedarse dos seguidas del mismo color.
     getHome.mockResolvedValue({
       ...HOME_LLENO,
-      page: { ...PAGINA, secondaryHtml: null },
+      page: { ...PAGINA, heroUrl: null },
     })
     const screen = await pintar()
     await expect.element(screen.getByText('News')).toBeVisible()

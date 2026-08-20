@@ -38,7 +38,7 @@ export const SECCIONES: Record<string, readonly string[]> = {
   // La portada habla de la persona, no de su produccion: el carrusel, los destacados,
   // la docencia y la agenda se retiraron, y sus filas viejas de `page_sections` dejan de
   // aparecer solas —lo que no esta aqui, no se dibuja ni se ofrece en el panel—.
-  home: ['hero', 'research_areas', 'latest_news'],
+  home: ['hero', 'image', 'latest_news'],
   research: ['header'],
   teaching: ['header', 'filters'],
   events: ['header'],

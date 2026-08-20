@@ -5,7 +5,6 @@ import { cn } from '@/lib/utils'
 import { getHome, getSite, type PublicHome, type PublicSite } from './api'
 import { PostCard } from './components/post-card'
 import { PostCarousel } from './components/post-carousel'
-import { RichText } from './components/rich-text'
 import { SectionBackground } from './components/section-background'
 import { SiteButton, SiteButtonLink } from './components/site-button'
 import { SectionHeading, SiteSection } from './components/site-section'
@@ -43,7 +42,10 @@ type Tono = 'brand' | 'default' | 'blank'
  * imagen se lean sobre un fondo limpio, sin el hueso del resto de la pagina. Al quedar
  * fuera del turno, las demas siguen alternando entre ellas sin contarla.
  */
-const TONO_FIJO: Partial<Record<string, Tono>> = { latest_news: 'blank' }
+const TONO_FIJO: Partial<Record<string, Tono>> = {
+  image: 'brand',
+  latest_news: 'blank',
+}
 
 function turnoDeColores(cuantas: number): Tono[] {
   // Desde arriba: el hero se queda con el fondo de la pagina, asi que la primera banda
@@ -116,9 +118,7 @@ export function SiteHome() {
   // Que bandas se pintan, en orden. Una encendida pero vacia no cuenta: no se dibuja, y
   // dejarle su turno de color descuadraria las de debajo.
   const bandas = [
-    seVe('research_areas') && home.page?.secondaryHtml != null
-      ? 'research_areas'
-      : null,
+    seVe('image') && home.page?.heroUrl != null ? 'image' : null,
     // Las noticias cierran la portada, y en carrusel: es lo ultimo que pasa y lo que
     // conviene que quede a la vista al final del recorrido.
     seVe('latest_news') && home.latestNews.length > 0 ? 'latest_news' : null,
@@ -134,8 +134,8 @@ export function SiteHome() {
       {seVe('hero') && (
         <Hero home={home} researchVisible={site?.pages.research === true} />
       )}
-      {bandas.includes('research_areas') && (
-        <Dominios home={home} tone={tono('research_areas')} />
+      {bandas.includes('image') && (
+        <Ilustracion home={home} tone={tono('image')} />
       )}
       {bandas.includes('latest_news') && (
         <GrupoDeEntradas
@@ -275,54 +275,41 @@ function Hero({
 }
 
 /**
- * Las lineas de investigacion, que se escriben en Contenido de paginas → Portada.
+ * Una imagen sola, centrada, sobre el solido del encabezado.
  *
- * La plantilla dibuja tres columnas con un filete a la izquierda. Aqui el contenido es
- * Markdown libre, asi que se reparte en columnas de texto en lugar de en tres cajas
- * fijas: si escribe tres apartados sale igual que la plantilla, y si escribe dos o
- * cuatro tambien funciona en vez de romperse.
+ * Sale del campo Imagen de la portada, en Contenido de paginas: la misma columna que en
+ * Research y Teaching pinta la ilustracion de la cabecera. Sin imagen elegida la banda
+ * no existe, en lugar de una franja de color vacia.
+ *
+ * El rotulo es opcional y va encima; si el titular no escribe ninguno queda solo la
+ * imagen, que es para lo que se pidio la banda.
  */
-function Dominios({ home, tone }: { home: PublicHome; tone: Tono }) {
-  const invertido = useBandaInvertida('home.research_areas', tone)
-  // El titular puede renombrar la banda desde Contenido de paginas; si no lo hace,
-  // queda el rotulo de la plantilla.
-  // Sin rotulo a la derecha por defecto: el titulo se basta. El titular puede escribir
-  // uno desde Contenido de paginas si algun dia quiere.
-  const rotulo = useSectionHeading('home.research_areas', {
-    title: 'Research lines',
-  })
+function Ilustracion({ home, tone }: { home: PublicHome; tone: Tono }) {
+  const invertido = useBandaInvertida('home.image', tone)
+  const rotulo = useSectionHeading('home.image', { title: '' })
 
-  // Vacia cuando el titular oculta la portada en Contenido de paginas.
-  if (home.page === null || home.page.secondaryHtml === null) return null
+  if (home.page?.heroUrl == null) return null
 
   return (
-    <SiteSection tone={tone} backgroundKey='home.research_areas'>
-      <SectionHeading
-        title={rotulo.title}
-        aside={rotulo.aside}
-        dark={invertido}
-      />
-      <RichText
-        html={home.page.secondaryHtml}
-        className={[
-          'gap-12 md:columns-2 lg:columns-3',
-          '[&_h1]:font-site-display [&_h2]:font-site-display [&_h3]:font-site-display',
-          '[&_h1]:text-site-headline-sm [&_h2]:text-site-headline-sm [&_h3]:text-site-headline-sm',
-          invertido
-            ? '[&_h1]:text-site-on-primary [&_h2]:text-site-on-primary [&_h3]:text-site-on-primary'
-            : '[&_h1]:text-site-primary [&_h2]:text-site-primary [&_h3]:text-site-primary',
-          '[&_h1]:mb-3 [&_h2]:mb-3 [&_h3]:mb-3',
-          // Un titulo nunca se queda solo al final de una columna, separado del
-          // parrafo que explica.
-          '[&_h1]:break-after-avoid [&_h2]:break-after-avoid [&_h3]:break-after-avoid',
-          '[&_p]:mb-6 [&_p]:break-inside-avoid',
-          invertido
-            ? '[&_p]:text-site-on-primary/85'
-            : '[&_p]:text-site-on-surface-variant',
-          '[&_ul]:mb-6 [&_ul]:list-disc [&_ul]:break-inside-avoid [&_ul]:ps-5',
-          '[&_a]:underline [&_a]:decoration-site-on-tertiary-container',
-        ].join(' ')}
-      />
+    <SiteSection tone={tone} backgroundKey='home.image'>
+      {rotulo.title !== '' && (
+        <SectionHeading
+          title={rotulo.title}
+          aside={rotulo.aside}
+          dark={invertido}
+        />
+      )}
+
+      <div className='flex justify-center'>
+        <img
+          src={home.page.heroUrl}
+          alt={home.page.heroAlt ?? ''}
+          // Tope en alto y no en ancho: una ilustracion apaisada llenaria la banda de
+          // lado a lado y una vertical la estiraria hasta empujar el resto de la portada
+          // fuera de la pantalla. Con el tope en alto, las dos caben igual de bien.
+          className='max-h-[28rem] w-auto max-w-full rounded-site'
+        />
+      </div>
     </SiteSection>
   )
 }
