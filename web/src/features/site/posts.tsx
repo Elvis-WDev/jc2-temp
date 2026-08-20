@@ -146,7 +146,7 @@ export function SitePosts({ pagina }: { pagina: PaginaConListado }) {
                     ? // Tres por fila en pantalla ancha. En la intermedia van dos: a
                       // tres, la tarjeta se queda mas estrecha que su propia portada y
                       // el titulo se parte en cuatro lineas.
-                      'grid gap-6 md:grid-cols-2 lg:grid-cols-3'
+                      'grid gap-x-10 gap-y-8 md:grid-cols-2 lg:grid-cols-3'
                     : 'flex flex-col gap-6'
                 }
               >
