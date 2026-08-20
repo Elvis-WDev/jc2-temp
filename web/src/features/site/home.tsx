@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
 import { FileDown } from 'lucide-react'
 import { queryKeys } from '@/lib/api/query-keys'
 import { cn } from '@/lib/utils'
@@ -409,16 +408,8 @@ function GrupoDeEntradas({
       <SectionHeading
         title={rotulo.title}
         dark={invertido}
-        // El aside del encabezado ya viene en versalitas: aqui basta con hacerlo enlace,
-        // sin un boton que compita con el titulo de la banda.
-        aside={
-          <Link
-            to={pagina.ruta}
-            className='underline-offset-4 transition-colors hover:underline'
-          >
-            See all
-          </Link>
-        }
+        // Sin «See all»: las noticias no tienen listado propio, viven solo aqui. A cada
+        // una se llega por su tarjeta.
       />
       {carrusel ? (
         <PostCarousel

@@ -235,14 +235,15 @@ export interface PublicSite {
   /**
    * Que paginas se ven. Con esto se construye el menu.
    *
-   * Eventos, noticias y blog ademas necesitan tener algo publicado: un menu que lleva a
-   * una pagina vacia estorba tanto como uno que lleva a una pagina oculta.
+   * Eventos y blog ademas necesitan tener algo publicado: un menu que lleva a una
+   * pagina vacia estorba tanto como uno que lleva a una pagina oculta.
+   *
+   * Noticias no aparece: no tiene listado propio. Vive en el carrusel de la portada.
    */
   pages: {
     research: boolean
     teaching: boolean
     events: boolean
-    news: boolean
     blog: boolean
   }
   /** Que bloques se pintan: `research.filters`, `home.hero`... */

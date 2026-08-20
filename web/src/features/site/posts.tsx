@@ -8,7 +8,7 @@ import { RichText } from './components/rich-text'
 import { SectionBackground } from './components/section-background'
 import { SitePagination } from './components/site-pagination'
 import { fondoDeCabecera } from './page-heroes'
-import { type PaginaDeEntradas } from './post-pages'
+import { type PaginaConListado } from './post-pages'
 import { useSectionBackground } from './use-section-background'
 import { resumirHtml, titulo, useSiteMeta } from './use-site-meta'
 
@@ -22,7 +22,7 @@ import { resumirHtml, titulo, useSiteMeta } from './use-site-meta'
  * La cabecera sale de `page_content`, asi que el titulo, la entradilla y la imagen de
  * fondo se cambian desde el panel sin tocar esto.
  */
-export function SitePosts({ pagina }: { pagina: PaginaDeEntradas }) {
+export function SitePosts({ pagina }: { pagina: PaginaConListado }) {
   // Sin `strict`: el mismo componente sirve a dos rutas distintas.
   const busqueda = useSearch({ strict: false }) as { page?: number }
   const navigate = useNavigate()
@@ -54,7 +54,7 @@ export function SitePosts({ pagina }: { pagina: PaginaDeEntradas }) {
   useSiteMeta({
     title: titulo(page?.pageTitle ?? pagina.titulo, site?.siteName),
     description: resumirHtml(page?.introHtml ?? null) ?? pagina.entradilla,
-    path: pagina.ruta,
+    path: pagina.listado,
     imageUrl: site?.meta.ogImageUrl ?? null,
   })
 
@@ -161,7 +161,7 @@ export function SitePosts({ pagina }: { pagina: PaginaDeEntradas }) {
                 pagination={resultado.pagination}
                 onPage={(numero) => {
                   void navigate({
-                    to: pagina.ruta,
+                    to: pagina.listado,
                     search: { page: numero },
                   })
                   window.scrollTo({ top: 0, behavior: 'smooth' })

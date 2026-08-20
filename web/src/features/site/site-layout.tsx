@@ -25,8 +25,10 @@ import { getSite, type PublicSite } from './api'
  * El menu.
  *
  * Inicio siempre; el resto solo si su pagina esta visible, porque enlazar una pagina
- * oculta lleva a un 404. Eventos, noticias y blog ademas necesitan tener algo
- * publicado.
+ * oculta lleva a un 404. Eventos y blog ademas necesitan tener algo publicado.
+ *
+ * Noticias no esta: no tiene listado propio. Vive en el carrusel de la portada, y a cada
+ * una se llega por su tarjeta.
  */
 const INICIO = { etiqueta: 'Home', to: '/' } as const
 
@@ -34,7 +36,6 @@ const OPCIONALES = [
   { etiqueta: 'Research', to: '/research', pagina: 'research' },
   { etiqueta: 'Teaching', to: '/teaching', pagina: 'teaching' },
   { etiqueta: 'Events', to: '/events', pagina: 'events' },
-  { etiqueta: 'News', to: '/news', pagina: 'news' },
   { etiqueta: 'Blog', to: '/blog', pagina: 'blog' },
 ] as const
 

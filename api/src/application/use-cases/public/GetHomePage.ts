@@ -60,9 +60,9 @@ export class GetHomePage {
       seVe('hero') || seVe('research_areas')
         ? this.siteContent.findPublishedPage('home')
         : Promise.resolve(null),
-      // Apagar la pagina de News la retira tambien de la portada: enlazar desde aqui a
-      // una seccion que el menu no ensena llevaria a un 404.
-      seVe('latest_news') && (visibilidad.pages.news ?? true)
+      // Solo su interruptor de banda: las noticias no tienen listado propio, asi que no
+      // hay ninguna pagina que apagar de la que dependan.
+      seVe('latest_news')
         ? this.posts.listPublished({ page: 1, page_size: LIMITE_ENTRADAS }, { kind: 'news' })
         : Promise.resolve({ items: [], kindLabels: {} }),
     ])

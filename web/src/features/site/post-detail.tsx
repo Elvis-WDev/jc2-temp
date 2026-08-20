@@ -69,11 +69,11 @@ export function SitePostDetail({ pagina }: { pagina: PaginaDeEntradas }) {
             : 'This entry could not be loaded.'}
         </h1>
         <Link
-          to={pagina.ruta}
+          to={pagina.listado ?? '/'}
           className='mt-6 inline-flex items-center gap-2 text-site-label text-site-primary uppercase'
         >
           <ArrowLeft aria-hidden className='size-4' />
-          Back to {pagina.titulo}
+          Back to {pagina.listado === null ? 'the home page' : pagina.titulo}
         </Link>
       </section>
     )
@@ -91,7 +91,7 @@ export function SitePostDetail({ pagina }: { pagina: PaginaDeEntradas }) {
 
         <div className='relative z-10 mx-auto flex max-w-site flex-col gap-6'>
           <Link
-            to={pagina.ruta}
+            to={pagina.listado ?? '/'}
             className={cn(
               'inline-flex items-center gap-2 text-site-label uppercase transition-colors',
               sobreImagen
@@ -100,7 +100,7 @@ export function SitePostDetail({ pagina }: { pagina: PaginaDeEntradas }) {
             )}
           >
             <ArrowLeft aria-hidden className='size-4' />
-            {pagina.titulo}
+            {pagina.listado === null ? 'Home' : pagina.titulo}
           </Link>
 
           <h1 className='max-w-4xl font-site-display text-site-display-sm text-balance text-site-on-surface md:text-site-display-lg'>
@@ -210,7 +210,7 @@ function metadatosDeEntrada(
         ? entrada.title
         : `${entrada.title} · ${site.siteName}`,
     description: entrada.summary ?? resumirHtml(entrada.contentHtml),
-    path: `${pagina.ruta}/${entrada.slug}`,
+    path: `${pagina.base}/${entrada.slug}`,
     imageUrl: entrada.imageUrl ?? site?.meta.ogImageUrl ?? null,
     jsonLd: {
       '@context': 'https://schema.org',

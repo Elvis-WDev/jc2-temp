@@ -81,12 +81,11 @@ export class GetSitemap {
       entradas.push({ path: `/events/${evento.slug}`, priority: '0.5' })
     }
 
-    // Los indices de noticias y blog solo se anuncian si tienen algo detras, igual que
-    // eventos: un sitemap que apunta a una pagina vacia no ayuda a nadie.
-    for (const [tipo, pagina] of Object.entries(PAGINA_POR_TIPO_DE_POST)) {
-      const hay = entradasPublicadas.some((entrada) => entrada.kind === tipo)
-      if (hay && seVe(pagina)) entradas.push({ path: `/${pagina}`, priority: '0.7' })
-    }
+    // El indice del blog, si tiene algo detras: igual que eventos, un sitemap que apunta
+    // a una pagina vacia no ayuda a nadie. Noticias no tiene indice que anunciar —vive
+    // en el carrusel de la portada—, pero sus fichas si, justo debajo.
+    const hayBlog = entradasPublicadas.some((entrada) => entrada.kind === 'personal')
+    if (hayBlog && seVe('blog')) entradas.push({ path: '/blog', priority: '0.7' })
     // Las fichas se quedan aunque su indice este oculto, igual que las de trabajos.
     for (const entrada of entradasPublicadas) {
       const pagina = PAGINA_POR_TIPO_DE_POST[entrada.kind]

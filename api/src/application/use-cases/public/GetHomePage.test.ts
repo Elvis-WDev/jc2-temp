@@ -133,14 +133,15 @@ describe('lo ultimo de noticias', () => {
     expect(home.latestNews.map((p) => p.id)).toEqual(['post-news'])
   })
 
-  it('apagar la pagina de News la retira tambien de la portada', async () => {
-    // Enlazar desde aqui a una seccion que el menu no ensena llevaria a un 404.
+  it('no depende de ninguna pagina de News, que ya no existe', async () => {
+    // Las noticias viven en el carrusel de la portada: apagar aquella pagina —que sigue
+    // en la tabla por la cabecera de sus fichas— no puede vaciar la portada.
     const { caso } = portada(true, {
       pages: { home: true, news: false, blog: true },
       sections: TODAS_VISIBLES.sections,
     })
     const home = await caso.execute()
 
-    expect(home.latestNews).toEqual([])
+    expect(home.latestNews).toHaveLength(1)
   })
 })

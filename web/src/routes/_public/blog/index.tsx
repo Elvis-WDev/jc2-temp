@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { createFileRoute } from '@tanstack/react-router'
-import { BLOG } from '@/features/site/post-pages'
+import { BLOG, type PaginaConListado } from '@/features/site/post-pages'
 import { SitePosts } from '@/features/site/posts'
 
 const searchSchema = z.object({
@@ -11,5 +11,5 @@ export const Route = createFileRoute('/_public/blog/')({
   validateSearch: searchSchema,
   // El componente va inline: exportar ademas una funcion desde el archivo de ruta
   // rompe el fast refresh de Vite.
-  component: () => <SitePosts pagina={BLOG} />,
+  component: () => <SitePosts pagina={BLOG as PaginaConListado} />,
 })

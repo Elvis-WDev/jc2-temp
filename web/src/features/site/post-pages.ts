@@ -12,7 +12,16 @@
 export interface PaginaDeEntradas {
   pageKey: 'news' | 'blog'
   kind: string
-  ruta: '/news' | '/blog'
+  /**
+   * Su listado, o `null` si no tiene.
+   *
+   * Las noticias no tienen: viven en el carrusel de la portada, y a cada una se llega
+   * por su tarjeta. Es lo que decide si la ficha ofrece volver al listado o a la
+   * portada.
+   */
+  listado: '/blog' | null
+  /** El prefijo de sus direcciones. Para los metadatos, no para navegar. */
+  base: '/news' | '/blog'
   rutaDeFicha: '/news/$slug' | '/blog/$slug'
   titulo: string
   entradilla: string
@@ -34,7 +43,8 @@ export interface PaginaDeEntradas {
 export const NOTICIAS: PaginaDeEntradas = {
   pageKey: 'news',
   kind: 'news',
-  ruta: '/news',
+  listado: null,
+  base: '/news',
   rutaDeFicha: '/news/$slug',
   titulo: 'News',
   entradilla: 'Announcements, awards and appointments.',
@@ -46,7 +56,8 @@ export const NOTICIAS: PaginaDeEntradas = {
 export const BLOG: PaginaDeEntradas = {
   pageKey: 'blog',
   kind: 'personal',
-  ruta: '/blog',
+  listado: '/blog',
+  base: '/blog',
   rutaDeFicha: '/blog/$slug',
   titulo: 'Blog',
   entradilla: 'Notes and longer writing, outside the academic record.',
@@ -54,3 +65,6 @@ export const BLOG: PaginaDeEntradas = {
   conCuerpo: true,
   listadoEnRejilla: true,
 }
+
+/** Una pagina que si tiene listado propio: es la unica que `SitePosts` sabe pintar. */
+export type PaginaConListado = PaginaDeEntradas & { listado: '/blog' }

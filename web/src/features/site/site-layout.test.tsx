@@ -43,7 +43,6 @@ const SITIO: PublicSite = {
     research: true,
     teaching: true,
     events: false,
-    news: false,
     blog: false,
   },
   sections: {},
@@ -103,7 +102,6 @@ describe('envoltura del sitio publico', () => {
         research: true,
         teaching: false,
         events: false,
-        news: false,
         blog: false,
       },
     })
@@ -112,11 +110,10 @@ describe('envoltura del sitio publico', () => {
     await expect.element(screen.getByText('Research')).toBeVisible()
     await expect.element(screen.getByText('Teaching')).not.toBeInTheDocument()
     await expect.element(screen.getByText('Events')).not.toBeInTheDocument()
-    await expect.element(screen.getByText('News')).not.toBeInTheDocument()
     await expect.element(screen.getByText('Blog')).not.toBeInTheDocument()
   })
 
-  it('noticias y blog aparecen cuando su pagina esta encendida', async () => {
+  it('el blog aparece cuando su pagina esta encendida', async () => {
     // La API ya combina las dos condiciones: pagina visible Y algo publicado. Aqui solo
     // se comprueba que el menu la respeta, igual que hace con Eventos.
     getSite.mockResolvedValue({
@@ -125,13 +122,11 @@ describe('envoltura del sitio publico', () => {
         research: false,
         teaching: false,
         events: false,
-        news: true,
         blog: true,
       },
     })
     const screen = await pintar()
 
-    await expect.element(screen.getByText('News')).toBeVisible()
     await expect.element(screen.getByText('Blog')).toBeVisible()
   })
 

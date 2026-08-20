@@ -209,7 +209,6 @@ describe('portada publica', () => {
         research: false,
         teaching: true,
         events: false,
-        news: true,
         blog: true,
       },
       sections: {},
@@ -242,7 +241,6 @@ describe('portada publica', () => {
         research: true,
         teaching: true,
         events: false,
-        news: true,
         blog: true,
       },
       sections: {},
@@ -269,7 +267,6 @@ describe('portada publica', () => {
         research: true,
         teaching: true,
         events: false,
-        news: true,
         blog: true,
       },
       sections: {},
@@ -307,7 +304,9 @@ describe('portada publica', () => {
 })
 
 describe('lo ultimo', () => {
-  it('ensena las noticias y lleva a su pagina', async () => {
+  it('ensena las noticias y lleva a la ficha de cada una', async () => {
+    // Sin «See all»: las noticias no tienen listado propio. A cada una se llega por su
+    // tarjeta, que es lo unico que enlaza.
     const screen = await pintar()
 
     await expect
@@ -315,7 +314,7 @@ describe('lo ultimo', () => {
       .toBeVisible()
     await expect
       .element(screen.getByRole('link', { name: 'See all' }))
-      .toHaveAttribute('href', '/news')
+      .not.toBeInTheDocument()
   })
 
   it('sin noticias no se pinta nada', async () => {
@@ -323,9 +322,7 @@ describe('lo ultimo', () => {
     const screen = await pintar()
     await expect.element(screen.getByText('Juana Castro')).toBeVisible()
 
-    await expect
-      .element(screen.getByRole('link', { name: 'See all' }))
-      .not.toBeInTheDocument()
+    await expect.element(screen.getByText('News')).not.toBeInTheDocument()
   })
 })
 

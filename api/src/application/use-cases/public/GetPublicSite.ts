@@ -31,14 +31,15 @@ export interface PublicSite {
   /**
    * Que paginas se ven. El menu del sitio se construye con esto.
    *
-   * Eventos, noticias y blog ademas necesitan tener algo publicado: un menu que lleva a
-   * una pagina vacia estorba tanto como uno que lleva a una pagina oculta.
+   * Eventos y blog ademas necesitan tener algo publicado: un menu que lleva a una
+   * pagina vacia estorba tanto como uno que lleva a una pagina oculta.
+   *
+   * Noticias no aparece: no tiene listado propio. Vive en el carrusel de la portada.
    */
   pages: {
     research: boolean
     teaching: boolean
     events: boolean
-    news: boolean
     blog: boolean
   }
   /** Que bloques se pintan, por pagina y seccion: `research.filters`, `home.hero`... */
@@ -75,16 +76,13 @@ export class GetPublicSite {
   ) {}
 
   async execute(): Promise<PublicSite> {
-    const [settings, perfil, hayEventos, hayNoticias, hayEntradas, visibilidad] = await Promise.all(
-      [
-        this.siteContent.getSettings(),
-        this.profile.execute(),
-        this.events.hasPublished(),
-        this.posts.hasPublished('news'),
-        this.posts.hasPublished('personal'),
-        this.siteContent.getVisibility(),
-      ],
-    )
+    const [settings, perfil, hayEventos, hayEntradas, visibilidad] = await Promise.all([
+      this.siteContent.getSettings(),
+      this.profile.execute(),
+      this.events.hasPublished(),
+      this.posts.hasPublished('personal'),
+      this.siteContent.getVisibility(),
+    ])
 
     const persona = perfil.person
 
@@ -103,7 +101,6 @@ export class GetPublicSite {
         research: visibilidad.pages.research ?? true,
         teaching: visibilidad.pages.teaching ?? true,
         events: (visibilidad.pages.events ?? true) && hayEventos,
-        news: (visibilidad.pages.news ?? true) && hayNoticias,
         blog: (visibilidad.pages.blog ?? true) && hayEntradas,
       },
       sections: visibilidad.sections,

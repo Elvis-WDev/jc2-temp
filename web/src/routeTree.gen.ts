@@ -40,7 +40,6 @@ import { Route as AdminAffiliationsIndexRouteImport } from './routes/admin/affil
 import { Route as AdminAcademicStatusesIndexRouteImport } from './routes/admin/academic-statuses/index'
 import { Route as PublicTeachingIndexRouteImport } from './routes/_public/teaching/index'
 import { Route as PublicResearchIndexRouteImport } from './routes/_public/research/index'
-import { Route as PublicNewsIndexRouteImport } from './routes/_public/news/index'
 import { Route as PublicEventsIndexRouteImport } from './routes/_public/events/index'
 import { Route as PublicBlogIndexRouteImport } from './routes/_public/blog/index'
 import { Route as AdminWorksNewRouteImport } from './routes/admin/works/new'
@@ -215,11 +214,6 @@ const PublicResearchIndexRoute = PublicResearchIndexRouteImport.update({
   path: '/research/',
   getParentRoute: () => PublicRouteRoute,
 } as any)
-const PublicNewsIndexRoute = PublicNewsIndexRouteImport.update({
-  id: '/news/',
-  path: '/news/',
-  getParentRoute: () => PublicRouteRoute,
-} as any)
 const PublicEventsIndexRoute = PublicEventsIndexRouteImport.update({
   id: '/events/',
   path: '/events/',
@@ -330,7 +324,6 @@ export interface FileRoutesByFullPath {
   '/admin/works/new': typeof AdminWorksNewRoute
   '/blog/': typeof PublicBlogIndexRoute
   '/events/': typeof PublicEventsIndexRoute
-  '/news/': typeof PublicNewsIndexRoute
   '/research/': typeof PublicResearchIndexRoute
   '/teaching/': typeof PublicTeachingIndexRoute
   '/admin/academic-statuses/': typeof AdminAcademicStatusesIndexRoute
@@ -379,7 +372,6 @@ export interface FileRoutesByTo {
   '/admin/works/new': typeof AdminWorksNewRoute
   '/blog': typeof PublicBlogIndexRoute
   '/events': typeof PublicEventsIndexRoute
-  '/news': typeof PublicNewsIndexRoute
   '/research': typeof PublicResearchIndexRoute
   '/teaching': typeof PublicTeachingIndexRoute
   '/admin/academic-statuses': typeof AdminAcademicStatusesIndexRoute
@@ -431,7 +423,6 @@ export interface FileRoutesById {
   '/admin/works/new': typeof AdminWorksNewRoute
   '/_public/blog/': typeof PublicBlogIndexRoute
   '/_public/events/': typeof PublicEventsIndexRoute
-  '/_public/news/': typeof PublicNewsIndexRoute
   '/_public/research/': typeof PublicResearchIndexRoute
   '/_public/teaching/': typeof PublicTeachingIndexRoute
   '/admin/academic-statuses/': typeof AdminAcademicStatusesIndexRoute
@@ -483,7 +474,6 @@ export interface FileRouteTypes {
     | '/admin/works/new'
     | '/blog/'
     | '/events/'
-    | '/news/'
     | '/research/'
     | '/teaching/'
     | '/admin/academic-statuses/'
@@ -532,7 +522,6 @@ export interface FileRouteTypes {
     | '/admin/works/new'
     | '/blog'
     | '/events'
-    | '/news'
     | '/research'
     | '/teaching'
     | '/admin/academic-statuses'
@@ -583,7 +572,6 @@ export interface FileRouteTypes {
     | '/admin/works/new'
     | '/_public/blog/'
     | '/_public/events/'
-    | '/_public/news/'
     | '/_public/research/'
     | '/_public/teaching/'
     | '/admin/academic-statuses/'
@@ -840,13 +828,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicResearchIndexRouteImport
       parentRoute: typeof PublicRouteRoute
     }
-    '/_public/news/': {
-      id: '/_public/news/'
-      path: '/news'
-      fullPath: '/news/'
-      preLoaderRoute: typeof PublicNewsIndexRouteImport
-      parentRoute: typeof PublicRouteRoute
-    }
     '/_public/events/': {
       id: '/_public/events/'
       path: '/events'
@@ -978,7 +959,6 @@ interface PublicRouteRouteChildren {
   PublicTeachingSlugRoute: typeof PublicTeachingSlugRoute
   PublicBlogIndexRoute: typeof PublicBlogIndexRoute
   PublicEventsIndexRoute: typeof PublicEventsIndexRoute
-  PublicNewsIndexRoute: typeof PublicNewsIndexRoute
   PublicResearchIndexRoute: typeof PublicResearchIndexRoute
   PublicTeachingIndexRoute: typeof PublicTeachingIndexRoute
 }
@@ -992,7 +972,6 @@ const PublicRouteRouteChildren: PublicRouteRouteChildren = {
   PublicTeachingSlugRoute: PublicTeachingSlugRoute,
   PublicBlogIndexRoute: PublicBlogIndexRoute,
   PublicEventsIndexRoute: PublicEventsIndexRoute,
-  PublicNewsIndexRoute: PublicNewsIndexRoute,
   PublicResearchIndexRoute: PublicResearchIndexRoute,
   PublicTeachingIndexRoute: PublicTeachingIndexRoute,
 }
