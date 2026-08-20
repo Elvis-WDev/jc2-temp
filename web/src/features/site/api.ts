@@ -100,6 +100,13 @@ export interface PublicWorkSummary {
   authors: string[]
   tags: Array<{ slug: string; name: string }>
   pdfUrl: string | null
+  /**
+   * Unas cinco lineas del abstract, en texto plano y ya recortadas por el servidor.
+   *
+   * Viaja en el listado porque la tarjeta lo ensena fijo: pedirlo por tarjeta seria una
+   * peticion por publicacion. `null` cuando no hay abstract publicado.
+   */
+  abstractExcerpt: string | null
 }
 
 /**

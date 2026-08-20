@@ -1,7 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render } from 'vitest-browser-react'
-import { userEvent } from 'vitest/browser'
 import { type PublicWorkSummary } from '../api'
 import { WorkCard } from './work-card'
 
@@ -43,6 +42,7 @@ const TRABAJO: PublicWorkSummary = {
   authors: ['Juana Castro', 'Ana Soto'],
   tags: [],
   pdfUrl: '/api/public/media/abc',
+  abstractExcerpt: 'Este trabajo estudia los costes de busqueda.',
 }
 
 const FICHA = {
@@ -99,59 +99,39 @@ describe('tarjeta de una publicacion', () => {
     await expect.element(screen.getByText('with Ana Soto')).toBeVisible()
   })
 
-  it('NO pide la ficha mientras el resumen este cerrado', async () => {
+  it('el abstract se ensena fijo, sin nada que pulsar', async () => {
     const screen = await pintar()
-    await expect.element(screen.getByText(/Asimetria/)).toBeVisible()
-
-    // El resumen no viaja en el listado: pedirlo de entrada anularia el ahorro.
-    expect(getWork).not.toHaveBeenCalled()
-  })
-
-  it('al desplegarlo pide la ficha y muestra el resumen', async () => {
-    const screen = await pintar()
-    await userEvent.click(screen.getByRole('button', { name: /abstract/i }))
 
     await expect
       .element(screen.getByText('Este trabajo estudia los costes de busqueda.'))
       .toBeVisible()
-    expect(getWork).toHaveBeenCalledWith('carbono')
-  })
-
-  it('desplegado aparecen los enlaces que no caben en el listado', async () => {
-    const screen = await pintar()
-    await userEvent.click(screen.getByRole('button', { name: /abstract/i }))
-
-    await expect.element(screen.getByText('Datos de replicacion')).toBeVisible()
-  })
-
-  it('un resumen largo se recorta: la tarjeta no vuelca el abstract entero', async () => {
-    // Un abstract academico ronda los dos mil caracteres. Volcado dentro de la tarjeta
-    // empuja el resto del listado fuera de la pantalla y ahi no lo lee nadie.
-    const largo = `${'Este trabajo estudia los mercados de carbono con datos de subasta. '.repeat(30)}FINAL DEL TEXTO`
-    getWork.mockResolvedValue({ abstractHtml: `<p>${largo}</p>`, links: [] })
-    const screen = await pintar()
-    await userEvent.click(screen.getByRole('button', { name: /abstract/i }))
-
     await expect
-      .element(screen.getByText(/Este trabajo estudia los mercados de carbono/))
-      .toBeVisible()
-    // Lo que se pinta acaba en puntos suspensivos y no llega al final del abstract.
-    await expect
-      .element(screen.getByText('FINAL DEL TEXTO', { exact: false }))
+      .element(screen.getByRole('button', { name: /abstract/i }))
       .not.toBeInTheDocument()
-    const panel = await screen.getByText(/Este trabajo estudia/).element()
-    expect(panel.textContent?.endsWith('…')).toBe(true)
-    expect((panel.textContent ?? '').length).toBeLessThanOrEqual(420)
   })
 
-  it('sin resumen escrito lo dice, en vez de abrir un panel vacio', async () => {
-    getWork.mockResolvedValue({ abstractHtml: null, links: [] })
+  it('no pide la ficha de cada publicacion', async () => {
+    // El extracto viaja ya recortado en el listado: pedirla por tarjeta seria una
+    // peticion por publicacion en cada pagina.
     const screen = await pintar()
-    await userEvent.click(screen.getByRole('button', { name: /abstract/i }))
+    await expect.element(screen.getByText(/Asimetria/)).toBeVisible()
+
+    expect(getWork).not.toHaveBeenCalled()
+  })
+
+  it('sin abstract publicado no deja un hueco ni un aviso', async () => {
+    const screen = await pintar({ ...TRABAJO, abstractExcerpt: null })
+    await expect.element(screen.getByText(/Asimetria/)).toBeVisible()
 
     await expect
       .element(screen.getByText('This work has no published abstract.'))
-      .toBeVisible()
+      .not.toBeInTheDocument()
+  })
+
+  it('lleva a la ficha, que es donde se lee entero', async () => {
+    const screen = await pintar()
+
+    await expect.element(screen.getByText('Full page')).toBeVisible()
   })
 
   it('sin PDF publico no se ofrece el boton', async () => {

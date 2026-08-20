@@ -1,25 +1,21 @@
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { ChevronDown, Database, FileText, Link2, Loader2 } from 'lucide-react'
-import { queryKeys } from '@/lib/api/query-keys'
+import { FileText, Link2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { getWork, type PublicWorkSummary } from '../api'
-import { resumirHtml } from '../use-site-meta'
+import { type PublicWorkSummary } from '../api'
 import { coautores, referencia } from '../work-format'
 
 /**
  * Una publicacion en el listado.
  *
- * El resumen **no viaja en el listado**: se pide al desplegarlo. Asi la lista no
- * engorda con textos que casi nadie abre (PERF-002) y, a cambio, quien lo abre recibe
- * ademas los enlaces a codigo y datos, la cita y el BibTeX, que tampoco caben en un
- * resumen de listado.
+ * El extracto del abstract se ensena fijo, sin nada que pulsar. Antes estaba detras de
+ * un boton y cada tarjeta pedia su ficha al desplegarse; a la vista siempre, eso serian
+ * tantas peticiones como publicaciones haya en la pagina, asi que el extracto viaja ya
+ * recortado en el propio listado.
  *
- * Y al desplegarlo no se vuelca el abstract entero: un parrafo academico de dos mil
- * caracteres dentro de una tarjeta empuja el resto del listado fuera de la pantalla y
- * nadie lo lee ahi. Se ensena un extracto y, al lado, el enlace a la ficha, que es donde
- * el texto completo se lee comodo.
+ * Es un extracto y no el abstract entero: un parrafo academico de dos mil caracteres
+ * dentro de una tarjeta empuja el resto del listado fuera de la pantalla y nadie lo lee
+ * ahi. Al lado va el enlace a la ficha, que es donde el texto completo se lee comodo, y
+ * donde estan la cita, el BibTeX y los enlaces a codigo y datos.
  */
 export function WorkCard({
   work,
@@ -29,25 +25,6 @@ export function WorkCard({
   /** Para descontar al titular de la lista de coautores. */
   ownerName: string | null
 }) {
-  const [abierto, setAbierto] = useState(false)
-
-  const { data: ficha, isFetching } = useQuery({
-    queryKey: queryKeys.public.work(work.slug),
-    queryFn: () => getWork(work.slug),
-    // Solo cuando alguien lo pide. Cerrarlo no lo borra: volver a abrirlo es inmediato.
-    enabled: abierto,
-    staleTime: 5 * 60_000,
-  })
-
-  // Unas cinco lineas en la tarjeta: lo justo para saber de que va sin tener que bajar.
-  const extracto = resumirHtml(ficha?.abstractHtml ?? null, 420)
-
-  // Todos los enlaces de la ficha menos el que ya esta arriba como DOI. No se
-  // excluye ningun tipo por su codigo: los tipos los crea el titular.
-  const enlacesExtra = (ficha?.links ?? []).filter(
-    (enlace) => enlace.url !== work.doiUrl
-  )
-
   return (
     <article className='group relative overflow-hidden border border-site-primary-container/10 bg-site-surface-bright p-6 transition-shadow hover:shadow-sm'>
       {/* Filete que se despliega de arriba abajo al pasar por encima. */}
@@ -118,60 +95,22 @@ export function WorkCard({
           </Accion>
         )}
 
-        <button
-          type='button'
-          onClick={() => {
-            setAbierto((valor) => !valor)
-          }}
-          aria-expanded={abierto}
-          className='flex items-center gap-1.5 text-site-label text-site-on-surface-variant uppercase transition-colors hover:text-site-primary'
+        <Link
+          to='/research/$slug'
+          params={{ slug: work.slug }}
+          className='ms-auto text-site-label text-site-primary uppercase hover:text-site-on-tertiary-fixed-variant'
         >
-          {isFetching ? (
-            <Loader2 className='size-4 animate-spin' />
-          ) : (
-            <ChevronDown
-              className={cn(
-                'size-4 transition-transform',
-                abierto && 'rotate-180'
-              )}
-            />
-          )}
-          Abstract
-        </button>
-
-        {abierto &&
-          enlacesExtra.map((enlace) => (
-            <Accion
-              key={enlace.url}
-              href={enlace.url}
-              icono={<Database className='size-4' />}
-            >
-              {enlace.label ?? enlace.type}
-            </Accion>
-          ))}
-
-        {abierto && (
-          <Link
-            to='/research/$slug'
-            params={{ slug: work.slug }}
-            className='ms-auto text-site-label text-site-primary uppercase hover:text-site-on-tertiary-fixed-variant'
-          >
-            Full page
-          </Link>
-        )}
+          Full page
+        </Link>
       </div>
 
-      {abierto && (
-        <div className='mt-3 w-full border border-site-outline-variant/30 bg-site-surface-container-lowest p-4 text-site-on-surface-variant'>
-          {ficha === undefined ? (
-            <p>Loading the abstract...</p>
-          ) : extracto === null ? (
-            // ERS §55: mejor decir que no hay que dejar un panel vacio.
-            <p>This work has no published abstract.</p>
-          ) : (
-            <p className='leading-relaxed'>{extracto}</p>
-          )}
-        </div>
+      {work.abstractExcerpt !== null && (
+        // Sin recuadro: la tarjeta ya es una caja, y encerrar el texto en otra dentro
+        // solo anade un borde que no separa nada. Sin abstract publicado no se pinta
+        // nada, en lugar de un panel diciendo que no lo hay.
+        <p className='mt-4 leading-relaxed text-site-on-surface-variant'>
+          {work.abstractExcerpt}
+        </p>
       )}
     </article>
   )

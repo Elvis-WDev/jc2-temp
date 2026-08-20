@@ -1,6 +1,7 @@
 import type { PublicWorkSummary } from '../../../application/ports/repositories/PublicWorkRepository.js'
 import type { PublicWorkDetail } from '../../../application/use-cases/research/PublicResearchUseCases.js'
 import { doiToUrl } from '../../../domain/research/Doi.js'
+import { extractoDeMarkdown } from '../../../shared/markdown/excerpt.js'
 import { renderMarkdown } from '../../../shared/markdown/render.js'
 
 /**
@@ -40,8 +41,15 @@ export function toPublicWorkSummaryDto(work: PublicWorkSummary, baseUrl: string)
     authors: work.authors.map((autor) => autor.fullName),
     tags: work.tags,
     pdfUrl: mediaUrl(baseUrl, work.pdfMediaId),
+    // Un extracto en texto plano, no el abstract entero ni su HTML: en la tarjeta caben
+    // unas cinco lineas, y mandar dos mil caracteres por publicacion para recortarlos en
+    // el navegador seria pagar el peso sin usarlo.
+    abstractExcerpt: extractoDeMarkdown(work.abstractMarkdown, LARGO_DEL_EXTRACTO),
   }
 }
+
+/** Unas cinco lineas: lo justo para saber de que va sin tener que bajar. */
+const LARGO_DEL_EXTRACTO = 420
 
 export function toPublicWorkDetailDto(detalle: PublicWorkDetail, baseUrl: string) {
   const { work } = detalle

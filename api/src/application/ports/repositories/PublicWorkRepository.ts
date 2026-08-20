@@ -43,6 +43,15 @@ export interface PublicWorkSummary {
    * enlazarlo; PERF-002 excluye la lista entera de archivos, no una direccion.
    */
   pdfMediaId: string | null
+  /**
+   * El abstract en crudo, para recortarlo al presentar.
+   *
+   * Viaja en el listado desde que la tarjeta lo ensena fijo. Antes no venia —PERF-002:
+   * no engordar la lista con textos que casi nadie abria— y cada tarjeta pedia su ficha
+   * al desplegarse; con el abstract siempre a la vista, eso serian tantas peticiones
+   * como publicaciones haya en la pagina.
+   */
+  abstractMarkdown: string | null
 }
 
 export interface ResearchFacets {

@@ -25,6 +25,8 @@ const SELECT_RESUMEN = {
   slug: true,
   title: true,
   subtitle: true,
+  // El texto entero: recortarlo es cosa del presenter, que es quien sabe cuanto cabe.
+  abstractMarkdown: true,
   academicStatus: { select: { code: true, label: true } },
   publicationYear: true,
   venueName: true,
@@ -53,6 +55,7 @@ type FilaResumen = {
   slug: string
   title: string
   subtitle: string | null
+  abstractMarkdown: string | null
   academicStatus: { code: string; label: string }
   publicationYear: number | null
   venueName: string | null
@@ -89,6 +92,7 @@ function mapResumen(fila: FilaResumen): PublicWorkSummary {
     authors: fila.authors.map((a) => ({ fullName: a.person.fullName, authorOrder: a.authorOrder })),
     tags: fila.tags.map((t) => t.tag),
     pdfMediaId: fila.files[0]?.mediaId ?? null,
+    abstractMarkdown: fila.abstractMarkdown,
   }
 }
 
