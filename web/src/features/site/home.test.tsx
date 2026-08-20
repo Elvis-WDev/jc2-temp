@@ -229,7 +229,8 @@ describe('portada publica', () => {
     const screen = await pintar()
 
     await expect.element(screen.getByText('Research lines')).toBeVisible()
-    await expect.element(screen.getByText('Main areas')).toBeVisible()
+    // Sin rotulo a la derecha: el titulo se basta.
+    await expect.element(screen.getByText('Main areas')).not.toBeInTheDocument()
   })
 
   it('si el titular escribe otro rotulo, manda el suyo', async () => {
@@ -259,7 +260,7 @@ describe('portada publica', () => {
       .not.toBeInTheDocument()
   })
 
-  it('escrito a medias, el hueco lo rellena la plantilla', async () => {
+  it('escrito a medias, lo que falta simplemente no sale', async () => {
     getHome.mockResolvedValue(CON_LINEAS)
     getSite.mockResolvedValue({
       siteName: 'Sitio',
@@ -280,7 +281,7 @@ describe('portada publica', () => {
     const screen = await pintar()
 
     await expect.element(screen.getByText('Lineas de trabajo')).toBeVisible()
-    await expect.element(screen.getByText('Main areas')).toBeVisible()
+    await expect.element(screen.getByText('Main areas')).not.toBeInTheDocument()
   })
 
   it('con los textos de la portada ocultos, el resto sigue en pie', async () => {

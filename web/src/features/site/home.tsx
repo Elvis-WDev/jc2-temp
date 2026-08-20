@@ -277,9 +277,10 @@ function Dominios({ home, tone }: { home: PublicHome; tone: Tono }) {
   const invertido = useBandaInvertida('home.research_areas', tone)
   // El titular puede renombrar la banda desde Contenido de paginas; si no lo hace,
   // queda el rotulo de la plantilla.
+  // Sin rotulo a la derecha por defecto: el titulo se basta. El titular puede escribir
+  // uno desde Contenido de paginas si algun dia quiere.
   const rotulo = useSectionHeading('home.research_areas', {
     title: 'Research lines',
-    aside: 'Main areas',
   })
 
   // Vacia cuando el titular oculta la portada en Contenido de paginas.
