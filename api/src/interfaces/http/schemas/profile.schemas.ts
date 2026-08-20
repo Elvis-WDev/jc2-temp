@@ -100,6 +100,7 @@ export const personLinkBodySchema = z.object({
   label: z.string().trim().max(100).nullable().optional(),
   url: z.url(),
   iconKey: z.string().trim().max(50).nullable().optional(),
+  iconMediaId: z.uuid().nullable().optional(),
   isPublic: z.boolean().default(true),
   sortOrder: z.number().int().min(0).default(0),
 })

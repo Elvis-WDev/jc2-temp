@@ -39,6 +39,14 @@ export interface PersonLinkRecord {
   label: string | null
   url: string
   iconKey: string | null
+  /**
+   * Icono propio subido, para ensenar el logotipo del servicio.
+   *
+   * La columna existia desde el principio y no la leia nadie: sin ella en el registro,
+   * el panel no podia elegirla y la web no podia pintarla. `iconKey` era la otra via
+   * —un nombre de icono de una lista fija— y quedo sin uso al retirarse esos iconos.
+   */
+  iconMediaId: string | null
   isPublic: boolean
   sortOrder: number
 }

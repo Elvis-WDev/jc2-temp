@@ -267,6 +267,8 @@ function Hero({
               )}
             </div>
           )}
+
+          <RedesAcademicas links={profile.links} invertido={sobreImagen} />
         </div>
 
         {profile.photoUrl !== null && (
@@ -337,6 +339,67 @@ function Dominios({ home, tone }: { home: PublicHome; tone: Tono }) {
         ].join(' ')}
       />
     </SiteSection>
+  )
+}
+
+/**
+ * Las redes academicas del titular, bajo los botones del hero.
+ *
+ * Las gestiona el en Perfil academico -> Enlaces: cuales, en que orden, y el logotipo de
+ * cada una. Aqui no hay ninguna lista de servicios conocidos, asi que anadir uno nuevo
+ * —o uno que no exista todavia— es una fila mas en el panel y no un cambio de codigo.
+ *
+ * Sin logotipo se ensena el rotulo. Es lo que permite tener el enlace puesto desde el
+ * primer dia y subir la marca cuando se tenga, en lugar de un hueco roto mientras tanto.
+ */
+function RedesAcademicas({
+  links,
+  invertido,
+}: {
+  links: PublicHome['profile']['links']
+  invertido: boolean
+}) {
+  if (links.length === 0) return null
+
+  return (
+    <ul className='flex flex-wrap items-center gap-3 pt-2'>
+      {links.map((enlace) => {
+        const nombre = enlace.label ?? enlace.type
+        return (
+          <li key={enlace.url}>
+            <a
+              href={enlace.url}
+              target='_blank'
+              rel='noopener noreferrer me'
+              // El nombre va en el `aria-label` y no dentro: con logotipo, dentro no hay
+              // texto que leer, y sin el se leeria dos veces.
+              aria-label={nombre}
+              title={nombre}
+              className={cn(
+                'flex items-center justify-center rounded-full border transition-colors',
+                enlace.iconUrl === null ? 'px-4 py-2' : 'size-11',
+                invertido
+                  ? 'border-site-on-primary/25 text-site-on-primary hover:bg-site-on-primary/10'
+                  : 'border-site-outline-variant text-site-on-surface-variant hover:border-site-primary hover:text-site-primary'
+              )}
+            >
+              {enlace.iconUrl === null ? (
+                <span className='text-site-label tracking-wider uppercase'>
+                  {nombre}
+                </span>
+              ) : (
+                <img
+                  src={enlace.iconUrl}
+                  alt=''
+                  // Decorativa: el enlace ya se anuncia con su `aria-label`.
+                  className='size-6 object-contain'
+                />
+              )}
+            </a>
+          </li>
+        )
+      })}
+    </ul>
   )
 }
 

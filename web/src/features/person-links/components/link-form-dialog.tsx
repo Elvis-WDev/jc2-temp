@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -34,6 +35,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { ImagePicker } from '@/components/media-picker'
 import { createPersonLink, updatePersonLink, type PersonLink } from '../api'
 
 const formSchema = z.object({
@@ -76,6 +78,12 @@ function Campos({ onOpenChange, personId, link }: Omit<Props, 'open'>) {
     },
   })
 
+  // Fuera del formulario, como el resto de imagenes del panel: lo que se guarda es un
+  // identificador y quien lo elige ve el archivo, no su UUID.
+  const [iconMediaId, setIconMediaId] = useState<string | null>(
+    link?.iconMediaId ?? null
+  )
+
   const guardar = useToastMutation({
     mutationFn: (values: FormValues) => {
       const payload = {
@@ -84,6 +92,7 @@ function Campos({ onOpenChange, personId, link }: Omit<Props, 'open'>) {
         label: values.label.trim() === '' ? null : values.label.trim(),
         url: values.url,
         isPublic: values.isPublic,
+        iconMediaId,
       }
       return esEdicion
         ? updatePersonLink(link.id, payload)
@@ -173,6 +182,17 @@ function Campos({ onOpenChange, personId, link }: Omit<Props, 'open'>) {
             </FormItem>
           )}
         />
+
+        <FormItem>
+          <FormLabel>Logo</FormLabel>
+          <ImagePicker value={iconMediaId} onChange={setIconMediaId} />
+          <FormDescription>
+            The mark of the service, shown next to the link on your home page.
+            Without one, the link appears with its name. It has to be uploaded
+            here: an image hosted elsewhere would tell that server the address
+            of every visitor, and the site blocks it.
+          </FormDescription>
+        </FormItem>
 
         <FormField
           control={form.control}

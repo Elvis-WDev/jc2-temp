@@ -82,9 +82,9 @@ function consulta(modelo: string): string {
  * aqui y contemplarlo en `isPubliclyReachable`.
  */
 const NO_SE_SIRVEN_EN_PUBLICO: Record<string, string> = {
-  // El sitio pinta los iconos con su propio juego (Lucide) y solo usa `iconKey`, que es
-  // un nombre, no un archivo. El icono subido no llega a salir nunca.
-  PersonLink: 'el sitio usa iconKey, no el archivo',
+  // Ninguno, de momento. `PersonLink` estuvo aqui mientras el sitio pintaba los iconos
+  // con su propio juego y no llegaba a servir el archivo subido; desde que el hero
+  // ensena el logotipo de cada enlace, se sirve como cualquier otro.
 }
 
 describe('referencias a archivos', () => {

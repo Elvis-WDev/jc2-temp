@@ -14,6 +14,8 @@ export interface PersonLink {
   label: string | null
   url: string
   iconKey: string | null
+  /** Logotipo subido. Es lo que la web pinta junto al enlace. */
+  iconMediaId: string | null
   isPublic: boolean
   sortOrder: number
 }
@@ -24,6 +26,7 @@ export interface PersonLinkInput {
   label?: string | null
   url: string
   iconKey?: string | null
+  iconMediaId?: string | null
   isPublic?: boolean
   sortOrder?: number
 }

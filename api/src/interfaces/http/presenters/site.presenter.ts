@@ -59,7 +59,7 @@ export function toPublicSiteDto(site: PublicSite, baseUrl: string) {
         type: link.linkType,
         label: link.label,
         url: link.url,
-        iconKey: link.iconKey,
+        iconUrl: mediaUrl(baseUrl, link.iconMediaId),
       })),
     },
   }

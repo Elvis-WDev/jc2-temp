@@ -57,7 +57,13 @@ export interface PublicProfile {
     type: string
     label: string | null
     url: string
-    iconKey: string | null
+    /**
+     * El logotipo del servicio, subido desde el panel.
+     *
+     * `null` cuando no se ha elegido ninguno: entonces el enlace se ensena con su
+     * rotulo, que es lo que hace el pie desde siempre.
+     */
+    iconUrl: string | null
   }>
 }
 

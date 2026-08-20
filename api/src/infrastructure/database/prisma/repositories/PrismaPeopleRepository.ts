@@ -46,6 +46,7 @@ const CAMPOS_LINK = {
   label: true,
   url: true,
   iconKey: true,
+  iconMediaId: true,
   isPublic: true,
   sortOrder: true,
 } as const

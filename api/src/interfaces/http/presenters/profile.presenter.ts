@@ -50,7 +50,7 @@ export interface PublicProfileDto {
   } | null
   /** La trayectoria, de lo vigente a lo mas antiguo. Ya viene ordenada del servidor. */
   affiliations: PublicAffiliationDto[]
-  links: Array<{ type: string; label: string | null; url: string; iconKey: string | null }>
+  links: Array<{ type: string; label: string | null; url: string; iconUrl: string | null }>
 }
 
 /**
@@ -104,7 +104,7 @@ export function toPublicProfileDto(profile: PublicProfile, baseUrl: string): Pub
             department: profile.primaryAffiliation.departmentName,
           },
     affiliations: profile.affiliations.map(toPublicAffiliationDto),
-    links: profile.links.map(toPublicLinkDto),
+    links: profile.links.map((link) => toPublicLinkDto(link, baseUrl)),
   }
 }
 
@@ -121,8 +121,15 @@ function toPublicAffiliationDto(afiliacion: AffiliationRecord): PublicAffiliatio
   }
 }
 
-function toPublicLinkDto(link: PersonLinkRecord) {
-  return { type: link.linkType, label: link.label, url: link.url, iconKey: link.iconKey }
+function toPublicLinkDto(link: PersonLinkRecord, baseUrl: string) {
+  return {
+    type: link.linkType,
+    label: link.label,
+    url: link.url,
+    // El logotipo del servicio, ya con su direccion. Sin el, quien pinte el enlace se
+    // queda con el rotulo, que es lo que hace el pie desde siempre.
+    iconUrl: mediaUrl(baseUrl, link.iconMediaId),
+  }
 }
 
 /** Version administrativa: aqui si hacen falta los identificadores para editar. */

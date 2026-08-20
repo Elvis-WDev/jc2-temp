@@ -248,6 +248,12 @@ export class PrismaMediaRepository implements MediaRepository {
       adjuntoDePost: prisma.postFile.count({
         where: { mediaId: id, isPublic: true, post: { editorialStatus: 'published' } },
       }),
+      // El logotipo de un enlace del titular. Los enlaces salen en el pie de todas las
+      // paginas y en la portada, asi que no cuelgan de nada que pueda estar en borrador:
+      // basta con que el enlace sea publico y sea suyo.
+      iconoDeEnlace: prisma.personLink.count({
+        where: { iconMediaId: id, isPublic: true, person: { isSiteOwner: true } },
+      }),
       // Intercalada en un texto largo que ya esta publicado. Sin esto, pegar una imagen
       // en el cuerpo de una entrada la dejaba respondiendo 404: se guardaba la direccion
       // y el archivo no se llegaba a servir.

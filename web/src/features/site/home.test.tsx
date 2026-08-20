@@ -87,7 +87,20 @@ const HOME: PublicHome = {
         isCurrent: false,
       },
     ],
-    links: [],
+    links: [
+      {
+        type: 'orcid',
+        label: 'ORCID',
+        url: 'https://orcid.org/x',
+        iconUrl: null,
+      },
+      {
+        type: 'linkedin',
+        label: 'LinkedIn',
+        url: 'https://linkedin.com/in/x',
+        iconUrl: '/api/public/media/logo',
+      },
+    ],
   },
   page: PAGINA,
   latestPosts: {
@@ -534,5 +547,63 @@ describe('las noticias, en carrusel', () => {
 
     expect(carruseles).toHaveLength(1)
     expect(carruseles[0]?.getAttribute('aria-label')).toBe('News')
+  })
+})
+
+describe('las redes academicas del hero', () => {
+  it('salen debajo de los botones, con su enlace', async () => {
+    // Se mira el DOM y no la visibilidad: aqui la hoja del sitio no se carga, asi que un
+    // enlace cuyo unico contenido es un logotipo que no llega a cargar mide cero.
+    const screen = await pintar()
+    await expect
+      .element(screen.getByRole('link', { name: 'ORCID' }))
+      .toBeVisible()
+
+    const enlace = document.querySelector('a[aria-label="LinkedIn"]')
+
+    expect(enlace?.getAttribute('href')).toBe('https://linkedin.com/in/x')
+    expect(enlace?.getAttribute('rel')).toContain('noopener')
+  })
+
+  it('con logotipo ensena la marca, sin el ensena el rotulo', async () => {
+    // Asi el enlace se puede poner desde el primer dia y subir la marca despues, en
+    // lugar de un hueco roto mientras tanto.
+    const screen = await pintar()
+    await expect
+      .element(screen.getByRole('link', { name: 'ORCID' }))
+      .toBeVisible()
+
+    const conLogo = document.querySelector('a[aria-label="LinkedIn"] img')
+    const sinLogo = document.querySelector('a[aria-label="ORCID"] img')
+
+    expect(conLogo?.getAttribute('src')).toBe('/api/public/media/logo')
+    expect(sinLogo).toBeNull()
+  })
+
+  it('el logotipo es decorativo: el nombre lo pone el enlace', async () => {
+    // Dentro no hay texto que leer, y repetirlo en el `alt` lo anunciaria dos veces.
+    const screen = await pintar()
+    await expect
+      .element(screen.getByRole('link', { name: 'ORCID' }))
+      .toBeVisible()
+
+    expect(
+      document
+        .querySelector('a[aria-label="LinkedIn"] img')
+        ?.getAttribute('alt')
+    ).toBe('')
+  })
+
+  it('sin enlaces no deja una fila vacia', async () => {
+    getHome.mockResolvedValue({
+      ...HOME,
+      profile: { ...HOME.profile, links: [] },
+    })
+    const screen = await pintar()
+    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
+
+    await expect
+      .element(screen.getByRole('link', { name: 'ORCID' }))
+      .not.toBeInTheDocument()
   })
 })
