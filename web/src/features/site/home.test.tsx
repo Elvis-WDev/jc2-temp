@@ -436,9 +436,7 @@ describe('las redes academicas del hero', () => {
     // Se mira el DOM y no la visibilidad: aqui la hoja del sitio no se carga, asi que un
     // enlace cuyo unico contenido es un logotipo que no llega a cargar mide cero.
     const screen = await pintar()
-    await expect
-      .element(screen.getByRole('link', { name: 'ORCID' }))
-      .toBeVisible()
+    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
 
     const enlace = document.querySelector('a[aria-label="LinkedIn"]')
 
@@ -446,27 +444,29 @@ describe('las redes academicas del hero', () => {
     expect(enlace?.getAttribute('rel')).toContain('noopener')
   })
 
-  it('con logotipo ensena la marca, sin el ensena el rotulo', async () => {
-    // Asi el enlace se puede poner desde el primer dia y subir la marca despues, en
-    // lugar de un hueco roto mientras tanto.
+  it('solo el logotipo: ni borde ni rotulo', async () => {
     const screen = await pintar()
-    await expect
-      .element(screen.getByRole('link', { name: 'ORCID' }))
-      .toBeVisible()
+    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
 
-    const conLogo = document.querySelector('a[aria-label="LinkedIn"] img')
-    const sinLogo = document.querySelector('a[aria-label="ORCID"] img')
+    const enlace = document.querySelector('a[aria-label="LinkedIn"]')
 
-    expect(conLogo?.getAttribute('src')).toBe('/api/public/media/logo')
-    expect(sinLogo).toBeNull()
+    expect(enlace?.textContent).toBe('')
+    expect(enlace?.className).not.toMatch(/border/)
+  })
+
+  it('un enlace sin logotipo no sale en el hero', async () => {
+    // Sin marca no hay nada que ensenar, y un enlace vacio seria un hueco que se puede
+    // pulsar. No se pierde: el pie los lista todos por su nombre.
+    const screen = await pintar()
+    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
+
+    expect(document.querySelector('a[aria-label="ORCID"]')).toBeNull()
   })
 
   it('el logotipo es decorativo: el nombre lo pone el enlace', async () => {
     // Dentro no hay texto que leer, y repetirlo en el `alt` lo anunciaria dos veces.
     const screen = await pintar()
-    await expect
-      .element(screen.getByRole('link', { name: 'ORCID' }))
-      .toBeVisible()
+    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
 
     expect(
       document
@@ -475,16 +475,17 @@ describe('las redes academicas del hero', () => {
     ).toBe('')
   })
 
-  it('sin enlaces no deja una fila vacia', async () => {
+  it('sin ningun logotipo no deja una fila vacia', async () => {
     getHome.mockResolvedValue({
       ...HOME,
-      profile: { ...HOME.profile, links: [] },
+      profile: {
+        ...HOME.profile,
+        links: HOME.profile.links.map((e) => ({ ...e, iconUrl: null })),
+      },
     })
     const screen = await pintar()
     await expect.element(screen.getByText('Juana Castro')).toBeVisible()
 
-    await expect
-      .element(screen.getByRole('link', { name: 'ORCID' }))
-      .not.toBeInTheDocument()
+    expect(document.querySelector('a[aria-label="LinkedIn"]')).toBeNull()
   })
 })

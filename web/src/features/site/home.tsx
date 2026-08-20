@@ -243,7 +243,7 @@ function Hero({
             </div>
           )}
 
-          <RedesAcademicas links={profile.links} invertido={sobreImagen} />
+          <RedesAcademicas links={profile.links} />
         </div>
 
         {profile.photoUrl !== null && (
@@ -324,21 +324,18 @@ function Dominios({ home, tone }: { home: PublicHome; tone: Tono }) {
  * cada una. Aqui no hay ninguna lista de servicios conocidos, asi que anadir uno nuevo
  * —o uno que no exista todavia— es una fila mas en el panel y no un cambio de codigo.
  *
- * Sin logotipo se ensena el rotulo. Es lo que permite tener el enlace puesto desde el
- * primer dia y subir la marca cuando se tenga, en lugar de un hueco roto mientras tanto.
+ * **Solo salen los que tienen logotipo.** Sin marca no hay nada que ensenar: un enlace
+ * vacio seria un hueco que se puede pulsar, y poner el rotulo en su lugar traeria de
+ * vuelta el texto que se quiso quitar. El enlace no se pierde: el pie los lista todos
+ * por su nombre.
  */
-function RedesAcademicas({
-  links,
-  invertido,
-}: {
-  links: PublicHome['profile']['links']
-  invertido: boolean
-}) {
-  if (links.length === 0) return null
+function RedesAcademicas({ links }: { links: PublicHome['profile']['links'] }) {
+  const conLogotipo = links.filter((enlace) => enlace.iconUrl !== null)
+  if (conLogotipo.length === 0) return null
 
   return (
-    <ul className='flex flex-wrap items-center gap-3 pt-2'>
-      {links.map((enlace) => {
+    <ul className='flex flex-wrap items-center gap-5 pt-2'>
+      {conLogotipo.map((enlace) => {
         const nombre = enlace.label ?? enlace.type
         return (
           <li key={enlace.url}>
@@ -346,30 +343,18 @@ function RedesAcademicas({
               href={enlace.url}
               target='_blank'
               rel='noopener noreferrer me'
-              // El nombre va en el `aria-label` y no dentro: con logotipo, dentro no hay
-              // texto que leer, y sin el se leeria dos veces.
+              // El nombre va en el `aria-label` y en el `title`: dentro no queda texto
+              // que leer, ni para un lector de pantalla ni para quien pasa el raton.
               aria-label={nombre}
               title={nombre}
-              className={cn(
-                'flex items-center justify-center rounded-full border transition-colors',
-                enlace.iconUrl === null ? 'px-4 py-2' : 'size-11',
-                invertido
-                  ? 'border-site-on-primary/25 text-site-on-primary hover:bg-site-on-primary/10'
-                  : 'border-site-outline-variant text-site-on-surface-variant hover:border-site-primary hover:text-site-primary'
-              )}
+              className='block transition-opacity hover:opacity-70'
             >
-              {enlace.iconUrl === null ? (
-                <span className='text-site-label tracking-wider uppercase'>
-                  {nombre}
-                </span>
-              ) : (
-                <img
-                  src={enlace.iconUrl}
-                  alt=''
-                  // Decorativa: el enlace ya se anuncia con su `aria-label`.
-                  className='size-6 object-contain'
-                />
-              )}
+              <img
+                src={enlace.iconUrl as string}
+                alt=''
+                // Decorativa: el enlace ya se anuncia con su `aria-label`.
+                className='size-8 object-contain'
+              />
             </a>
           </li>
         )
