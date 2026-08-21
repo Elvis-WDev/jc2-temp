@@ -264,6 +264,14 @@ function SidebarMenuCollapsedDropdown({
 }
 
 function checkIsActive(href: string, item: NavItem, mainNav = false) {
+  // Una entrada puede representar a varias direcciones: Configuracion lleva a la primera
+  // de sus secciones y sigue marcada en el resto.
+  if (
+    'activeFor' in item &&
+    item.activeFor?.some((ruta) => href.startsWith(ruta))
+  )
+    return true
+
   return (
     href === item.url || // /endpint?search=param
     href.split('?')[0] === item.url || // endpoint

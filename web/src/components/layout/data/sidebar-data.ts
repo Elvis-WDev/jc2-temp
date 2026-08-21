@@ -15,6 +15,10 @@ import {
   UserCog,
   Users,
 } from 'lucide-react'
+import {
+  RUTAS_DE_CONFIGURACION,
+  SECCIONES,
+} from '@/features/configuration/secciones'
 import { type SidebarData } from '../types'
 
 /**
@@ -75,19 +79,11 @@ export const sidebarData: SidebarData = {
         {
           // Ocho pantallas que se tocan una vez al ano —doce tipos de trabajo, nueve
           // estados, seis revistas— ocupaban ocho sitios en una lista que no cabia.
-          // Plegadas ocupan uno, y cada una conserva su direccion.
+          // Ahora son un modulo con sus pestanas, y una sola entrada aqui.
           title: 'Configuration',
+          url: SECCIONES[0].url,
           icon: SlidersHorizontal,
-          items: [
-            { title: 'Work types', url: '/admin/work-types' },
-            { title: 'Academic statuses', url: '/admin/academic-statuses' },
-            { title: 'Venues', url: '/admin/venues' },
-            { title: 'Citation styles', url: '/admin/citation-styles' },
-            { title: 'Tags', url: '/admin/tags' },
-            { title: 'Institutions', url: '/admin/institutions' },
-            { title: 'Departments', url: '/admin/departments' },
-            { title: 'Catalogues', url: '/admin/catalogs' },
-          ],
+          activeFor: RUTAS_DE_CONFIGURACION,
         },
         { title: 'Audit log', url: '/admin/audit-log', icon: ScrollText },
       ],

@@ -12,6 +12,7 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command'
+import { SECCIONES } from '@/features/configuration/secciones'
 import { sidebarData } from './layout/data/sidebar-data'
 import { ScrollArea } from './ui/scroll-area'
 
@@ -70,6 +71,28 @@ export function CommandMenu() {
               })}
             </CommandGroup>
           ))}
+
+          {/* Las secciones de Configuracion no estan en el menu —viven dentro de su
+              modulo— y aun asi tienen que poder buscarse por su nombre: es la via rapida
+              para llegar a un vocabulario sin recorrer pestanas. */}
+          <CommandGroup heading='Configuration'>
+            {SECCIONES.map((seccion) => (
+              <CommandItem
+                key={seccion.url}
+                value={seccion.titulo}
+                onSelect={() => {
+                  runCommand(() => {
+                    void navigate({ to: seccion.url })
+                  })
+                }}
+              >
+                <div className='flex size-4 items-center justify-center'>
+                  <ArrowRight className='size-2 text-muted-foreground/80' />
+                </div>
+                {seccion.titulo}
+              </CommandItem>
+            ))}
+          </CommandGroup>
           <CommandSeparator />
           <CommandGroup heading='Appearance'>
             <CommandItem onSelect={() => runCommand(() => setTheme('light'))}>

@@ -20,6 +20,14 @@ type BaseNavItem = {
 
 type NavLink = BaseNavItem & {
   url: LinkProps['to'] | (string & {})
+  /**
+   * Otras direcciones en las que esta entrada se marca como activa.
+   *
+   * Lo usa Configuracion: es una entrada que lleva a la primera de sus ocho secciones,
+   * y tiene que seguir marcada en las otras siete. Sin esto, entrar en Venues dejaba el
+   * menu sin ninguna entrada encendida.
+   */
+  activeFor?: readonly string[]
   items?: never
 }
 

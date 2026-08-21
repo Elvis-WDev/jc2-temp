@@ -144,10 +144,31 @@ mueve en una línea.
 
 ### Fase 3 — La pantalla de Configuración
 
-- [ ] Una pantalla con las seis secciones, cada una con su tabla y su diálogo, tal como
+- [x] Un módulo con las ocho secciones, cada una con su tabla y su diálogo, tal como
       están hoy. **No se reescriben**: se recolocan.
-- [ ] Las direcciones viejas siguen funcionando y llevan a su sección: hay enlaces
-      guardados y el panel no debe romperlos.
+- [x] Las direcciones viejas siguen funcionando y llevan a su sección.
+
+**Hecha, con un cambio de forma sobre lo planeado.** El plan decía «una pantalla con las
+secciones dentro». Al abrirlo se vio que eso obligaba a juntar las ocho bajo una sola
+ruta, y **las ocho guardan su página, su búsqueda y sus filtros en la dirección usando
+los mismos nombres**: `page`, `q`, `active`. Compartiendo ruta, cambiar de sección
+arrastraría los filtros de la anterior y un enlace a un listado filtrado dejaría de
+valer, que es una propiedad que el proyecto decidió conservar (`data-tables.md:40-47`).
+
+Así que el módulo es el marco, no la ruta: un encabezado común —«Configuration»— con una
+barra de ocho pestañas, y cada sección conserva su dirección y su estado. Se comprobó:
+buscar «econ» en Tags y saltar a Venues no arrastra el filtro.
+
+Las ocho pantallas pierden su cabecera y su título propios, que ahora los pone el marco.
+Ocho bloques idénticos de cabecera se quedan en uno.
+
+En el menú, Configuration deja de ser un plegable y pasa a ser **una entrada** que lleva a
+la primera sección y sigue marcada en las otras siete. Para eso el menú aprende
+`activeFor`: una entrada puede representar varias direcciones.
+
+**Una regresión que cazó la prueba, no yo:** la paleta de Ctrl+K construye su lista del
+menú lateral, así que al sacar las ocho del menú dejaron de poder buscarse por su nombre.
+Ahora la paleta las lista aparte, bajo su propio encabezado.
 
 ### Fase 4 — Los formularios largos
 

@@ -5,15 +5,10 @@ import { Plus } from 'lucide-react'
 import { queryKeys } from '@/lib/api/query-keys'
 import { useToastMutation } from '@/hooks/use-toast-mutation'
 import { Button } from '@/components/ui/button'
-import { ConfigDrawer } from '@/components/config-drawer'
 import { ConfirmDangerDialog } from '@/components/confirm-danger-dialog'
 import { AppDataTable } from '@/components/data-table'
 import { EmptyState } from '@/components/empty-state'
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
+import { ConfigurationLayout } from '@/features/configuration/layout'
 import { listTagCategories, listTags, setTagActive, type Tag } from './api'
 import { TagDeleteDialog } from './components/tag-delete-dialog'
 import { TagFormDialog } from './components/tag-form-dialog'
@@ -102,14 +97,7 @@ export function Tags() {
 
   return (
     <>
-      <Header fixed>
-        <Search className='me-auto' />
-        <ThemeSwitch />
-        <ConfigDrawer />
-        <ProfileDropdown />
-      </Header>
-
-      <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
+      <ConfigurationLayout>
         <div className='flex flex-wrap items-end justify-between gap-2'>
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>Tags</h2>
@@ -190,7 +178,7 @@ export function Tags() {
             )
           }
         />
-      </Main>
+      </ConfigurationLayout>
 
       <TagFormDialog
         open={formAbierto}

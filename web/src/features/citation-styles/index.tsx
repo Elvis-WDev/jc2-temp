@@ -12,17 +12,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { ConfigDrawer } from '@/components/config-drawer'
 import { ConfirmDangerDialog } from '@/components/confirm-danger-dialog'
 import { AppDataTable, DataTableColumnHeader } from '@/components/data-table'
 import { EmptyState } from '@/components/empty-state'
-import { Header } from '@/components/layout/header'
-import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
 import { StatusBadge } from '@/components/status-badge'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { VisibilityToggleButton } from '@/components/visibility-toggle-button'
+import { ConfigurationLayout } from '@/features/configuration/layout'
 import {
   deleteCitationStyle,
   listCitationStyles,
@@ -186,14 +181,7 @@ export function CitationStyles() {
 
   return (
     <>
-      <Header fixed>
-        <Search className='me-auto' />
-        <ThemeSwitch />
-        <ConfigDrawer />
-        <ProfileDropdown />
-      </Header>
-
-      <Main className='flex flex-1 flex-col gap-4 sm:gap-6'>
+      <ConfigurationLayout>
         <div className='flex flex-wrap items-end justify-between gap-2'>
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>
@@ -234,7 +222,7 @@ export function CitationStyles() {
             )
           }
         />
-      </Main>
+      </ConfigurationLayout>
 
       <StyleFormDialog
         open={formAbierto}
