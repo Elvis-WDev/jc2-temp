@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { CollapsibleCard } from '@/components/collapsible-card'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
@@ -163,6 +164,15 @@ type Props = { workId?: string }
  * Asi los valores iniciales se pasan por props y no hace falta sincronizarlos con un
  * efecto, que ademas provocaria un render con el formulario vacio antes de rellenarlo.
  */
+/** Lo que vive dentro de «More options»: si algo de aqui falla, hay que abrirlo. */
+const CAMPOS_PLEGADOS = [
+  'versionLabel',
+  'downloadCode',
+  'displayOrder',
+  'citationTextOverride',
+  'bibtexOverride',
+] as const
+
 export function WorkForm({ workId }: Props) {
   const esEdicion = workId !== undefined
 
@@ -423,41 +433,6 @@ function WorkFormFields({ work }: { work: Work | undefined }) {
                 />
                 <FormField
                   control={form.control}
-                  name='academicStatus'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Academic status</FormLabel>
-                      <Select
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {conEstadoActual(estados, field.value).map(
-                            (estado) => (
-                              <SelectItem key={estado.code} value={estado.code}>
-                                {estado.label}
-                              </SelectItem>
-                            )
-                          )}
-                        </SelectContent>
-                      </Select>
-                      {/* ERS RF-004: no es lo mismo que el estado de publicacion en
-                          el sitio, y confundirlos es el error clasico. */}
-                      <FormDescription>
-                        Where the publication stands, not whether it appears on
-                        your site.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
                   name='publicationYear'
                   render={({ field }) => (
                     <FormItem>
@@ -469,18 +444,53 @@ function WorkFormFields({ work }: { work: Work | undefined }) {
                     </FormItem>
                   )}
                 />
-              </CardContent>
-            </Card>
+                <FormField
+                  control={form.control}
+                  name='academicStatus'
+                  render={({ field }) => (
+                    <FormItem className='sm:col-span-2'>
+                      <FormLabel>Academic status</FormLabel>
+                      <div className='grid gap-1 sm:grid-cols-[auto_1fr] sm:items-center sm:gap-3'>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {conEstadoActual(estados, field.value).map(
+                              (estado) => (
+                                <SelectItem
+                                  key={estado.code}
+                                  value={estado.code}
+                                >
+                                  {estado.label}
+                                </SelectItem>
+                              )
+                            )}
+                          </SelectContent>
+                        </Select>
+                        {/* ERS RF-004: no es lo mismo que el estado de publicacion en
+                            el sitio, y confundirlos es el error clasico. Va al lado y
+                            no debajo porque en una columna estrecha se partia en
+                            cuatro lineas. */}
+                        <FormDescription className='!mt-0'>
+                          Not whether it appears on your site.
+                        </FormDescription>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <Card>
-              <CardContent className='pt-6'>
-                <AuthorsSection value={autores} onChange={setAutores} />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className='pt-6'>
-                <TagsSection value={etiquetas} onChange={setEtiquetas} />
+                {/* Los autores son parte de lo basico de una publicacion, no material
+                    adjunto: van con el titulo y el ano, separados por una linea. */}
+                <div className='border-t pt-4 sm:col-span-2'>
+                  <AuthorsSection value={autores} onChange={setAutores} />
+                </div>
               </CardContent>
             </Card>
 
@@ -488,7 +498,7 @@ function WorkFormFields({ work }: { work: Work | undefined }) {
               <CardHeader>
                 <CardTitle>Content</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className='grid gap-4'>
                 <FormField
                   control={form.control}
                   name='abstractMarkdown'
@@ -498,41 +508,122 @@ function WorkFormFields({ work }: { work: Work | undefined }) {
                       <FormControl>
                         <Textarea rows={6} {...field} />
                       </FormControl>
-                      <FormDescription>
-                        You can use Markdown for bold, lists and links.
-                      </FormDescription>
+                      <FormDescription>Markdown works here.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {/* Las etiquetas dicen de que trata, igual que el resumen. */}
+                <div className='border-t pt-4'>
+                  <TagsSection value={etiquetas} onChange={setEtiquetas} />
+                </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Venue</CardTitle>
+                <CardTitle>Where it was published</CardTitle>
               </CardHeader>
-              <CardContent className='grid gap-4 sm:grid-cols-2'>
-                <div className='sm:col-span-2'>
-                  <VenueSection
-                    value={venue}
-                    onChange={setVenue}
-                    {...(work?.venueName === undefined
-                      ? {}
-                      : { nombreFicha: work.venueName })}
-                  />
+              <CardContent className='grid gap-4'>
+                <VenueSection
+                  value={venue}
+                  onChange={setVenue}
+                  {...(work?.venueName === undefined
+                    ? {}
+                    : { nombreFicha: work.venueName })}
+                />
+
+                {/* Seis campos cortos —un numero de volumen, un ISBN— en tres columnas
+                    y no en dos: en dos ocupaban tres filas para nada. */}
+                <div className='grid gap-4 border-t pt-4 sm:grid-cols-3'>
+                  {(
+                    [
+                      ['publisherName', 'Publisher'],
+                      ['volume', 'Volume'],
+                      ['issue', 'Issue'],
+                      ['pages', 'Pages'],
+                      ['isbn', 'ISBN'],
+                      ['issn', 'ISSN'],
+                    ] as const
+                  ).map(([nombre, etiqueta]) => (
+                    <FormField
+                      key={nombre}
+                      control={form.control}
+                      name={nombre}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{etiqueta}</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ))}
                 </div>
 
+                <div className='grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end'>
+                  <FormField
+                    control={form.control}
+                    name='doi'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>DOI</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder='10.1016/j.jet.2024.01.001'
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name='isOpenAccess'
+                    render={({ field }) => (
+                      <FormItem className='flex items-center gap-2 pb-2'>
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel className='!mt-0'>Open access</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Material</CardTitle>
+              </CardHeader>
+              <CardContent className='grid gap-4'>
+                <LinksSection value={enlaces} onChange={setEnlaces} />
+                <div className='border-t pt-4'>
+                  <FilesSection value={archivos} onChange={setArchivos} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <CollapsibleCard
+              title='More options'
+              description='Version, manual citation, position in Research.'
+              forceOpen={CAMPOS_PLEGADOS.some(
+                (campo) => form.formState.errors[campo] !== undefined
+              )}
+            >
+              <div className='grid gap-4 sm:grid-cols-2'>
                 {(
                   [
-                    ['publisherName', 'Editorial'],
                     ['versionLabel', 'Version'],
                     ['downloadCode', 'Download code'],
-                    ['volume', 'Volume'],
-                    ['issue', 'Issue'],
-                    ['pages', 'Pages'],
-                    ['isbn', 'ISBN'],
-                    ['issn', 'ISSN'],
                   ] as const
                 ).map(([nombre, etiqueta]) => (
                   <FormField
@@ -550,67 +641,34 @@ function WorkFormFields({ work }: { work: Work | undefined }) {
                     )}
                   />
                 ))}
+              </div>
 
-                <FormField
-                  control={form.control}
-                  name='doi'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>DOI</FormLabel>
+              <FormField
+                control={form.control}
+                name='displayOrder'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Position in Research</FormLabel>
+                    <div className='grid gap-1 sm:grid-cols-[minmax(0,10rem)_1fr] sm:items-center sm:gap-3'>
                       <FormControl>
-                        <Input
-                          placeholder='10.1016/j.jet.2024.01.001'
-                          {...field}
-                        />
+                        <Input inputMode='numeric' placeholder='1' {...field} />
                       </FormControl>
-                      <FormDescription>
-                        Paste it as you have it, with or without
-                        https://doi.org/ delante.
+                      {/* La ayuda va al lado del campo. Debajo, en una columna de
+                          160px, salia en ocho lineas rotas. */}
+                      <FormDescription className='!mt-0'>
+                        1 goes first within its type. Empty, it falls in by
+                        year.
                       </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <FormField
-                  control={form.control}
-                  name='isOpenAccess'
-                  render={({ field }) => (
-                    <FormItem className='flex items-center gap-2 sm:col-span-2'>
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <FormLabel className='!mt-0'>Open access</FormLabel>
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className='pt-6'>
-                <LinksSection value={enlaces} onChange={setEnlaces} />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className='pt-6'>
-                <FilesSection value={archivos} onChange={setArchivos} />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Citation</CardTitle>
-              </CardHeader>
-              <CardContent className='grid gap-4'>
+              <div className='grid gap-4 border-t pt-4'>
                 <p className='text-sm text-muted-foreground'>
-                  The citation and the BibTeX are generated on their own from
-                  the data above. Fill these in only if you need a specific
-                  format.
+                  The citation and the BibTeX are written on their own from the
+                  data above. Fill these in only for a specific format.
                 </p>
                 <FormField
                   control={form.control}
@@ -642,50 +700,22 @@ function WorkFormFields({ work }: { work: Work | undefined }) {
                     </FormItem>
                   )}
                 />
-              </CardContent>
-            </Card>
+              </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Order in Research</CardTitle>
-              </CardHeader>
-              <CardContent className='grid gap-4'>
-                <FormField
-                  control={form.control}
-                  name='displayOrder'
-                  render={({ field }) => (
-                    <FormItem className='max-w-40'>
-                      <FormLabel>Position</FormLabel>
-                      <FormControl>
-                        <Input inputMode='numeric' placeholder='1' {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Within its publication type: 1 goes first, then 2, and
-                        so on. Leave it empty and it falls in by year, most
-                        recent first, after the ones you numbered.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
+              {/* Las citas por estilo se guardan por su cuenta: cada una es un registro
+                  propio, y escribir una no deberia obligar a guardar el trabajo entero.
+                  Por eso va dentro del <form> pero sin campos suyos. */}
+              {workId !== undefined && (
+                <div className='border-t pt-4'>
+                  <CitationsSection workId={workId} />
+                </div>
+              )}
+            </CollapsibleCard>
 
             {form.formState.errors.root && (
               <p className='text-sm text-destructive' role='alert'>
                 {form.formState.errors.root.message}
               </p>
-            )}
-
-            {/* Las citas por estilo se guardan por su cuenta: cada una es un registro
-                propio, y escribir una no deberia obligar a guardar el trabajo entero.
-                Por eso va dentro del <form> pero sin campos suyos. */}
-            {workId !== undefined && (
-              <Card>
-                <CardContent className='pt-6'>
-                  <CitationsSection workId={workId} />
-                </CardContent>
-              </Card>
             )}
 
             <div className='sticky bottom-0 flex justify-end gap-2 border-t bg-background py-4'>

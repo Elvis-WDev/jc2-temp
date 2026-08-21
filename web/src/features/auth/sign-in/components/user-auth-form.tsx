@@ -65,8 +65,8 @@ function mensajeDeError(error: unknown): string {
   // de datos caida o sin migrar.
   if (error.isUnexpected) {
     const referencia =
-      error.requestId === '' ? '' : ` (referencia: ${error.requestId})`
-    return `Error del servidor al iniciar sesion${referencia}. Revisa que la base de datos este disponible.`
+      error.requestId === '' ? '' : ` (reference: ${error.requestId})`
+    return `The server failed while signing in${referencia}. Check that the database is up.`
   }
 
   // Better Auth responde 401 ante credenciales invalidas. No se distingue email

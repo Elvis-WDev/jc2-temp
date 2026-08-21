@@ -345,7 +345,7 @@ function Campos({ event }: { event: EventItem | undefined }) {
                         <Input type='datetime-local' {...field} />
                       </FormControl>
                       <FormDescription>
-                        Leave it empty if it runs for a while with no fixed end.
+                        Empty if it has no fixed end.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -396,12 +396,84 @@ function Campos({ event }: { event: EventItem | undefined }) {
                         <Textarea rows={2} {...field} />
                       </FormControl>
                       <FormDescription>
-                        This is what appears in the agenda.
+                        What appears in the agenda.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {/* `organizer` es texto libre y estas son fichas de Institutions: lo
+                    mismo dicho de dos maneras. Estaban en tarjetas distintas, a 900px
+                    de scroll una de otra. */}
+                <div className='grid gap-3 border-t pt-4 sm:col-span-2'>
+                  <p className='text-sm font-medium'>Organising institutions</p>
+                  {instituciones.length === 0 ? (
+                    <p className='rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground'>
+                      No institutions. Optional.
+                    </p>
+                  ) : (
+                    <div className='flex flex-wrap gap-2'>
+                      {instituciones.map((institucion) => (
+                        <span
+                          key={institucion.id}
+                          className='inline-flex items-center gap-1'
+                        >
+                          <StatusBadge tone='info' dot={false}>
+                            {institucion.name}
+                          </StatusBadge>
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            size='icon'
+                            className='size-6'
+                            aria-label={`Remove ${institucion.name}`}
+                            onClick={() => {
+                              setInstituciones(
+                                instituciones.filter(
+                                  (actual) => actual.id !== institucion.id
+                                )
+                              )
+                            }}
+                          >
+                            <X className='size-3' />
+                          </Button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {disponibles.length > 0 && (
+                    <Select
+                      value=''
+                      onValueChange={(id) => {
+                        const elegida = disponibles.find(
+                          (institucion) => institucion.id === id
+                        )
+                        if (elegida !== undefined) {
+                          setInstituciones([
+                            ...instituciones,
+                            { id: elegida.id, name: elegida.name },
+                          ])
+                        }
+                      }}
+                    >
+                      <SelectTrigger className='sm:max-w-sm'>
+                        <SelectValue placeholder='Add an institution' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {disponibles.map((institucion) => (
+                          <SelectItem
+                            key={institucion.id}
+                            value={institucion.id}
+                          >
+                            {institucion.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
@@ -409,7 +481,7 @@ function Campos({ event }: { event: EventItem | undefined }) {
               <CardHeader>
                 <CardTitle>Content</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className='grid gap-4'>
                 <FormField
                   control={form.control}
                   name='contentMarkdown'
@@ -419,39 +491,37 @@ function Campos({ event }: { event: EventItem | undefined }) {
                       <FormControl>
                         <Textarea rows={8} {...field} />
                       </FormControl>
-                      <FormDescription>Admite Markdown.</FormDescription>
+                      <FormDescription>Markdown works here.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Image</CardTitle>
-              </CardHeader>
-              <CardContent className='grid gap-4'>
-                <ImagePicker value={imageMediaId} onChange={setImageMediaId} />
-                {imageMediaId !== null && (
-                  <FormField
-                    control={form.control}
-                    name='imageAlt'
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Image description</FormLabel>
-                        <FormControl>
-                          <Input placeholder='Seminar poster' {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          It is read by those who browse without seeing the
-                          image.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                {/* La imagen es lo que se ve del evento, igual que el texto. */}
+                <div className='border-t pt-4'>
+                  <ImagePicker
+                    value={imageMediaId}
+                    onChange={setImageMediaId}
                   />
-                )}
+                  {imageMediaId !== null && (
+                    <FormField
+                      control={form.control}
+                      name='imageAlt'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Image description</FormLabel>
+                          <FormControl>
+                            <Input placeholder='Seminar poster' {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            Read by those who browse without seeing it.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+                </div>
               </CardContent>
             </Card>
 
@@ -515,76 +585,6 @@ function Campos({ event }: { event: EventItem | undefined }) {
                     </FormItem>
                   )}
                 />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Organised by</CardTitle>
-              </CardHeader>
-              <CardContent className='grid gap-3'>
-                {instituciones.length === 0 ? (
-                  <p className='rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground'>
-                    No institutions. Optional.
-                  </p>
-                ) : (
-                  <div className='flex flex-wrap gap-2'>
-                    {instituciones.map((institucion) => (
-                      <span
-                        key={institucion.id}
-                        className='inline-flex items-center gap-1'
-                      >
-                        <StatusBadge tone='info' dot={false}>
-                          {institucion.name}
-                        </StatusBadge>
-                        <Button
-                          type='button'
-                          variant='ghost'
-                          size='icon'
-                          className='size-6'
-                          aria-label={`Remove ${institucion.name}`}
-                          onClick={() => {
-                            setInstituciones(
-                              instituciones.filter(
-                                (actual) => actual.id !== institucion.id
-                              )
-                            )
-                          }}
-                        >
-                          <X className='size-3' />
-                        </Button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {disponibles.length > 0 && (
-                  <Select
-                    value=''
-                    onValueChange={(id) => {
-                      const elegida = disponibles.find(
-                        (institucion) => institucion.id === id
-                      )
-                      if (elegida !== undefined) {
-                        setInstituciones([
-                          ...instituciones,
-                          { id: elegida.id, name: elegida.name },
-                        ])
-                      }
-                    }}
-                  >
-                    <SelectTrigger className='sm:max-w-sm'>
-                      <SelectValue placeholder='Add an institution' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {disponibles.map((institucion) => (
-                        <SelectItem key={institucion.id} value={institucion.id}>
-                          {institucion.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
               </CardContent>
             </Card>
 

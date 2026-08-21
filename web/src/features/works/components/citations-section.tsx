@@ -86,8 +86,7 @@ export function CitationsSection({ workId }: Props) {
       <div>
         <h3 className='font-medium'>Citations by style</h3>
         <p className='text-sm text-muted-foreground'>
-          How this work is cited in each format. The BibTeX is generated on its
-          own.
+          How this work is cited in each format.
         </p>
       </div>
 

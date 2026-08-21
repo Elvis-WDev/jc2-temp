@@ -271,8 +271,7 @@ function Campos({ onOpenChange, page }: Omit<Props, 'open'>) {
         <div className='grid gap-2 border-t pt-4'>
           <Label>What appears on this page</Label>
           <p className='text-sm text-muted-foreground'>
-            Cada bloque se enciende y se apaga por su cuenta. Se guarda al
-            momento.
+            Each block is switched on and off on its own, and saves right away.
           </p>
           <SectionsSection pageKey={page.pageKey} />
         </div>

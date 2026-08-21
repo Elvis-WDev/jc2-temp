@@ -34,13 +34,11 @@ export function VenueSection({ value, onChange, nombreFicha }: Props) {
 
   return (
     <div className='grid gap-3'>
-      <div>
-        <h3 className='font-medium'>Where it was published</h3>
-        <p className='text-sm text-muted-foreground'>
-          Choose a venue from your list, or type a loose name if it is not
-          merece ficha propia.
-        </p>
-      </div>
+      {/* El titulo lo pone la tarjeta que envuelve: repetirlo aqui era decir lo
+          mismo dos veces seguidas. */}
+      <p className='text-sm text-muted-foreground'>
+        Pick one from your list, or type a loose name.
+      </p>
 
       {value.venueId === null ? (
         <div className='grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end'>

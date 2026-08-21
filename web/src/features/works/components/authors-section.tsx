@@ -62,7 +62,7 @@ export function AuthorsSection({ value, onChange }: Props) {
         <div>
           <h3 className='font-medium'>Authors</h3>
           <p className='text-sm text-muted-foreground'>
-            In the order they sign. Use the arrows to change it.
+            In the order they sign.
           </p>
         </div>
         <Button

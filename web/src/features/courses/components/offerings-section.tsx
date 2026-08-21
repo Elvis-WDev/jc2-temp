@@ -177,7 +177,7 @@ export function OfferingsSection({ course }: Props) {
                           {edicion.materials.length}{' '}
                           {edicion.materials.length === 1
                             ? 'material'
-                            : 'materiales'}
+                            : 'materials'}
                         </span>
                       </Button>
                     </CollapsibleTrigger>

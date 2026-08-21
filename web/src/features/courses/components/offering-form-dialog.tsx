@@ -269,7 +269,7 @@ function Campos({ onOpenChange, courseId, offering }: Omit<Props, 'open'>) {
                   ))}
                 </SelectContent>
               </Select>
-              <FormDescription>Opcional.</FormDescription>
+              <FormDescription>Optional.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -409,7 +409,7 @@ function Campos({ onOpenChange, courseId, offering }: Omit<Props, 'open'>) {
               <FormControl>
                 <Textarea rows={5} {...field} />
               </FormControl>
-              <FormDescription>Admite Markdown.</FormDescription>
+              <FormDescription>Markdown works here.</FormDescription>
               <FormMessage />
             </FormItem>
           )}

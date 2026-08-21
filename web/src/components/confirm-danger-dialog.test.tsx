@@ -25,7 +25,7 @@ describe('cuando la accion no se puede deshacer', () => {
     const { getByRole } = await render(<ConfirmDangerDialog {...props()} />)
 
     await expect
-      .element(getByRole('button', { name: 'Continuar' }))
+      .element(getByRole('button', { name: 'Continue' }))
       .toBeInTheDocument()
     expect(getByRole('textbox').query()).toBeNull()
   })
@@ -36,7 +36,7 @@ describe('cuando la accion no se puede deshacer', () => {
       <ConfirmDangerDialog {...props({ onConfirm })} />
     )
 
-    await userEvent.click(getByRole('button', { name: 'Continuar' }))
+    await userEvent.click(getByRole('button', { name: 'Continue' }))
 
     const confirmar = getByRole('button', { name: 'Delete' })
     await expect.element(confirmar).toBeDisabled()
@@ -67,7 +67,7 @@ describe('cuando la accion se puede deshacer', () => {
     )
 
     // Ni paso intermedio ni campo que rellenar: la friccion sobra si se deshace.
-    expect(getByRole('button', { name: 'Continuar' }).query()).toBeNull()
+    expect(getByRole('button', { name: 'Continue' }).query()).toBeNull()
     expect(getByRole('textbox').query()).toBeNull()
 
     await userEvent.click(getByRole('button', { name: 'Ocultar' }))

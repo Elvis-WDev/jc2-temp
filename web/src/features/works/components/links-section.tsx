@@ -40,9 +40,6 @@ export function LinksSection({ value, onChange }: Props) {
       <div className='flex items-center justify-between'>
         <div>
           <h3 className='font-medium'>Links</h3>
-          <p className='text-sm text-muted-foreground'>
-            Addresses where the work or its material can be consulted.
-          </p>
         </div>
         <Button
           type='button'

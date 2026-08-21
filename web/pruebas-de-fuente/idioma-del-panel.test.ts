@@ -20,16 +20,15 @@ import { describe, expect, it } from 'vitest'
  * aviso cuando alguien use `process` en una pantalla.
  */
 
-/** Palabras que no existen en ingles: su presencia delata una cadena sin traducir. */
+/**
+ * Palabras que no existen en ingles: su presencia delata una cadena sin traducir.
+ *
+ * La lista no se adivina, se amplia cuando algo se escapa. La primera version dejo
+ * pasar once cadenas —«Admite Markdown.», «Opcional.», «merece ficha propia»— porque
+ * ninguna de sus palabras estaba aqui. Si aparece otra, se añade.
+ */
 const CASTELLANO =
-  /\b(Ocultar|Mostrar|Guardar|Cancelar|Buscar|Crear|Editar|Borrar|Eliminar|Cerrar|Subir|Bajar|Descargar|Publicar|Archivar|Limpiar|Anterior|Siguiente|Volumen|Numero|Subtitulo|Codigo|Elegir|Descargable|Archivo|Nombre|Titulo|Fecha|Ninguno|Ninguna|actualizado|creado|Pegalo|Inscribirse)\b/
-
-function esComentario(linea: string): boolean {
-  const limpia = linea.trim()
-  return (
-    limpia.startsWith('//') || limpia.startsWith('*') || limpia.startsWith('/*')
-  )
-}
+  /\b(Ocultar|Mostrar|Guardar|Cancelar|Buscar|Crear|Editar|Borrar|Eliminar|Cerrar|Subir|Bajar|Descargar|Publicar|Archivar|Limpiar|Anterior|Siguiente|Volumen|Numero|Subtitulo|Codigo|Elegir|Descargable|Archivo|Nombre|Titulo|Fecha|Ninguno|Ninguna|actualizado|creado|Pegalo|Inscribirse|Admite|Opcional|merece|ficha|propia|propio|delante|detras|materiales|enciende|apaga|cuenta|servidor|sesion|disponible|momento|bloque|vacio|vacia|borrador|etiquetas|enlaces|imagenes|paginas|Continuar|Aceptar|Aplicar|Volver|Añadir|Anadir|Quitar)\b/
 
 function ficheros(directorio: string): string[] {
   return readdirSync(directorio).flatMap((entrada) => {
@@ -39,36 +38,51 @@ function ficheros(directorio: string): string[] {
   })
 }
 
+/** Fuera los comentarios: van en castellano a proposito. */
+function sinComentarios(codigo: string): string {
+  return codigo
+    .replace(/\/\*[\s\S]*?\*\//g, (bloque) => bloque.replace(/[^\n]/g, ' '))
+    .replace(/^[ \t]*\/\/.*$/gm, '')
+}
+
 /**
- * Lo que el usuario llega a leer.
+ * Lo que el usuario llega a leer, con su linea.
  *
  * Tres formas: cadenas entre comillas, texto suelto en su propia linea, y texto entre
- * etiquetas en la misma linea. La tercera falta la primera vez y dejaba pasar
- * `<FormLabel>Subtitulo</FormLabel>` entero, que es justo la forma mas comun de un
- * rotulo.
+ * etiquetas. Esta ultima **puede ocupar varias lineas** —prettier parte los parrafos
+ * largos— y mirarlas de una en una es como se colaron «merece ficha propia» y
+ * «https://doi.org/ delante»: cada trozo por separado parecia ingles.
  *
  * Se descartan las claves y rutas —`work_link`, `/admin/works`— y las clases de estilo,
  * que van entrecomilladas pero nadie las lee.
  */
-function textoVisible(linea: string): string[] {
-  const entrecomillado = [...linea.matchAll(/'([^'\\]{3,120})'/g)].map(
-    (m) => m[1] ?? ''
-  )
-  const entreEtiquetas = [...linea.matchAll(/>([^<>{}]{3,120})</g)].map(
-    (m) => m[1] ?? ''
-  )
-  const suelto = /^[A-Z][^<>{}'"]{3,120}$/.test(linea.trim())
-    ? [linea.trim()]
-    : []
+function textoVisible(codigo: string): Array<{ linea: number; texto: string }> {
+  const limpio = sinComentarios(codigo)
+  const trozos: Array<{ inicio: number; texto: string }> = []
 
-  return [...entrecomillado, ...entreEtiquetas, ...suelto]
-    .map((texto) => texto.trim())
+  for (const m of limpio.matchAll(/'([^'\\\n]{3,200})'/g))
+    trozos.push({ inicio: m.index, texto: m[1] ?? '' })
+
+  // Sin `{}` dentro: asi no se traga codigo JSX entero, solo texto literal.
+  for (const m of limpio.matchAll(/>([^<>{}]{3,300})</g))
+    trozos.push({ inicio: m.index, texto: m[1] ?? '' })
+
+  for (const m of limpio.matchAll(/^[ \t]*([A-Z][^<>{}'"\n]{3,200})$/gm))
+    trozos.push({ inicio: m.index, texto: m[1] ?? '' })
+
+  return trozos
+    // Los parrafos partidos vuelven a ser una sola frase antes de mirarlos.
+    .map(({ inicio, texto }) => ({
+      linea: limpio.slice(0, inicio).split('\n').length,
+      texto: texto.split(/\s+/).join(' ').trim(),
+    }))
     .filter(
-      (texto) =>
-        !/^[a-z0-9_@./:*-]+$/.test(texto) && !texto.includes('className')
+      ({ texto }) =>
+        texto.length >= 3 &&
+        !/^[a-z0-9_@./:*-]+$/.test(texto) &&
+        !texto.includes('className')
     )
 }
-
 
 describe('el idioma del panel', () => {
   it('no queda ni un rotulo en castellano', () => {
@@ -78,18 +92,11 @@ describe('el idioma del panel', () => {
       ...ficheros('src/features'),
       ...ficheros('src/components'),
     ]) {
-      readFileSync(ruta, 'utf8')
-        .split('\n')
-        .forEach((linea, indice) => {
-          if (esComentario(linea)) return
-          for (const texto of textoVisible(linea)) {
-            if (CASTELLANO.test(texto)) {
-              sospechas.push(
-                `${ruta}:${String(indice + 1)}  ${texto.slice(0, 60)}`
-              )
-            }
-          }
-        })
+      for (const { linea, texto } of textoVisible(readFileSync(ruta, 'utf8'))) {
+        if (CASTELLANO.test(texto)) {
+          sospechas.push(`${ruta}:${String(linea)}  ${texto.slice(0, 60)}`)
+        }
+      }
     }
 
     expect(sospechas).toEqual([])

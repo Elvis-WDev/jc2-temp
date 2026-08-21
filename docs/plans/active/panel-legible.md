@@ -172,14 +172,57 @@ Ahora la paleta las lista aparte, bajo su propio encabezado.
 
 ### Fase 4 — Los formularios largos
 
-- [ ] Publicación baja de 9 bloques a 4: **Lo básico**, **Contenido**, **Dónde se
-      publicó**, **Material** (autores, etiquetas, enlaces, archivos, cita).
-- [ ] Lo que casi nadie toca —cita manual, BibTeX, código de descarga, orden— va a un
-      bloque plegado, cerrado por defecto.
-- [ ] Cada ayuda se lee y se decide: se queda, se acorta o se va.
-- [ ] Arreglar la ayuda del campo de orden, que hoy sale en ocho líneas rotas.
-- [ ] Objetivo medible: **por debajo de 2 pantallas** de scroll, hoy 3,2.
-- [ ] Lo mismo con Evento (1,8) y Curso (1,2), que están mejor pero repiten el patrón.
+- [x] Publicación baja de 10 bloques a 4 más uno plegado.
+- [x] Lo que casi nadie toca —versión, código de descarga, cita a mano, BibTeX, orden—
+      va a ese bloque plegado, cerrado por defecto.
+- [x] Cada ayuda se lee y se decide: de 14 quedan 7.
+- [x] Arreglada la ayuda del campo de orden, que salía en ocho líneas rotas.
+- [ ] Objetivo medible: por debajo de 2 pantallas. **Se queda en 2,4.**
+- [x] Lo mismo con Evento y Curso. Y con Entrada, que no estaba en el plan.
+
+Medido en 1440×900, con 828px visibles bajo la cabecera:
+
+| Formulario | Antes | Ahora | Bloques | Ayudas |
+|---|---|---|---|---|
+| Publicación (edición) | 3.287px · 4,0 | 2.011px · **2,4** | 10 → 4 + 1 plegado | 14 → 7 |
+| Evento | 1.687px · 2,0 | 1.545px · **1,9** | 5 → 3 | 6 → 6 |
+| Curso | 1.323px · 1,6 | 1.190px · **1,4** | 3 → 2 | 7 → 3 |
+| Entrada | 1.475px · 1,8 | 1.398px · **1,7** | 4 → 4 | 7 → 4 |
+
+El «3,2 de hoy» que decía el plan no se pudo reproducir: medido de nuevo, el formulario
+de Publicación en edición ocupaba **4,0 pantallas**. La reducción pedida era del 38%; la
+conseguida es del 39%, sobre una cifra de partida mayor.
+
+**El objetivo absoluto no se alcanza, y no se fuerza.** Quedan 17 campos visibles y
+cuatro listas —autores, etiquetas, enlaces, archivos—; bajar de 1.656px exigía esconder
+campos que sí se usan. El candidato obvio eran los seis identificadores —volumen, número,
+páginas, ISBN, ISSN, editorial— que están en blanco en la mayoría de los tipos, pero
+plegarlos los habría dejado cerrados justo al crear un artículo de revista, que es cuando
+hacen falta. Se revisa en la fase 5: el editor de texto enriquecido cambia el tamaño de
+resumen y descripción, y entonces la cifra querrá decir otra cosa.
+
+**El reparto no es el que decía el plan, y se cambió a propósito.** El plan metía autores
+y etiquetas en «Material». Los autores son lo segundo que se sabe de una publicación,
+después del título, y las etiquetas dicen de qué trata igual que el resumen. Así que los
+autores van con **Lo básico** y las etiquetas con **Contenido**; «Material» son enlaces,
+archivos y citas, que es lo que la palabra significa. Mismo número de bloques, cada
+título dice de verdad lo que hay debajo.
+
+En Evento pasó algo parecido y más claro: `organizer` —texto libre— y la lista de
+instituciones organizadoras eran lo mismo dicho de dos maneras, en tarjetas separadas por
+900px de scroll. Ahora están juntas.
+
+**El bloque plegado se tragaba los errores.** Con un valor inválido dentro y el bloque
+cerrado, pulsar «Save» no hacía nada y no explicaba nada. No lo vi mirando: lo cazó una
+prueba escrita para intentarlo con el bloque cerrado a propósito. `CollapsibleCard` acepta
+`forceOpen` y se abre en cuanto aparece un error dentro.
+
+**Y once cadenas en castellano que la fase 1 dejó pasar** —«Admite Markdown.»,
+«Opcional.», «merece ficha propia», «https://doi.org/ delante», «Continuar», un mensaje de
+error de inicio de sesión entero—. La prueba de idioma miraba las líneas de una en una, y
+prettier parte los párrafos largos: cada trozo por separado parecía inglés. Ahora junta el
+texto entre etiquetas aunque ocupe varias líneas, y la lista de palabras creció. Se validó
+rompiendo el código a posta.
 
 ### Fase 5 — El texto enriquecido
 

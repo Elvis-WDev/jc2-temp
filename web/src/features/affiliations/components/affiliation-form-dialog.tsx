@@ -234,7 +234,7 @@ function Campos({ onOpenChange, personId, affiliation }: Omit<Props, 'open'>) {
                   ))}
                 </SelectContent>
               </Select>
-              <FormDescription>Opcional.</FormDescription>
+              <FormDescription>Optional.</FormDescription>
               <FormMessage />
             </FormItem>
           )}

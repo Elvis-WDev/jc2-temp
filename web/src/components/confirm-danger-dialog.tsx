@@ -138,7 +138,7 @@ function Contenido({
               setPaso(2)
             }}
           >
-            Continuar
+            Continue
           </Button>
         ) : (
           <Button

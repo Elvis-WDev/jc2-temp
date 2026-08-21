@@ -22,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { ConfigDrawer } from '@/components/config-drawer'
+import { HelpDetails } from '@/components/help-details'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
 import { ImagePicker } from '@/components/media-picker'
@@ -265,7 +266,7 @@ function Campos({
                       </FormControl>
                       <FormDescription>
                         {tipo.conCuerpo
-                          ? 'This is what appears in the list, before opening it.'
+                          ? 'What appears in the list, before opening it.'
                           : 'A news item is its title and this. Keep it short.'}
                       </FormDescription>
                       <FormMessage />
@@ -283,8 +284,8 @@ function Campos({
                         <Input inputMode='numeric' placeholder='' {...field} />
                       </FormControl>
                       <FormDescription>
-                        Leave it empty and it goes by date, newest first. With a
-                        number it is pinned above, lowest first.
+                        Empty, it goes by date. With a number, it is pinned
+                        above.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -316,28 +317,26 @@ function Campos({
                             }}
                           />
                         </FormControl>
-                        <FormDescription>
-                          Markdown: <code>##</code> for a heading,{' '}
-                          <code>**bold**</code>,{' '}
-                          <code>[text](https://...)</code> for a link.
-                        </FormDescription>
-                        <FormDescription>
-                          <strong>Video:</strong> paste the address from your
-                          browser bar on a line of its own and it becomes a
-                          player — for example{' '}
-                          <code>
-                            https://www.youtube.com/watch?v=dQw4w9WgXcQ
-                          </code>
-                          . YouTube and Vimeo only. Video is embedded, not
-                          hosted here: a file this size would have to be
-                          downloaded whole before it could be skipped through.
-                        </FormDescription>
-                        <FormDescription>
-                          <strong>Images:</strong> use the button above. Only
-                          images uploaded here can be placed in the text: one
-                          hosted elsewhere would tell that server the address of
-                          every reader.
-                        </FormDescription>
+                        <HelpDetails summary='What you can put in here'>
+                          <p>
+                            <strong>Markdown:</strong> <code>##</code> for a
+                            heading, <code>**bold**</code>,{' '}
+                            <code>[text](https://...)</code> for a link.
+                          </p>
+                          <p>
+                            <strong>Video:</strong> paste the address from your
+                            browser bar on a line of its own and it becomes a
+                            player. YouTube and Vimeo only. It is embedded, not
+                            hosted here: a file that size would have to be
+                            downloaded whole before it could be skipped through.
+                          </p>
+                          <p>
+                            <strong>Images:</strong> use the button above. Only
+                            images uploaded here can go in the text: one hosted
+                            elsewhere would tell that server the address of
+                            every reader.
+                          </p>
+                        </HelpDetails>
                         <FormMessage />
                       </FormItem>
                     )}

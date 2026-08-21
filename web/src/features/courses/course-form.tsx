@@ -209,7 +209,6 @@ function Campos({ course }: { course: Course | undefined }) {
                       <FormControl>
                         <Input placeholder='Micro Intermedia' {...field} />
                       </FormControl>
-                      <FormDescription>For narrow listings.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -224,9 +223,6 @@ function Campos({ course }: { course: Course | undefined }) {
                       <FormControl>
                         <Input placeholder='ECON2101' {...field} />
                       </FormControl>
-                      <FormDescription>
-                        Each offering can have its own.
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -261,10 +257,6 @@ function Campos({ course }: { course: Course | undefined }) {
                           {...field}
                         />
                       </FormControl>
-                      <FormDescription>
-                        The course on the site of the institution, if it has
-                        one.
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -280,7 +272,7 @@ function Campos({ course }: { course: Course | undefined }) {
                         <Textarea rows={2} {...field} />
                       </FormControl>
                       <FormDescription>
-                        This is what appears in the listing.
+                        What appears in the listing.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -293,7 +285,7 @@ function Campos({ course }: { course: Course | undefined }) {
               <CardHeader>
                 <CardTitle>Content</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className='grid gap-4'>
                 <FormField
                   control={form.control}
                   name='descriptionMarkdown'
@@ -303,21 +295,16 @@ function Campos({ course }: { course: Course | undefined }) {
                       <FormControl>
                         <Textarea rows={8} {...field} />
                       </FormControl>
-                      <FormDescription>Admite Markdown.</FormDescription>
+                      <FormDescription>Markdown works here.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </CardContent>
-            </Card>
 
-            <Card>
-              <CardContent className='pt-6'>
-                <TagsSection
-                  value={etiquetas}
-                  onChange={setEtiquetas}
-                  description='They let visitors filter your courses by topic.'
-                />
+                {/* Las etiquetas dicen de que trata, igual que la descripcion. */}
+                <div className='border-t pt-4'>
+                  <TagsSection value={etiquetas} onChange={setEtiquetas} />
+                </div>
               </CardContent>
             </Card>
 

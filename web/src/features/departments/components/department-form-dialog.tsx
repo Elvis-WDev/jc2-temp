@@ -276,7 +276,7 @@ function Campos({
               <FormControl>
                 <Textarea rows={3} {...field} />
               </FormControl>
-              <FormDescription>Admite Markdown. Opcional.</FormDescription>
+              <FormDescription>Markdown works here. Optional.</FormDescription>
               <FormMessage />
             </FormItem>
           )}

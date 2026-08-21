@@ -11,25 +11,18 @@ export type TagDraft = { id: string; name: string }
 type Props = {
   value: TagDraft[]
   onChange: (tags: TagDraft[]) => void
-  /** Qué se está etiquetando. Lo usan tanto los trabajos como los cursos. */
-  description?: string
 }
 
 /** Etiquetas. Se eligen de las que ya existen, no se escriben libres. */
-export function TagsSection({
-  value,
-  onChange,
-  description = 'They let visitors filter your work by topic.',
-}: Props) {
+export function TagsSection({ value, onChange }: Props) {
   const [abierto, setAbierto] = useState(false)
 
   return (
     <div className='grid gap-3'>
       <div className='flex items-center justify-between'>
-        <div>
-          <h3 className='font-medium'>Tags</h3>
-          <p className='text-sm text-muted-foreground'>{description}</p>
-        </div>
+        {/* Sin frase de ayuda: «Tags» ya lo dice, y la que habia —«dejan filtrar
+            tu trabajo por tema»— repetia lo que se ve al usarlas. */}
+        <h3 className='font-medium'>Tags</h3>
         <Button
           type='button'
           variant='outline'
