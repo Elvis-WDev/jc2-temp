@@ -114,11 +114,33 @@ los lee nadie desde la aplicación.
 
 ### Fase 2 — El menú lateral
 
-- [ ] **Configuración pasa a ser una entrada**, con Work types, Academic statuses,
-      Venues, Citation styles, Tags y Catalogues dentro. El menú baja de 23 entradas a
-      **18** y de 8 grupos a 6.
-- [ ] Comprobar contra la ventana: el contenido tiene que caber sin scroll en 756 px.
-- [ ] Los grupos se distinguen por separación, no sólo por un rótulo de 12 px.
+- [x] **Configuración pasa a ser una entrada**, plegable, con las pantallas de
+      vocabulario dentro.
+- [x] Comprobar contra la ventana: el contenido cabe sin scroll.
+- [x] Los grupos se distinguen por separación, no sólo por un rótulo de 12 px.
+
+**Hecha.** De **22 entradas en 8 grupos** a **14 en 5**, y de 1200 px de contenido a 756:
+cabe entero, sin scroll, en una ventana de 900 px de alto.
+
+**La auditoría se equivocaba en un número, y era el importante.** Decía 52 px por entrada;
+son **32**. Aquella cifra salía de dividir el alto total entre las entradas, y en el total
+entraba la fila del encabezado —el nombre del sitio—, que mide 48. Con 52 px por entrada
+la conclusión habría sido que ni 15 entradas caben y que había que tocar la tipografía;
+con 32, sobra con reagrupar.
+
+Lo que se hizo, por orden de lo que más ahorra:
+
+- **Configuration**, plegable, con las ocho pantallas de vocabulario: tipos de trabajo,
+  estados, revistas, estilos de cita, etiquetas, instituciones, departamentos y
+  catálogos. Cada una conserva su dirección.
+- **Research, Teaching, Events y News & blog** eran cuatro grupos de una, dos y tres
+  entradas: cuatro rótulos para nueve destinos. Ahora son **Content**.
+- **Dashboard pierde su rótulo «General»**: una sola entrada no necesita un título encima,
+  y ese título costaba 40 px de los 756.
+
+Instituciones y departamentos entran en Configuration aunque no sean «tipos ni estados»:
+son dos filas y dos filas, se montan una vez y no se vuelven a tocar. Es discutible y se
+mueve en una línea.
 
 ### Fase 3 — La pantalla de Configuración
 

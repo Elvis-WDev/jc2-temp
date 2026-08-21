@@ -1,22 +1,17 @@
 import {
-  BookMarked,
   Newspaper,
   PenLine,
   Building2,
   CalendarDays,
-  CircleDot,
   FileText,
   FolderOpen,
   GraduationCap,
   Image,
-  Landmark,
   LayoutDashboard,
   Link2,
-  ListChecks,
-  Quote,
   ScrollText,
   Settings,
-  Tags,
+  SlidersHorizontal,
   UserCog,
   Users,
 } from 'lucide-react'
@@ -38,10 +33,10 @@ export const sidebarData: SidebarData = {
   },
   teams: [],
   navGroups: [
+    // Sin rotulo: una sola entrada no necesita que le pongan titulo encima, y ese
+    // titulo cuesta 40px de los 756 que hay.
     {
-      title: 'General',
-      // El mismo nombre que el encabezado de la pantalla: llamarlo de dos formas
-      // distintas hace dudar de si son dos sitios.
+      title: '',
       items: [{ title: 'Dashboard', url: '/admin', icon: LayoutDashboard }],
     },
     {
@@ -53,42 +48,15 @@ export const sidebarData: SidebarData = {
       ],
     },
     {
-      title: 'Research',
+      // Research, Teaching, Events y News & blog eran cuatro grupos de uno, dos y tres
+      // entradas: cuatro rotulos para nueve destinos. Juntos caben en uno y el menu
+      // entero deja de necesitar scroll.
+      title: 'Content',
       items: [
         { title: 'Work', url: '/admin/works', icon: FileText },
         { title: 'Authors', url: '/admin/persons', icon: Users },
-        { title: 'Work types', url: '/admin/work-types', icon: ListChecks },
-        {
-          title: 'Academic statuses',
-          url: '/admin/academic-statuses',
-          icon: CircleDot,
-        },
-        { title: 'Venues', url: '/admin/venues', icon: BookMarked },
-        {
-          title: 'Citation styles',
-          url: '/admin/citation-styles',
-          icon: Quote,
-        },
-        { title: 'Tags', url: '/admin/tags', icon: Tags },
-      ],
-    },
-    {
-      title: 'Teaching',
-      items: [
         { title: 'Courses', url: '/admin/courses', icon: GraduationCap },
-        { title: 'Institutions', url: '/admin/institutions', icon: Building2 },
-        { title: 'Departments', url: '/admin/departments', icon: Landmark },
-      ],
-    },
-    {
-      title: 'Events',
-      items: [{ title: 'Events', url: '/admin/events', icon: CalendarDays }],
-    },
-    {
-      // Dos entradas y una sola pantalla: para el titular son dos cosas distintas, y en
-      // el codigo son la misma tabla con el filtro puesto.
-      title: 'News & blog',
-      items: [
+        { title: 'Events', url: '/admin/events', icon: CalendarDays },
         { title: 'News', url: '/admin/posts/news', icon: Newspaper },
         { title: 'Blog', url: '/admin/posts/blog', icon: PenLine },
       ],
@@ -104,7 +72,23 @@ export const sidebarData: SidebarData = {
     {
       title: 'System',
       items: [
-        { title: 'Catalogues', url: '/admin/catalogs', icon: ListChecks },
+        {
+          // Ocho pantallas que se tocan una vez al ano —doce tipos de trabajo, nueve
+          // estados, seis revistas— ocupaban ocho sitios en una lista que no cabia.
+          // Plegadas ocupan uno, y cada una conserva su direccion.
+          title: 'Configuration',
+          icon: SlidersHorizontal,
+          items: [
+            { title: 'Work types', url: '/admin/work-types' },
+            { title: 'Academic statuses', url: '/admin/academic-statuses' },
+            { title: 'Venues', url: '/admin/venues' },
+            { title: 'Citation styles', url: '/admin/citation-styles' },
+            { title: 'Tags', url: '/admin/tags' },
+            { title: 'Institutions', url: '/admin/institutions' },
+            { title: 'Departments', url: '/admin/departments' },
+            { title: 'Catalogues', url: '/admin/catalogs' },
+          ],
+        },
         { title: 'Audit log', url: '/admin/audit-log', icon: ScrollText },
       ],
     },

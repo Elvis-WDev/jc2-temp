@@ -74,8 +74,12 @@ export function NavGroup({ title, items }: NavGroupProps) {
   }
 
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>{title}</SidebarGroupLabel>
+    // Sin rotulo no hace falta el aire de arriba y abajo: ese margen esta para separar
+    // un bloque de su titulo, y aqui no hay titulo que separar.
+    <SidebarGroup className={cn(title === '' && 'py-0')}>
+      {/* Sin titulo no se pinta la caja: dejarla vacia gasta 32px de alto para no
+          decir nada. */}
+      {title !== '' && <SidebarGroupLabel>{title}</SidebarGroupLabel>}
       <SidebarMenu>
         {ordenados.map((item) => {
           const key = `${item.title}-${item.url}`
