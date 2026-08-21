@@ -34,6 +34,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { MarkdownEditor } from '@/components/markdown-editor'
 import { ImagePicker } from '@/components/media-picker'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
@@ -489,7 +490,7 @@ function Campos({ event }: { event: EventItem | undefined }) {
                     <FormItem>
                       <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Textarea rows={8} {...field} />
+                        <MarkdownEditor rows={8} {...field} />
                       </FormControl>
                       <FormDescription>Markdown works here.</FormDescription>
                       <FormMessage />

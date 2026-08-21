@@ -27,7 +27,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Textarea } from '@/components/ui/textarea'
+import { MarkdownEditor } from '@/components/markdown-editor'
 import { ImagePicker } from '@/components/media-picker'
 import {
   NOMBRE_DE_PAGINA,
@@ -162,7 +162,7 @@ function Campos({ onOpenChange, page }: Omit<Props, 'open'>) {
             <FormItem>
               <FormLabel>Intro</FormLabel>
               <FormControl>
-                <Textarea rows={4} {...field} />
+                <MarkdownEditor rows={4} {...field} />
               </FormControl>
               <FormDescription>
                 Goes below the title. Markdown is allowed.
@@ -179,7 +179,7 @@ function Campos({ onOpenChange, page }: Omit<Props, 'open'>) {
             <FormItem>
               <FormLabel>Secondary text</FormLabel>
               <FormControl>
-                <Textarea rows={3} {...field} />
+                <MarkdownEditor rows={3} {...field} />
               </FormControl>
               <FormDescription>
                 {esPortada

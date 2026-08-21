@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { Textarea } from '@/components/ui/textarea'
+import { MarkdownEditor } from '@/components/markdown-editor'
 import { listDepartments, listInstitutions } from '@/features/institutions/api'
 import { createAffiliation, updateAffiliation, type Affiliation } from '../api'
 
@@ -366,7 +366,7 @@ function Campos({ onOpenChange, personId, affiliation }: Omit<Props, 'open'>) {
             <FormItem className='sm:col-span-2'>
               <FormLabel>Notas</FormLabel>
               <FormControl>
-                <Textarea rows={3} {...field} />
+                <MarkdownEditor rows={3} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

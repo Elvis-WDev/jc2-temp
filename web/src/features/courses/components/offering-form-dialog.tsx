@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import { MarkdownEditor } from '@/components/markdown-editor'
 import { listDepartments, listInstitutions } from '@/features/institutions/api'
 import { createOffering, updateOffering, type CourseOffering } from '../api'
 import { TeachersSection, type TeacherDraft } from './teachers-section'
@@ -407,7 +408,7 @@ function Campos({ onOpenChange, courseId, offering }: Omit<Props, 'open'>) {
             <FormItem className='sm:col-span-2'>
               <FormLabel>Content</FormLabel>
               <FormControl>
-                <Textarea rows={5} {...field} />
+                <MarkdownEditor rows={5} {...field} />
               </FormControl>
               <FormDescription>Markdown works here.</FormDescription>
               <FormMessage />

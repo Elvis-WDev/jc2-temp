@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -25,6 +25,7 @@ import { ConfigDrawer } from '@/components/config-drawer'
 import { HelpDetails } from '@/components/help-details'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { MarkdownEditor } from '@/components/markdown-editor'
 import { ImagePicker } from '@/components/media-picker'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
@@ -35,7 +36,6 @@ import {
   AttachmentsSection,
   type AttachmentDraft,
 } from './components/attachments-section'
-import { InsertImageButton } from './components/insert-image-button'
 import { type PostKind } from './kinds'
 
 /**
@@ -108,9 +108,6 @@ function Campos({
     }))
   )
 
-  // Para poder escribir la imagen donde estaba el cursor y no al final del todo.
-  const cuerpo = useRef<HTMLTextAreaElement | null>(null)
-
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -124,21 +121,6 @@ function Campos({
           : String(post.displayOrder),
     },
   })
-
-  const insertarEnCuerpo = (fragmento: string) => {
-    const actual = form.getValues('contentMarkdown')
-    const posicion = cuerpo.current?.selectionStart ?? actual.length
-    const antes = actual.slice(0, posicion)
-    const despues = actual.slice(posicion)
-    // En su propio parrafo: pegada al texto anterior, Markdown la trataria como parte
-    // de esa linea y no como un bloque.
-    const separador = antes === '' || antes.endsWith('\n') ? '' : '\n\n'
-    form.setValue(
-      'contentMarkdown',
-      `${antes}${separador}${fragmento}\n\n${despues}`,
-      { shouldDirty: true }
-    )
-  }
 
   const guardar = useToastMutation({
     mutationFn: (values: FormValues) => {
@@ -300,7 +282,6 @@ function Campos({
                   <CardTitle>Body</CardTitle>
                 </CardHeader>
                 <CardContent className='grid gap-4'>
-                  <InsertImageButton onInsert={insertarEnCuerpo} />
                   <FormField
                     control={form.control}
                     name='contentMarkdown'
@@ -308,21 +289,12 @@ function Campos({
                       <FormItem>
                         <FormLabel>Text</FormLabel>
                         <FormControl>
-                          <Textarea
-                            rows={16}
-                            {...field}
-                            ref={(elemento) => {
-                              field.ref(elemento)
-                              cuerpo.current = elemento
-                            }}
-                          />
+                          {/* El boton de intercalar una imagen vive en la barra del
+                              editor: estaba suelto encima del campo, y desde ahi no
+                              sabia donde tenia el cursor quien escribia. */}
+                          <MarkdownEditor rows={16} withImages {...field} />
                         </FormControl>
                         <HelpDetails summary='What you can put in here'>
-                          <p>
-                            <strong>Markdown:</strong> <code>##</code> for a
-                            heading, <code>**bold**</code>,{' '}
-                            <code>[text](https://...)</code> for a link.
-                          </p>
                           <p>
                             <strong>Video:</strong> paste the address from your
                             browser bar on a line of its own and it becomes a

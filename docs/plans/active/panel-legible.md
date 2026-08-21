@@ -226,12 +226,48 @@ rompiendo el código a posta.
 
 ### Fase 5 — El texto enriquecido
 
-- [ ] Editor sobre los 11 campos Markdown: negrita, cursiva, títulos, listas, enlaces y
-      cita. Nada más: lo que el saneador del servidor ya permite.
-- [ ] Sigue guardando Markdown. Se comprueba con el texto que ya hay escrito.
-- [ ] El botón de insertar imagen del blog se integra en la barra del editor.
-- [ ] Decidir la librería con el titular antes de instalarla: es una dependencia nueva
-      y pesa.
+- [x] Editor sobre los 11 campos Markdown: negrita, cursiva, títulos, listas, enlace y
+      cita. Nada más.
+- [x] Sigue guardando Markdown. **Nunca lo reescribe**: comprobado con vídeo y todo.
+- [x] El botón de insertar imagen del blog se integra en la barra del editor.
+- [x] Decidida la librería con el titular antes de instalar nada. **No se instaló
+      ninguna.**
+
+Medido antes de elegir, comprimido y con React fuera: Tiptap con su puente a Markdown
+186 kB, Lexical 125 kB, Milkdown 887 kB, `marked` a secas 12 kB.
+
+Y al abrirlo apareció lo que ninguna de esas cifras decía: **un editor visual habría roto
+el vídeo del blog**. El reproductor aparece porque una dirección de YouTube va sola en su
+línea; cualquier editor que convierta el Markdown a su formato y de vuelta la habría
+devuelto como `[https://…](https://…)`, y el vídeo habría dejado de incrustarse. Lo mismo
+con las imágenes, que tienen que ser exactamente `![alt](/api/public/media/<id>)`. Con
+WYSIWYG hacía falta un nodo propio para cada cosa y comprobar el viaje de ida y vuelta en
+los once campos.
+
+Elegido: **barra de botones sobre el campo de siempre, más vista previa**. Los botones
+escriben la sintaxis alrededor de lo seleccionado, y el texto guardado no se vuelve a
+escribir jamás. Cero riesgo sobre lo que ya hay.
+
+**La vista previa la calcula el servidor**, en `POST /api/admin/markdown/preview`. Es una
+desviación de lo que se habló —se habló de `marked` en el navegador, 12 kB— y sale mejor
+por las dos puntas: son 0 kB de dependencia nueva, y sobre todo es **el mismo HTML** que
+sale publicado. Convertirlo en el navegador obligaba a repetir allí el conversor, la lista
+de servidores de vídeo y el saneador; en cuanto una de las dos copias cambiara, la vista
+previa enseñaría algo que la página no enseña. Una dirección de vídeo suelta se habría
+visto como texto en la previa y como reproductor en la web.
+
+Los botones son de doble sentido: el mismo pone y quita. Los de línea —título, listas,
+cita— actúan sobre la línea entera y no sobre donde cayó el ratón.
+
+**Dos fallos que cazaron las pruebas, no yo:**
+
+- La llamada iba a `/admin/markdown/preview` en lugar de `/api/admin/…`, así que pegaba
+  contra la propia aplicación y devolvía 405. La prueba unitaria no podía verlo —tiene el
+  cliente sustituido—; lo vio el barrido en navegador.
+- Y al romper el código a posta para validar las pruebas, resultó que cuatro de ellas
+  seleccionaban justo desde el principio de una línea, donde «prefijo a la línea entera» y
+  «prefijo donde cayó el ratón» dan lo mismo. Pasaban con el código roto. Ahora
+  seleccionan a media palabra.
 
 ## Verification
 

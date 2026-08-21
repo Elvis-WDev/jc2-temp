@@ -38,6 +38,7 @@ import { CollapsibleCard } from '@/components/collapsible-card'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { MarkdownEditor } from '@/components/markdown-editor'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { listWorkTypes } from '@/features/work-types/api'
@@ -506,7 +507,7 @@ function WorkFormFields({ work }: { work: Work | undefined }) {
                     <FormItem>
                       <FormLabel>Abstract</FormLabel>
                       <FormControl>
-                        <Textarea rows={6} {...field} />
+                        <MarkdownEditor rows={6} {...field} />
                       </FormControl>
                       <FormDescription>Markdown works here.</FormDescription>
                       <FormMessage />

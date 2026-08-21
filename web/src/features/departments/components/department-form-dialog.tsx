@@ -32,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
+import { MarkdownEditor } from '@/components/markdown-editor'
 import {
   createDepartment,
   listInstitutions,
@@ -274,7 +274,7 @@ function Campos({
             <FormItem className='sm:col-span-2'>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea rows={3} {...field} />
+                <MarkdownEditor rows={3} {...field} />
               </FormControl>
               <FormDescription>Markdown works here. Optional.</FormDescription>
               <FormMessage />

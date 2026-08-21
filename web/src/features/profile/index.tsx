@@ -23,6 +23,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ConfigDrawer } from '@/components/config-drawer'
 import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
+import { MarkdownEditor } from '@/components/markdown-editor'
 import { DocumentPicker, ImagePicker } from '@/components/media-picker'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
@@ -259,7 +260,7 @@ function ProfileFields({ profile }: { profile: Profile }) {
                     <FormItem>
                       <FormLabel>Extended bio</FormLabel>
                       <FormControl>
-                        <Textarea rows={6} {...field} />
+                        <MarkdownEditor rows={6} {...field} />
                       </FormControl>
                       <FormDescription>
                         You can use Markdown for bold, lists and links.
@@ -275,7 +276,7 @@ function ProfileFields({ profile }: { profile: Profile }) {
                     <FormItem>
                       <FormLabel>Research statement</FormLabel>
                       <FormControl>
-                        <Textarea rows={6} {...field} />
+                        <MarkdownEditor rows={6} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

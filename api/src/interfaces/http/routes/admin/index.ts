@@ -4,6 +4,7 @@ import type { MediaControllerDeps } from '../../controllers/media.controller.js'
 import { createRequireAdmin } from '../../middlewares/requireAdmin.js'
 import { createAdminCatalogRouter, type AdminCatalogRouterDeps } from './catalog.routes.js'
 import { createAdminDashboardRouter, type AdminDashboardRouterDeps } from './dashboard.routes.js'
+import { createAdminMarkdownRouter } from './markdown.routes.js'
 import { createAdminMediaRouter } from './media.routes.js'
 import { createProfileRouter, type ProfileRouterDeps } from './profile.routes.js'
 import { createAdminResearchRouter, type AdminResearchRouterDeps } from './research.routes.js'
@@ -47,6 +48,7 @@ export function createAdminRouter(deps: AdminRouterDeps): Router {
 
   router.use('/dashboard', createAdminDashboardRouter(deps.dashboard))
   router.use('/media', createAdminMediaRouter(deps.media))
+  router.use('/markdown', createAdminMarkdownRouter())
   router.use('/tags', createAdminTagsRouter(deps.tags))
   router.use('/', createAdminCatalogRouter(deps.catalog))
   router.use('/works', createAdminResearchRouter(deps.research))
