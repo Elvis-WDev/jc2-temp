@@ -90,12 +90,27 @@ instalada.
 
 ### Fase 1 — El idioma, de una vez
 
-- [ ] Traducir los 27 rótulos y mensajes al inglés, módulo por módulo.
-- [ ] Una prueba que falle si vuelve a colarse uno: la misma lista de palabras con la
-      que se midieron.
+- [x] Traducir los rótulos y mensajes al inglés, módulo por módulo.
+- [x] Una prueba que falle si vuelve a colarse uno.
 
-Va primero porque es lo más barato de todo y arregla la mitad de la fatiga sin mover una
-sola caja de sitio.
+**Hecha.** No eran 27 sino **63**: la cifra de la auditoría salía de una lista de palabras
+escrita a mano, y al barrer con una más ancha aparecieron los botones de crear de siete
+diálogos, los de ocultar y mostrar de cuatro módulos, los de subir y bajar de Catálogos,
+y las flechas del carrusel del sitio público, que había escrito yo.
+
+La prueba vive fuera de `src`, en `pruebas-de-fuente/`, porque lee el código en disco y
+necesita Node: `tsconfig.app.json` es configuración de navegador, y meterla dentro
+obligaría a añadir los tipos de Node al código de la aplicación y a perder el aviso
+cuando alguien use `process` en una pantalla. `vite.config.ts` pasa a tener dos entornos.
+
+Mira tres formas de texto visible: cadenas entrecomilladas, texto suelto en su línea, y
+texto entre etiquetas en la misma línea. **La tercera faltaba en la primera versión** y
+dejaba pasar `<FormLabel>Subtitulo</FormLabel>` entero, que es la forma más común de un
+rótulo; lo descubrí al comprobar la prueba rompiéndola a propósito, no antes. Con las
+tres, encontró dos que se me habían escapado a mano.
+
+Los comentarios del código siguen en castellano: es la convención del repositorio y no
+los lee nadie desde la aplicación.
 
 ### Fase 2 — El menú lateral
 

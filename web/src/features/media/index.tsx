@@ -233,7 +233,7 @@ export function Media() {
                   </a>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Descargar</TooltipContent>
+              <TooltipContent>Download</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -324,7 +324,7 @@ export function Media() {
                 title='No matches'
                 description='No file matches the current filters.'
                 action={{
-                  label: 'Limpiar filtros',
+                  label: 'Clear filters',
                   onClick: () => {
                     void navigate({
                       search: (prev) => ({

@@ -467,7 +467,7 @@ function Campos({ event }: { event: EventItem | undefined }) {
                     <FormItem>
                       <FormLabel>Text</FormLabel>
                       <FormControl>
-                        <Input placeholder='Inscribirse' {...field} />
+                        <Input placeholder='Register' {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -520,7 +520,7 @@ function Campos({ event }: { event: EventItem | undefined }) {
 
             <Card>
               <CardHeader>
-                <CardTitle>Quien organiza</CardTitle>
+                <CardTitle>Organised by</CardTitle>
               </CardHeader>
               <CardContent className='grid gap-3'>
                 {instituciones.length === 0 ? (

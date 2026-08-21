@@ -386,7 +386,7 @@ function WorkFormFields({ work }: { work: Work | undefined }) {
                   name='subtitle'
                   render={({ field }) => (
                     <FormItem className='sm:col-span-2'>
-                      <FormLabel>Subtitulo</FormLabel>
+                      <FormLabel>Subtitle</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -527,9 +527,9 @@ function WorkFormFields({ work }: { work: Work | undefined }) {
                   [
                     ['publisherName', 'Editorial'],
                     ['versionLabel', 'Version'],
-                    ['downloadCode', 'Codigo de descarga'],
-                    ['volume', 'Volumen'],
-                    ['issue', 'Numero'],
+                    ['downloadCode', 'Download code'],
+                    ['volume', 'Volume'],
+                    ['issue', 'Issue'],
                     ['pages', 'Pages'],
                     ['isbn', 'ISBN'],
                     ['issn', 'ISSN'],
@@ -564,8 +564,8 @@ function WorkFormFields({ work }: { work: Work | undefined }) {
                         />
                       </FormControl>
                       <FormDescription>
-                        Pegalo tal cual lo tengas, con o sin https://doi.org/
-                        delante.
+                        Paste it as you have it, with or without
+                        https://doi.org/ delante.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -583,7 +583,7 @@ function WorkFormFields({ work }: { work: Work | undefined }) {
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>
-                      <FormLabel className='!mt-0'>Acceso abierto</FormLabel>
+                      <FormLabel className='!mt-0'>Open access</FormLabel>
                     </FormItem>
                   )}
                 />
@@ -630,7 +630,7 @@ function WorkFormFields({ work }: { work: Work | undefined }) {
                   name='bibtexOverride'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>BibTeX manual</FormLabel>
+                      <FormLabel>Manual BibTeX</FormLabel>
                       <FormControl>
                         <Textarea
                           rows={4}

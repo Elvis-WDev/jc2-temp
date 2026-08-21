@@ -49,7 +49,7 @@ export function WorkCard({
         </span>
         {work.isOpenAccess && (
           <span className='text-site-label tracking-widest text-site-secondary uppercase'>
-            Acceso abierto
+            Open access
           </span>
         )}
       </div>

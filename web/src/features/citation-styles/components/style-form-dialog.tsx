@@ -100,7 +100,7 @@ function Campos({ onOpenChange, style }: Omit<Props, 'open'>) {
           })
     },
     invalidates: [queryKeys.citationStyles.all],
-    success: esEdicion ? 'Estilo actualizado.' : 'Estilo creado.',
+    success: esEdicion ? 'Style updated.' : 'Style created.',
     onSuccess: () => {
       onOpenChange(false)
     },
@@ -198,7 +198,7 @@ function Campos({ onOpenChange, style }: Omit<Props, 'open'>) {
           </Button>
           <Button type='submit' disabled={guardar.isPending}>
             {guardar.isPending && <Loader2 className='animate-spin' />}
-            {esEdicion ? 'Save' : 'Crear'}
+            {esEdicion ? 'Save' : 'Create'}
           </Button>
         </DialogFooter>
       </form>

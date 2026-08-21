@@ -165,7 +165,7 @@ export function Works() {
                 title='No matches'
                 description='No work matches the current filters.'
                 action={{
-                  label: 'Limpiar filtros',
+                  label: 'Clear filters',
                   onClick: () => {
                     void tableNavigate({
                       search: (prev) => ({
@@ -205,7 +205,7 @@ export function Works() {
           title='Archive work'
           description='It will be withdrawn from the public site and the home page. You still keep it whole here.'
           warning='You can publish it again whenever you want.'
-          confirmText='Archivar'
+          confirmText='Archive'
           isLoading={archivar.isPending}
           onConfirm={() => {
             archivar.mutate(archivando.id)

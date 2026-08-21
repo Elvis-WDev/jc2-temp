@@ -110,7 +110,7 @@ export function PostCarousel({
               se ve es una sola pieza a lo ancho. En pantalla estrecha no caben sin
               taparla, y ahi se pasa arrastrando, que es el gesto natural. */}
           <Flecha
-            etiqueta='Anterior'
+            etiqueta='Previous'
             posicion='start-0'
             invertido={invertido}
             deshabilitada={actual === 0}
@@ -121,7 +121,7 @@ export function PostCarousel({
             <ChevronLeft className='size-5' />
           </Flecha>
           <Flecha
-            etiqueta='Siguiente'
+            etiqueta='Next'
             posicion='end-0'
             invertido={invertido}
             deshabilitada={actual === entradas.length - 1}

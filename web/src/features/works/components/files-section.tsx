@@ -86,7 +86,7 @@ export function FilesSection({ value, onChange }: Props) {
               setEligiendo(true)
             }}
           >
-            <Paperclip /> Elegir subido
+            <Paperclip /> Choose an uploaded one
           </Button>
           <Button
             type='button'
@@ -149,7 +149,7 @@ export function FilesSection({ value, onChange }: Props) {
                     htmlFor={`descargable-${archivo.mediaId}`}
                     className='text-xs'
                   >
-                    Descargable
+                    Downloadable
                   </Label>
                   <Switch
                     id={`descargable-${archivo.mediaId}`}

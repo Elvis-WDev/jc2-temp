@@ -211,7 +211,7 @@ export function UploadDialog({
               if (archivo !== null) subir.mutate(archivo)
             }}
           >
-            {subir.isPending ? `Subiendo ${String(progreso)}%` : 'Subir'}
+            {subir.isPending ? `Uploading ${String(progreso)}%` : 'Upload'}
           </Button>
         </DialogFooter>
       </DialogContent>

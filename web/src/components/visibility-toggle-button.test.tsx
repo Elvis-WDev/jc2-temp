@@ -21,7 +21,7 @@ describe('cuando algo esta visible', () => {
       />
     )
 
-    await userEvent.click(getByRole('button', { name: 'Ocultar: UNSW' }))
+    await userEvent.click(getByRole('button', { name: 'Hide: UNSW' }))
 
     expect(onHide).toHaveBeenCalledOnce()
     expect(onShow).not.toHaveBeenCalled()
@@ -41,7 +41,7 @@ describe('cuando algo esta oculto', () => {
       />
     )
 
-    const boton = getByRole('button', { name: 'Mostrar: UNSW' })
+    const boton = getByRole('button', { name: 'Show: UNSW' })
     await expect.element(boton).toBeEnabled()
 
     await userEvent.click(boton)
@@ -71,10 +71,10 @@ describe('el nombre accesible', () => {
     )
 
     await expect
-      .element(getByRole('button', { name: 'Ocultar: Journal Article' }))
+      .element(getByRole('button', { name: 'Hide: Journal Article' }))
       .toBeInTheDocument()
     await expect
-      .element(getByRole('button', { name: 'Ocultar: Working Paper' }))
+      .element(getByRole('button', { name: 'Hide: Working Paper' }))
       .toBeInTheDocument()
   })
 })

@@ -98,8 +98,8 @@ export function tagsColumns(acciones: {
           <VisibilityToggleButton
             isActive={row.original.isActive}
             name={row.original.name}
-            hideLabel='Ocultar'
-            showLabel='Mostrar'
+            hideLabel='Hide'
+            showLabel='Show'
             onHide={() => {
               acciones.onHide(row.original)
             }}

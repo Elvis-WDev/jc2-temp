@@ -186,7 +186,7 @@ export function Persons() {
                 title='No matches'
                 description='No author matches the search.'
                 action={{
-                  label: 'Limpiar busqueda',
+                  label: 'Clear search',
                   onClick: () => {
                     void navigate({
                       search: (prev) => ({ ...prev, q: undefined, page: 1 }),

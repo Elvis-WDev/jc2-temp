@@ -34,8 +34,8 @@ export function VisibilityToggleButton({
   name,
   onHide,
   onShow,
-  hideLabel = 'Ocultar',
-  showLabel = 'Mostrar',
+  hideLabel = 'Hide',
+  showLabel = 'Show',
   isLoading = false,
 }: Props) {
   const etiqueta = isActive ? hideLabel : showLabel

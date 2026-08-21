@@ -30,7 +30,7 @@ export const NOMBRE_DE_CATALOGO: Record<Catalog, string> = {
   person_link: 'Your profiles and networks',
   work_file: 'Files on a work',
   course_material: 'Course materials',
-  affiliation: 'Tipos de vinculo',
+  affiliation: 'Appointment types',
   venue: 'Venue types',
   event: 'Event types',
   course_level: 'Course levels',

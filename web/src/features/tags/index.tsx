@@ -173,7 +173,7 @@ export function Tags() {
                 variant='no-results'
                 title='No matches'
                 description='No tag matches the current filters.'
-                action={{ label: 'Limpiar filtros', onClick: limpiarFiltros }}
+                action={{ label: 'Clear filters', onClick: limpiarFiltros }}
               />
             ) : (
               <EmptyState
@@ -205,10 +205,10 @@ export function Tags() {
           }}
           requireTypedName={false}
           name={ocultando.name}
-          title={`Ocultar ${ocultando.name}`}
+          title={`Hide ${ocultando.name}`}
           description='It can no longer be assigned to new work and courses. Those that already carry it keep it.'
           warning='You can show it again whenever you want from this same table.'
-          confirmText='Ocultar'
+          confirmText='Hide'
           isLoading={ocultar.isPending}
           onConfirm={() => {
             ocultar.mutate(ocultando.id)

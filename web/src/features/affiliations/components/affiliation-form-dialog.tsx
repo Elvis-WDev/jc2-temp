@@ -160,7 +160,7 @@ function Campos({ onOpenChange, personId, affiliation }: Omit<Props, 'open'>) {
       >
         <DialogHeader className='sm:col-span-2'>
           <DialogTitle>
-            {esEdicion ? 'Editar afiliacion' : 'New affiliation'}
+            {esEdicion ? 'Edit affiliation' : 'New affiliation'}
           </DialogTitle>
           <DialogDescription>
             Where you work or have worked, and in what role.
@@ -386,7 +386,7 @@ function Campos({ onOpenChange, personId, affiliation }: Omit<Props, 'open'>) {
           </Button>
           <Button type='submit' disabled={guardar.isPending}>
             {guardar.isPending && <Loader2 className='animate-spin' />}
-            {esEdicion ? 'Save' : 'Crear'}
+            {esEdicion ? 'Save' : 'Create'}
           </Button>
         </DialogFooter>
       </form>

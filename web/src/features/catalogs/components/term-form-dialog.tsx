@@ -102,7 +102,7 @@ function Campos({ onOpenChange, catalog, term }: Omit<Props, 'open'>) {
           })
     },
     invalidates: [queryKeys.catalogTerms.all],
-    success: esEdicion ? 'Termino actualizado.' : 'Termino creado.',
+    success: esEdicion ? 'Term updated.' : 'Term created.',
     onSuccess: () => {
       onOpenChange(false)
     },
@@ -205,7 +205,7 @@ function Campos({ onOpenChange, catalog, term }: Omit<Props, 'open'>) {
           </Button>
           <Button type='submit' disabled={guardar.isPending}>
             {guardar.isPending && <Loader2 className='animate-spin' />}
-            {esEdicion ? 'Save' : 'Crear'}
+            {esEdicion ? 'Save' : 'Create'}
           </Button>
         </DialogFooter>
       </form>

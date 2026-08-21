@@ -287,10 +287,10 @@ export function Departments() {
           }}
           requireTypedName={false}
           name={ocultando.name}
-          title={`Ocultar ${ocultando.name}`}
+          title={`Hide ${ocultando.name}`}
           description='It can no longer be chosen when recording affiliations and course offerings. What already uses it does not change.'
           warning='You can show it again whenever you want from this same table.'
-          confirmText='Ocultar'
+          confirmText='Hide'
           isLoading={ocultar.isPending}
           onConfirm={() => {
             ocultar.mutate(ocultando.id)

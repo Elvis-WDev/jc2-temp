@@ -212,7 +212,7 @@ function Campos({ onOpenChange, status }: Omit<Props, 'open'>) {
           <span className='text-sm font-medium'>This is how it will look</span>
           <span>
             <StatusBadge tone={tonoElegido}>
-              {nombreEscrito === '' ? 'Sin nombre' : nombreEscrito}
+              {nombreEscrito === '' ? 'No name' : nombreEscrito}
             </StatusBadge>
           </span>
         </div>
@@ -230,7 +230,7 @@ function Campos({ onOpenChange, status }: Omit<Props, 'open'>) {
           </Button>
           <Button type='submit' disabled={guardar.isPending}>
             {guardar.isPending && <Loader2 className='animate-spin' />}
-            {esEdicion ? 'Save' : 'Crear'}
+            {esEdicion ? 'Save' : 'Create'}
           </Button>
         </DialogFooter>
       </form>

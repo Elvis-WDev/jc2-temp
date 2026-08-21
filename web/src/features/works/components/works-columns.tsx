@@ -166,7 +166,7 @@ export function worksColumns(acciones: Acciones): ColumnDef<Work>[] {
                   ? 'Add at least one author before publishing'
                   : publicado
                     ? 'Already published'
-                    : 'Publicar'}
+                    : 'Publish'}
               </TooltipContent>
             </Tooltip>
 
@@ -189,7 +189,7 @@ export function worksColumns(acciones: Acciones): ColumnDef<Work>[] {
               <TooltipContent>
                 {work.editorialStatus === 'archived'
                   ? 'Already archived'
-                  : 'Archivar'}
+                  : 'Archive'}
               </TooltipContent>
             </Tooltip>
 

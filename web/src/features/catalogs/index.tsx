@@ -101,7 +101,7 @@ export function Catalogs() {
       await updateCatalogTerm(vecino.id, { sortOrder: termino.sortOrder })
     },
     invalidates: refresca,
-    success: 'Orden actualizado.',
+    success: 'Order updated.',
   })
 
   const borrar = useToastMutation({
@@ -186,7 +186,7 @@ export function Catalogs() {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {indice <= 0 ? 'It is already first' : 'Subir'}
+                  {indice <= 0 ? 'It is already first' : 'Move up'}
                 </TooltipContent>
               </Tooltip>
 
@@ -207,7 +207,7 @@ export function Catalogs() {
                 <TooltipContent>
                   {indice >= terminos.length - 1
                     ? 'It is already last'
-                    : 'Bajar'}
+                    : 'Move down'}
                 </TooltipContent>
               </Tooltip>
 

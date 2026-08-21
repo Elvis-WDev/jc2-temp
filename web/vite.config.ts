@@ -54,11 +54,31 @@ export default defineConfig({
   test: {
     silent: 'passed-only',
     unstubEnvs: true,
-    browser: {
-      enabled: true,
-      provider: playwright(),
-      instances: [{ browser: 'chromium' }],
-    },
+    // Dos entornos: casi todo se prueba en un navegador de verdad, pero alguna
+    // comprobacion mira el codigo fuente en disco y para eso hace falta Node.
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'navegador',
+          include: ['src/**/*.test.{ts,tsx}'],
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            instances: [{ browser: 'chromium' }],
+          },
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'fuente',
+          // Fuera de `src`: leen el codigo fuente, no la aplicacion en marcha.
+          include: ['pruebas-de-fuente/**/*.test.ts'],
+          environment: 'node',
+        },
+      },
+    ],
     coverage: {
       // include: ['src/**/*.{js,jsx,ts,tsx}'], // Uncomment to expand the report to all src/**/* so untested modules appear as 0% coverage.
       exclude: [

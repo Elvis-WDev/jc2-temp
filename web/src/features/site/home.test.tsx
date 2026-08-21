@@ -404,11 +404,11 @@ describe('las noticias, en carrusel', () => {
     const screen = await pintar()
 
     await expect
-      .element(screen.getByRole('button', { name: 'Siguiente' }))
+      .element(screen.getByRole('button', { name: 'Next' }))
       .toBeVisible()
     // En la primera no hay nada anterior a lo que ir.
     await expect
-      .element(screen.getByRole('button', { name: 'Anterior' }))
+      .element(screen.getByRole('button', { name: 'Previous' }))
       .toBeDisabled()
   })
 
@@ -419,7 +419,7 @@ describe('las noticias, en carrusel', () => {
     await expect.element(screen.getByText('News')).toBeVisible()
 
     await expect
-      .element(screen.getByRole('button', { name: 'Siguiente' }))
+      .element(screen.getByRole('button', { name: 'Next' }))
       .not.toBeInTheDocument()
   })
 })

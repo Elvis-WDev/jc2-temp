@@ -159,8 +159,8 @@ export function Institutions() {
             <VisibilityToggleButton
               isActive={row.original.isActive}
               name={row.original.name}
-              hideLabel='Ocultar'
-              showLabel='Mostrar'
+              hideLabel='Hide'
+              showLabel='Show'
               onHide={() => {
                 setOcultando(row.original)
               }}
@@ -250,7 +250,7 @@ export function Institutions() {
                 title='No matches'
                 description='No institution matches the current filters.'
                 action={{
-                  label: 'Limpiar filtros',
+                  label: 'Clear filters',
                   onClick: () => {
                     void navigate({
                       search: (prev) => ({
@@ -294,10 +294,10 @@ export function Institutions() {
           }}
           requireTypedName={false}
           name={ocultando.name}
-          title={`Ocultar ${ocultando.name}`}
+          title={`Hide ${ocultando.name}`}
           description='It can no longer be chosen when creating courses and affiliations. What already uses it does not change.'
           warning='You can show it again whenever you want from this same table.'
-          confirmText='Ocultar'
+          confirmText='Hide'
           isLoading={ocultar.isPending}
           onConfirm={() => {
             ocultar.mutate(ocultando.id)

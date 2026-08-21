@@ -268,7 +268,7 @@ function Campos({ onOpenChange, venue }: Omit<Props, 'open'>) {
           </Button>
           <Button type='submit' disabled={guardar.isPending}>
             {guardar.isPending && <Loader2 className='animate-spin' />}
-            {esEdicion ? 'Save' : 'Crear'}
+            {esEdicion ? 'Save' : 'Create'}
           </Button>
         </DialogFooter>
       </form>

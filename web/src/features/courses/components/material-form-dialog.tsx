@@ -118,7 +118,7 @@ function Campos({ onOpenChange, offeringId, material }: Omit<Props, 'open'>) {
       mediaNombre:
         material?.mediaId === null || material === undefined
           ? ''
-          : 'Archivo elegido',
+          : 'File chosen',
       externalUrl: material?.externalUrl ?? '',
       materialType: material?.materialType ?? 'syllabus',
       title: material?.title ?? '',

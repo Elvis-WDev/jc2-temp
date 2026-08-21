@@ -81,7 +81,7 @@ export function WorkTypeFormDialog({ open, onOpenChange, workType }: Props) {
           }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.workTypes.all })
-      toast.success(esEdicion ? 'Tipo actualizado.' : 'Tipo creado.')
+      toast.success(esEdicion ? 'Type updated.' : 'Type created.')
       onOpenChange(false)
     },
     onError: (error) => {

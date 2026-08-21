@@ -327,7 +327,7 @@ export function Venues() {
                 title='No matches'
                 description='No venue matches the current filters.'
                 action={{
-                  label: 'Limpiar filtros',
+                  label: 'Clear filters',
                   onClick: () => {
                     void navigate({
                       search: (prev) => ({

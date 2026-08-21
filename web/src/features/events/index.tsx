@@ -343,7 +343,7 @@ export function Events() {
                 title='No matches'
                 description='No event matches the current filters.'
                 action={{
-                  label: 'Limpiar filtros',
+                  label: 'Clear filters',
                   onClick: () => {
                     void tableNavigate({
                       search: (prev) => ({
@@ -384,7 +384,7 @@ export function Events() {
           title='Archive event'
           description='It will be withdrawn from the site. You still keep it whole here.'
           warning='You can publish it again whenever you want.'
-          confirmText='Archivar'
+          confirmText='Archive'
           isLoading={archivar.isPending}
           onConfirm={() => {
             archivar.mutate(archivando.id)

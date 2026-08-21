@@ -199,7 +199,7 @@ export function AuditLog() {
                 title='No matches'
                 description='No activity matches the current filters.'
                 action={{
-                  label: 'Limpiar filtros',
+                  label: 'Clear filters',
                   onClick: () => {
                     void navigate({
                       search: (prev) => ({

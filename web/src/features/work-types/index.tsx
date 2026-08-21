@@ -150,8 +150,8 @@ export function WorkTypes() {
             <VisibilityToggleButton
               isActive={row.original.isActive}
               name={row.original.label}
-              hideLabel='Ocultar'
-              showLabel='Mostrar'
+              hideLabel='Hide'
+              showLabel='Show'
               onHide={() => {
                 setOcultando(row.original)
               }}
@@ -253,10 +253,10 @@ export function WorkTypes() {
           }}
           requireTypedName={false}
           name={ocultando.label}
-          title={`Ocultar ${ocultando.label}`}
+          title={`Hide ${ocultando.label}`}
           description='It can no longer be chosen when creating or editing work. Those that already use it do not change.'
           warning='You can show it again whenever you want from this same table.'
-          confirmText='Ocultar'
+          confirmText='Hide'
           isLoading={ocultar.isPending}
           onConfirm={() => {
             ocultar.mutate(ocultando.id)
