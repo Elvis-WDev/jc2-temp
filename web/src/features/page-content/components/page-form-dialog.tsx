@@ -75,6 +75,7 @@ function Campos({ onOpenChange, page }: Omit<Props, 'open'>) {
     page.heroMediaId
   )
   const admiteImagen = PAGINAS_CON_IMAGEN.includes(page.pageKey)
+  const esPortada = page.pageKey === 'home'
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -181,8 +182,12 @@ function Campos({ onOpenChange, page }: Omit<Props, 'open'>) {
                 <Textarea rows={3} {...field} />
               </FormControl>
               <FormDescription>
-                On the home page it fills the &quot;Research lines&quot; band,
-                in columns: each heading opens a column. Markdown is allowed.
+                {esPortada
+                  ? // Llenaba la banda de «Research lines», que se retiro de la
+                    // portada. El campo se queda —el texto escrito es del titular y no
+                    // se tira— pero decir que sigue saliendo seria mentir.
+                    'Not shown on the home page at the moment: the band that used it was removed. What is written here is kept.'
+                  : 'Markdown is allowed.'}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -196,10 +201,18 @@ function Campos({ onOpenChange, page }: Omit<Props, 'open'>) {
             al lado, como una ilustración más. */}
         {admiteImagen && (
           <div className='grid gap-2 border-t pt-4'>
-            <Label>Header image</Label>
+            {/* La misma columna, en dos sitios distintos: en Research y Teaching va
+                al lado del titulo, y en la portada centrada en su propia banda. El
+                rotulo tiene que decir cual de las dos, o quien la sube la busca donde
+                no esta. */}
+            <Label>
+              {esPortada ? 'Image of the second band' : 'Header image'}
+            </Label>
             <p className='text-sm text-muted-foreground'>
-              Goes beside the title, on the right. It has to be marked visible
-              on the site.
+              {esPortada
+                ? 'Goes centred on its own band, the one with the solid colour, below the introduction. Without one, that band does not appear.'
+                : 'Goes beside the title, on the right.'}{' '}
+              It has to be marked visible on the site.
             </p>
             <ImagePicker value={heroMediaId} onChange={setHeroMediaId} />
 
