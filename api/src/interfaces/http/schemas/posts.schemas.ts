@@ -1,4 +1,5 @@
 import { z } from '../openapi/registry.js'
+import { LARGO_DE_TEXTO } from '../../../shared/markdown/limites.js'
 import { patchSchemaOf } from './common.schemas.js'
 
 /**
@@ -26,7 +27,7 @@ export const postCreateSchema = z.object({
   // Vacio: se deriva del titulo. Un slug publicado no cambia despues (RN-010).
   slug: z.string().trim().max(220).optional(),
   summary: z.string().max(2000).nullable().optional(),
-  contentMarkdown: z.string().max(100000).nullable().optional(),
+  contentMarkdown: z.string().max(LARGO_DE_TEXTO.CUERPO).nullable().optional(),
   imageMediaId: z.uuid().nullable().optional(),
   imageAlt: z.string().trim().max(500).nullable().optional(),
   displayOrder: z.number().int().min(0).nullable().optional(),

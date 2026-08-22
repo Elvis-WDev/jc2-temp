@@ -107,30 +107,47 @@ sola marca a la vista.
 
 32 ficheros de prueba, 342 pruebas.
 
-## Fase 3 — La vista previa se rompe por encima de 20.000 caracteres
+## Fase 3 — La vista previa se rompe por encima de 20.000 caracteres ✅
 
 **Mío, de la fase 5.** Puse el tope del endpoint en 20.000 con un comentario que decía
-que era «el mismo que el del campo más largo que se guarda». Es falso. Los límites reales:
+que era «el mismo que el del campo más largo que se guarda». Era falso por un factor de
+cinco. Un cuerpo de 20.800 caracteres se guardaba sin problema y la previa decía *«The
+preview could not be loaded.»*
 
-| Campos | Límite |
+- [x] El tope sube al del campo más largo de verdad: 100.000.
+- [x] Y deja de estar escrito a mano en trece sitios.
+- [x] Pruebas con el máximo (pasa) y con uno más (422).
+- [x] Corregido el comentario que justificaba el 20.000.
+
+**Hecha, y más ancha de lo que pedía el plan.** El plan hablaba de «dos sitios». Eran
+**trece**: doce campos con su número escrito a mano —tres veces 20.000, nueve veces
+50.000, una vez 100.000— y el de la previa. Ahora hay tres tamaños con nombre en
+`shared/markdown/limites.ts` —`BREVE`, `NORMAL`, `CUERPO`— y los doce campos los usan.
+
+**El tope de la previa se calcula, no se escribe:** `Math.max(...)` de esos tres. Subir un
+tamaño lo sube solo, que es lo único que de verdad impide que vuelvan a desfasarse.
+
+**Una prueba mía volvía a no valer para nada.** La que comprobaba que se acepta el campo
+más largo construía el texto **con la propia constante del límite**: al bajarla, el texto
+encogía con ella y la prueba seguía pasando. Lo vi al rebajar el tope a 20.000 a posta y
+ver caer solo una de las dos. Ahora el texto se dimensiona con `CUERPO`, que es el
+requisito real, y caen las dos.
+
+**El coste, medido:**
+
+| Tamaño | Convertir |
 |---|---|
-| descripción de departamento y de afiliación | 20.000 |
-| resumen, biografía, declaración, curso, evento, edición, intro, secundario | 50.000 |
-| **cuerpo del blog** | **100.000** |
+| 20.000 | 7,1 ms |
+| 50.000 | 14,6 ms |
+| 100.000 | 27,6 ms |
 
-Un cuerpo de 20.800 caracteres se guarda sin problema y la previa dice *«The preview could
-not be loaded.»*
+De punta a punta en el navegador, unos 580–600 ms para los tres, así que lo que se nota es
+el viaje, no la conversión.
 
-- [ ] El tope de la vista previa sube a 100.000, el del campo más largo de verdad.
-- [ ] Y deja de estar escrito a mano en dos sitios: una constante compartida, para que no
-      pueda volver a desfasarse.
-- [ ] Prueba de ruta con un texto de 100.000 (pasa) y de 100.001 (422).
-- [ ] Corregir el comentario que justificaba el 20.000.
+Comprobado en marcha: los tres tamaños se previsualizan, pasado el tope avisa en vez de
+colgarse, y los 100.000 se siguen guardando.
 
-**Riesgo:** ninguno para el usuario. Un texto de 100.000 caracteres tarda más en
-convertirse; hay que medir cuánto y decir la cifra, no suponerla.
-
----
+32 ficheros de prueba, 344 pruebas.
 
 ## Fase 4 — Ctrl+Z debe deshacer lo que ponen los botones
 

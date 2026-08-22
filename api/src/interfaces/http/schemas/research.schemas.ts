@@ -1,4 +1,5 @@
 import { z } from '../openapi/registry.js'
+import { LARGO_DE_TEXTO } from '../../../shared/markdown/limites.js'
 import { calendarDateSchema, patchSchemaOf } from './common.schemas.js'
 
 export const workIdParamsSchema = z.object({ id: z.uuid() })
@@ -54,8 +55,8 @@ export const workCreateSchema = z.object({
   title: z.string().trim().min(1).max(1000),
   subtitle: z.string().trim().max(1000).nullable().optional(),
   slug: z.string().trim().max(260).default(''),
-  abstractMarkdown: z.string().max(50000).nullable().optional(),
-  descriptionMarkdown: z.string().max(50000).nullable().optional(),
+  abstractMarkdown: z.string().max(LARGO_DE_TEXTO.NORMAL).nullable().optional(),
+  descriptionMarkdown: z.string().max(LARGO_DE_TEXTO.NORMAL).nullable().optional(),
   // Ya no es una lista cerrada: el titular crea los estados que necesite. Que el
   // codigo exista lo comprueba el repositorio, que devuelve 404 con el codigo pedido.
   academicStatus: z

@@ -1,4 +1,5 @@
 import { PAGE_KEYS } from '../../../application/ports/repositories/SiteContentRepository.js'
+import { LARGO_DE_TEXTO } from '../../../shared/markdown/limites.js'
 import { z } from '../openapi/registry.js'
 import { calendarDateSchema, patchSchemaOf } from './common.schemas.js'
 
@@ -54,7 +55,7 @@ export const departmentBodySchema = z.object({
   shortName: z.string().trim().max(120).nullable().optional(),
   slug: z.string().trim().min(1).max(180),
   websiteUrl: z.url().nullable().optional(),
-  descriptionMarkdown: z.string().max(20000).nullable().optional(),
+  descriptionMarkdown: z.string().max(LARGO_DE_TEXTO.BREVE).nullable().optional(),
   sortOrder: z.number().int().min(0).optional(),
   isActive: z.boolean().optional(),
 })
@@ -79,8 +80,8 @@ export const personBodySchema = z.object({
   city: z.string().trim().max(120).nullable().optional(),
   countryCode: z.string().length(2).nullable().optional(),
   shortBio: z.string().max(2000).nullable().optional(),
-  fullBioMarkdown: z.string().max(50000).nullable().optional(),
-  researchStatementMarkdown: z.string().max(50000).nullable().optional(),
+  fullBioMarkdown: z.string().max(LARGO_DE_TEXTO.NORMAL).nullable().optional(),
+  researchStatementMarkdown: z.string().max(LARGO_DE_TEXTO.NORMAL).nullable().optional(),
   photoMediaId: z.uuid().nullable().optional(),
   cvMediaId: z.uuid().nullable().optional(),
   orcid: z.string().trim().max(40).nullable().optional(),
@@ -117,7 +118,7 @@ export const affiliationBodySchema = z.object({
   endDate: calendarDateSchema.nullable().optional(),
   isPrimary: z.boolean().default(false),
   isCurrent: z.boolean().default(false),
-  descriptionMarkdown: z.string().max(20000).nullable().optional(),
+  descriptionMarkdown: z.string().max(LARGO_DE_TEXTO.BREVE).nullable().optional(),
   sortOrder: z.number().int().min(0).default(0),
 })
 
@@ -160,8 +161,8 @@ export const pageContentPatchSchema = z
   .object({
     pageTitle: z.string().trim().max(250).nullable(),
     eyebrow: z.string().trim().max(120).nullable(),
-    introMarkdown: z.string().max(50000).nullable(),
-    secondaryMarkdown: z.string().max(50000).nullable(),
+    introMarkdown: z.string().max(LARGO_DE_TEXTO.NORMAL).nullable(),
+    secondaryMarkdown: z.string().max(LARGO_DE_TEXTO.NORMAL).nullable(),
     heroMediaId: z.uuid().nullable(),
     heroAlt: z.string().max(500).nullable(),
     isPublished: z.boolean(),

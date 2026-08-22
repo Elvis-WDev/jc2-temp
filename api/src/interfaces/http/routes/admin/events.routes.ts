@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { LARGO_DE_TEXTO } from '../../../../shared/markdown/limites.js'
 import type { Request } from 'express'
 import type { EventUseCases } from '../../../../application/use-cases/events/EventUseCases.js'
 import { validate, validated } from '../../middlewares/validate.js'
@@ -21,7 +22,7 @@ const eventCreateSchema = z.object({
   slug: z.string().trim().max(220).default(''),
   eventType: z.string().trim().max(50).nullable().optional(),
   summary: z.string().max(5000).nullable().optional(),
-  contentMarkdown: z.string().max(50000).nullable().optional(),
+  contentMarkdown: z.string().max(LARGO_DE_TEXTO.NORMAL).nullable().optional(),
   // Instante completo y no dia: un seminario tiene hora, y esa hora importa.
   startsAt: z.iso.datetime().transform((valor) => new Date(valor)),
   endsAt: z.iso

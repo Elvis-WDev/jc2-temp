@@ -2,6 +2,10 @@ import request from 'supertest'
 import { describe, expect, it } from 'vitest'
 import { createApp } from './app.js'
 import { buildContainer } from './container.js'
+import {
+  LARGO_DE_TEXTO,
+  LARGO_MAXIMO_PREVISUALIZABLE,
+} from '../shared/markdown/limites.js'
 
 /**
  * La vista previa del panel.
@@ -62,10 +66,26 @@ describe('la vista previa de Markdown', () => {
     expect(res.body.data.html).toContain('youtube-nocookie.com/embed/dQw4w9WgXcQ')
   })
 
-  it('rechaza un texto mas largo de lo que se puede guardar', async () => {
-    const res = await previsualizar('a'.repeat(20001))
+  it('acepta el campo mas largo que se puede guardar', async () => {
+    // El texto se dimensiona con `CUERPO` —lo que de verdad admite el cuerpo de una
+    // entrada— y no con el limite de la previa. Midiendolo con el propio limite, bajarlo
+    // encogia tambien el texto y la prueba seguia pasando: asi estaba escrita al
+    // principio y no cazaba nada.
+    const res = await previsualizar('palabra '.repeat(LARGO_DE_TEXTO.CUERPO / 8))
+
+    expect(res.status).toBe(200)
+    expect(res.body.data.html).toContain('palabra')
+  })
+
+  it('y rechaza lo que ya no cabria en ningun campo', async () => {
+    const res = await previsualizar('a'.repeat(LARGO_MAXIMO_PREVISUALIZABLE + 1))
 
     expect(res.status).toBe(422)
+  })
+
+  it('el limite es el del campo mas largo, no un numero suelto', () => {
+    // Si alguien sube el tamano de un campo y no el de aqui, esto lo dice.
+    expect(LARGO_MAXIMO_PREVISUALIZABLE).toBe(Math.max(...Object.values(LARGO_DE_TEXTO)))
   })
 
   it('sin sesion no se llega', async () => {

@@ -1,4 +1,5 @@
 import { z } from '../openapi/registry.js'
+import { LARGO_DE_TEXTO } from '../../../shared/markdown/limites.js'
 import { calendarDateSchema, patchSchemaOf } from './common.schemas.js'
 
 export const courseIdParamsSchema = z.object({ id: z.uuid() })
@@ -33,7 +34,7 @@ export const courseCreateSchema = z.object({
   defaultCode: z.string().trim().max(80).nullable().optional(),
   level: z.string().trim().max(80).nullable().optional(),
   summary: z.string().max(5000).nullable().optional(),
-  descriptionMarkdown: z.string().max(50000).nullable().optional(),
+  descriptionMarkdown: z.string().max(LARGO_DE_TEXTO.NORMAL).nullable().optional(),
   coverMediaId: z.uuid().nullable().optional(),
   externalUrl: z.url().nullable().optional(),
   displayOrder: z.number().int().nullable().optional(),
@@ -54,7 +55,7 @@ export const offeringCreateSchema = z.object({
   endDate: calendarDateSchema.nullable().optional(),
   teachingRole: z.string().trim().max(120).nullable().optional(),
   summary: z.string().max(5000).nullable().optional(),
-  contentMarkdown: z.string().max(50000).nullable().optional(),
+  contentMarkdown: z.string().max(LARGO_DE_TEXTO.NORMAL).nullable().optional(),
   isActive: z.boolean().optional(),
   sortOrder: z.number().int().nullable().optional(),
   // Quien imparte la edicion. Se envia entera: la lista que llega sustituye a la que

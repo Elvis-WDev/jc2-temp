@@ -16,7 +16,7 @@ registry.registerPath({
   responses: {
     200: { description: 'HTML saneado, o null si el texto esta vacio.' },
     401: respuestaError('Sin sesion.'),
-    422: respuestaError('El texto pasa de 20.000 caracteres.'),
+    422: respuestaError('El texto pasa del maximo que admite el campo mas largo.'),
   },
 })
 
