@@ -68,20 +68,20 @@ export function WorkCard({
           </Link>
         </h2>
 
-        {work.pdfUrl !== null && (
+        {work.mainFile !== null && (
           <a
-            href={work.pdfUrl}
-            // Se guarda, no se hojea: el PDF se sirve para verse en el navegador, asi
-            // que sin esto se abriria en una pestana en lugar de descargarse.
+            href={work.mainFile.url}
+            // Se guarda, no se hojea: el archivo se sirve para verse en el navegador,
+            // asi que sin esto se abriria en una pestana en lugar de descargarse.
             download
-            // El titulo va en el nombre accesible: «Descargar PDF» repetido dieciseis
-            // veces en un listado no dice cual es cual.
-            aria-label={`Download the PDF of ${work.title}`}
-            title='Download the PDF'
+            // El titulo va en el nombre accesible: «Descargar» repetido dieciseis veces
+            // en un listado no dice cual es cual.
+            aria-label={`Download ${nombreDelArchivo(work.mainFile)} of ${work.title}`}
+            title={work.mainFile.label ?? undefined}
             className='flex shrink-0 items-center gap-1.5 rounded-site border border-site-primary px-3 py-1.5 text-site-label text-site-primary uppercase transition-colors hover:bg-site-primary hover:text-site-on-primary'
           >
             <FileDown aria-hidden className='size-4' />
-            PDF
+            {work.mainFile.type === 'paper_pdf' ? 'PDF' : 'Download'}
           </a>
         )}
       </div>
@@ -152,4 +152,20 @@ function Accion({
       {children}
     </a>
   )
+}
+
+/**
+ * Como se llama el adjunto cuando hay que decirlo en voz alta.
+ *
+ * Es el primero de la publicacion y no tiene por que ser el PDF del articulo: puede ser
+ * el borrador, las diapositivas o los datos. Se prefiere el rotulo que le puso el
+ * titular; si no le puso ninguno, el tipo, que al menos distingue unos de otros.
+ */
+function nombreDelArchivo(archivo: {
+  type: string
+  label: string | null
+}): string {
+  if (archivo.label !== null && archivo.label.trim() !== '')
+    return archivo.label
+  return archivo.type === 'paper_pdf' ? 'the PDF' : 'the file'
 }

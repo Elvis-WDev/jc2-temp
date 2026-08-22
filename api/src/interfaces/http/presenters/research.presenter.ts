@@ -40,7 +40,16 @@ export function toPublicWorkSummaryDto(work: PublicWorkSummary, baseUrl: string)
     isOpenAccess: work.isOpenAccess,
     authors: work.authors.map((autor) => autor.fullName),
     tags: work.tags,
-    pdfUrl: mediaUrl(baseUrl, work.pdfMediaId),
+    // El primer adjunto, para el boton de descarga rapida de la tarjeta. El tipo viaja
+    // con el para poder rotularlo: «PDF» cuando lo es, «Download» cuando es otra cosa.
+    mainFile:
+      work.mainFile === null
+        ? null
+        : {
+            url: mediaUrl(baseUrl, work.mainFile.mediaId) as string,
+            type: work.mainFile.fileType,
+            label: work.mainFile.label,
+          },
     // Un extracto en texto plano, no el abstract entero ni su HTML: en la tarjeta caben
     // unas cinco lineas, y mandar dos mil caracteres por publicacion para recortarlos en
     // el navegador seria pagar el peso sin usarlo.

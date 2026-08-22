@@ -332,15 +332,19 @@ function Cabecera({
         )}
 
         <div className='flex flex-wrap gap-4 pt-2'>
-          {work.files
-            .filter((archivo) => archivo.type === 'paper_pdf')
-            .slice(0, 1)
-            .map((archivo) => (
-              <SiteButton key={archivo.url} href={archivo.url}>
-                <FileText aria-hidden className='size-4' />
-                Download PDF
-              </SiteButton>
-            ))}
+          {/* El primero de la lista, sea del tipo que sea, para que el boton grande de
+              aqui y el de la tarjeta lleven al mismo sitio. Filtrado a `paper_pdf`, una
+              publicacion cuyo adjunto fuera el borrador o los datos se quedaba sin boton
+              arriba mientras el archivo si aparecia en la columna de la derecha. Todos
+              los demas siguen ahi. */}
+          {work.files.slice(0, 1).map((archivo) => (
+            <SiteButton key={archivo.url} href={archivo.url}>
+              <FileText aria-hidden className='size-4' />
+              {archivo.type === 'paper_pdf'
+                ? 'Download PDF'
+                : `Download ${archivo.label ?? 'file'}`}
+            </SiteButton>
+          ))}
           {work.doiUrl !== null && (
             <SiteButton href={work.doiUrl} variant='outline'>
               <Link2 aria-hidden className='size-4' />

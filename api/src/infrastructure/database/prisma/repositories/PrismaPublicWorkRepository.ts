@@ -41,10 +41,11 @@ const SELECT_RESUMEN = {
     select: { authorOrder: true, person: { select: { fullName: true } } },
   },
   tags: { select: { tag: { select: { slug: true, name: true } } } },
-  // Solo el PDF publico, no la lista de archivos (PERF-002).
+  // Solo el primero, no la lista entera (PERF-002). Y sin filtrar por tipo: es «el
+  // documento que hayan adjuntado», que no siempre es el PDF del articulo.
   files: {
-    where: { isPublic: true, fileType: 'paper_pdf' },
-    select: { mediaId: true },
+    where: { isPublic: true },
+    select: { mediaId: true, fileType: true, label: true },
     orderBy: { sortOrder: 'asc' },
     take: 1,
   },
@@ -67,7 +68,7 @@ type FilaResumen = {
   workType: { code: string; label: string; pluralLabel: string }
   authors: Array<{ authorOrder: number; person: { fullName: string } }>
   tags: Array<{ tag: { slug: string; name: string } }>
-  files: Array<{ mediaId: string }>
+  files: Array<{ mediaId: string; fileType: string; label: string | null }>
 }
 
 function mapResumen(fila: FilaResumen): PublicWorkSummary {
@@ -91,7 +92,14 @@ function mapResumen(fila: FilaResumen): PublicWorkSummary {
     isOpenAccess: fila.isOpenAccess,
     authors: fila.authors.map((a) => ({ fullName: a.person.fullName, authorOrder: a.authorOrder })),
     tags: fila.tags.map((t) => t.tag),
-    pdfMediaId: fila.files[0]?.mediaId ?? null,
+    mainFile:
+      fila.files[0] === undefined
+        ? null
+        : {
+            mediaId: fila.files[0].mediaId,
+            fileType: fila.files[0].fileType,
+            label: fila.files[0].label,
+          },
     abstractMarkdown: fila.abstractMarkdown,
   }
 }

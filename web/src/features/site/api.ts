@@ -99,7 +99,14 @@ export interface PublicWorkSummary {
   isOpenAccess: boolean
   authors: string[]
   tags: Array<{ slug: string; name: string }>
-  pdfUrl: string | null
+  /**
+   * El primer archivo adjunto, para descargarlo desde la tarjeta sin abrir la ficha.
+   *
+   * El primero, sea del tipo que sea: estuvo filtrado a `paper_pdf` y una publicacion
+   * cuyo adjunto fuera el borrador o las diapositivas se quedaba sin boton. Los demas
+   * salen en la ficha, en «Downloads and links».
+   */
+  mainFile: { url: string; type: string; label: string | null } | null
   /**
    * Unas cinco lineas del abstract, en texto plano y ya recortadas por el servidor.
    *

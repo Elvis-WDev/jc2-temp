@@ -75,7 +75,7 @@ function trabajo(
     isOpenAccess: false,
     authors: ['Juana Castro'],
     tags: [],
-    pdfUrl: null,
+    mainFile: null,
   }
 }
 

@@ -39,10 +39,15 @@ export interface PublicWorkSummary {
   authors: Array<{ fullName: string; authorOrder: number }>
   tags: Array<{ slug: string; name: string }>
   /**
-   * El PDF publico, si lo hay. Antes era solo un booleano y la tarjeta no podia
-   * enlazarlo; PERF-002 excluye la lista entera de archivos, no una direccion.
+   * El primer archivo publico, para poder descargarlo desde la tarjeta sin abrir la
+   * ficha. Antes era solo un booleano y la tarjeta no podia enlazarlo; PERF-002 excluye
+   * la lista entera de archivos, no una direccion.
+   *
+   * **El primero, sea del tipo que sea.** Estuvo filtrado a `paper_pdf`, asi que una
+   * publicacion cuyo adjunto fuera el borrador, las diapositivas o los datos se quedaba
+   * sin boton aunque tuviera archivo. Los demas se ven en la ficha.
    */
-  pdfMediaId: string | null
+  mainFile: { mediaId: string; fileType: string; label: string | null } | null
   /**
    * El abstract en crudo, para recortarlo al presentar.
    *

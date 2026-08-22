@@ -41,7 +41,11 @@ const TRABAJO: PublicWorkSummary = {
   isOpenAccess: false,
   authors: ['Juana Castro', 'Ana Soto'],
   tags: [],
-  pdfUrl: '/api/public/media/abc',
+  mainFile: {
+    url: '/api/public/media/abc',
+    type: 'paper_pdf',
+    label: null,
+  },
   abstractExcerpt: 'Este trabajo estudia los costes de busqueda.',
 }
 
@@ -156,11 +160,44 @@ describe('tarjeta de una publicacion', () => {
       .toBeVisible()
   })
 
-  it('sin PDF publico no se ofrece el boton', async () => {
+  it('sin ningun adjunto publico no se ofrece el boton', async () => {
     // Mejor ninguno que uno que lleve a un 404.
-    const screen = await pintar({ ...TRABAJO, pdfUrl: null })
+    const screen = await pintar({ ...TRABAJO, mainFile: null })
     await expect.element(screen.getByText(/Asimetria/)).toBeVisible()
 
     await expect.element(screen.getByText('PDF')).not.toBeInTheDocument()
+    await expect.element(screen.getByText('Download')).not.toBeInTheDocument()
+  })
+
+  it('el adjunto no tiene por que ser el PDF del articulo', async () => {
+    // Estuvo filtrado a `paper_pdf`: una publicacion cuyo primer adjunto fueran las
+    // diapositivas o los datos se quedaba sin boton aunque tuviera archivo.
+    const screen = await pintar({
+      ...TRABAJO,
+      mainFile: {
+        url: '/api/public/media/slides',
+        type: 'slides',
+        label: 'Slides',
+      },
+    })
+
+    const boton = screen.getByRole('link', { name: /download slides of/i })
+    await expect.element(boton).toBeVisible()
+    await expect
+      .element(boton)
+      .toHaveAttribute('href', '/api/public/media/slides')
+    // Rotulo generico: llamar «PDF» a un .pptx seria mentir.
+    await expect.element(screen.getByText('Download')).toBeVisible()
+  })
+
+  it('sin rotulo escrito, el nombre accesible dice al menos que clase de archivo es', async () => {
+    const screen = await pintar({
+      ...TRABAJO,
+      mainFile: { url: '/api/public/media/x', type: 'dataset', label: null },
+    })
+
+    await expect
+      .element(screen.getByRole('link', { name: /download the file of/i }))
+      .toBeVisible()
   })
 })
