@@ -1,0 +1,199 @@
+# Seis fallos encontrados y cómo se arreglan
+
+Salieron de una cacería con la aplicación en marcha: sonda por sonda contra el Docker
+local, no leyendo código a ver qué pintaba mal. Cada uno está reproducido; los tres
+últimos son míos, de las fases 4 y 5 de `panel-legible.md`.
+
+El orden de las fases va por lo que cuesta perder, no por lo que cuesta arreglar.
+
+## Lo que se sabe antes de empezar
+
+- **Ningún dato está perdido todavía.** Los cinco eventos siguen con su
+  `published_at`; ningún trabajo archivado se ha quedado sin fecha. El fallo 1 es una
+  bomba sin estallar, no un destrozo que haya que reparar.
+- **El huso horario del sitio ya existe.** `site_settings.timezone` vale
+  `Australia/Sydney`, se edita en el panel, se valida y **no se usa en ninguna parte**.
+  El comentario de `web/src/lib/locale.ts` ya da por hecho que existe —«porque la zona
+  horaria configurada es `Australia/Sydney`»— y aun así solo se aplica el idioma. El
+  fallo 2 no pide decidir nada nuevo: pide terminar lo que ya estaba decidido.
+- **Lo que hay que evitar al arreglar el resumen:** convertir el Markdown a texto plano
+  con `marked` + saneador deja el texto limpio, pero `&` sigue saliendo como `&amp;` y
+  `>` como `&gt;`. Ya pasa hoy —lo comprobé— así que no es una regresión nueva, pero si
+  se toca el extracto hay que llevárselo por delante de paso.
+- **El deshacer tiene arreglo y está probado:** `document.execCommand('insertText')`
+  conserva la pila nativa del `textarea`. Verificado en el Chromium del proyecto:
+  escribir, aplicar negrita con el «botón», Ctrl+Z y volver al texto de partida.
+
+---
+
+## Fase 1 — Archivar un evento no puede borrarle la fecha
+
+**El fallo.** `EventUseCases.archive` (`api/.../events/EventUseCases.ts:141`) tiene un
+comentario que dice *«Se conserva `published_at`»* y debajo pasa `null`. Las entradas lo
+hacen bien: `PostUseCases.ts:141` pasa `actual.publishedAt`. Probado en marcha: un evento
+con `2026-08-19T14:57:40.044Z` volvió con `null`. Volver a publicarlo escribe la fecha de
+hoy, así que **la original no se recupera**.
+
+- [ ] `archive` pasa la fecha que ya tenía, como hace `PostUseCases`.
+- [ ] Prueba de caso de uso: publicar, archivar y comprobar que la fecha sigue ahí. Se
+      valida rompiéndola a posta.
+- [ ] Mirar los otros dos caminos de archivado —works y courses— y dejar constancia en la
+      prueba de que ellos ya lo hacían bien, para que nadie lo «arregle» al revés.
+
+**Riesgo:** ninguno. Un argumento.
+
+---
+
+## Fase 2 — El resumen de una publicación se ve con el Markdown crudo
+
+**El fallo.** El campo dice *«Markdown works here»*, la barra de la fase 5 escribe `**`,
+y la tarjeta de `/research` enseña esto tal cual:
+
+```
+We show **strong** revenue results, see [the appendix](https://ejemplo.invalid)
+and `theta_i`. ## Second heading - first bullet - second bullet
+```
+
+`extractoDeMarkdown` (`api/src/shared/markdown/excerpt.ts:19`) quita etiquetas HTML pero
+nunca convierte el Markdown. No salta hoy porque los resúmenes sembrados son prosa plana;
+saltará con el primer resumen que use la barra de botones.
+
+- [ ] El extracto pasa por `renderMarkdown` —el mismo de la web— y **después** se le
+      quitan las etiquetas. Así una dirección de vídeo suelta desaparece del extracto en
+      lugar de salir como URL, que es lo que pasa si solo se usa `marked`.
+- [ ] Y se decodifican las cinco entidades XML que deja el conversor —`&amp;`, `&lt;`,
+      `&gt;`, `&quot;`, `&#39;`—, que hoy se ven en crudo. «Auctions A & B» sale hoy como
+      «Auctions A &amp;amp; B».
+- [ ] Pruebas con negrita, enlace, código, título, lista, vídeo, `&` y `<`.
+- [ ] Corregir el comentario de `excerpt.ts`, que afirma que decodifica entidades y no es
+      verdad.
+
+**Riesgo:** bajo. `renderMarkdown` es puro y ya tiene sus propias pruebas. Hay que mirar
+que el corte por palabras siga cayendo donde debe con el texto ya convertido.
+
+---
+
+## Fase 3 — La vista previa se rompe por encima de 20.000 caracteres
+
+**Mío, de la fase 5.** Puse el tope del endpoint en 20.000 con un comentario que decía
+que era «el mismo que el del campo más largo que se guarda». Es falso. Los límites reales:
+
+| Campos | Límite |
+|---|---|
+| descripción de departamento y de afiliación | 20.000 |
+| resumen, biografía, declaración, curso, evento, edición, intro, secundario | 50.000 |
+| **cuerpo del blog** | **100.000** |
+
+Un cuerpo de 20.800 caracteres se guarda sin problema y la previa dice *«The preview could
+not be loaded.»*
+
+- [ ] El tope de la vista previa sube a 100.000, el del campo más largo de verdad.
+- [ ] Y deja de estar escrito a mano en dos sitios: una constante compartida, para que no
+      pueda volver a desfasarse.
+- [ ] Prueba de ruta con un texto de 100.000 (pasa) y de 100.001 (422).
+- [ ] Corregir el comentario que justificaba el 20.000.
+
+**Riesgo:** ninguno para el usuario. Un texto de 100.000 caracteres tarda más en
+convertirse; hay que medir cuánto y decir la cifra, no suponerla.
+
+---
+
+## Fase 4 — Ctrl+Z debe deshacer lo que ponen los botones
+
+**Mío, de la fase 5.** Poner negrita y pulsar Ctrl+Z deja `hola **mundo**`. Escribir el
+valor desde React vacía la pila de deshacer nativa del `textarea`.
+
+- [ ] Los botones escriben con `document.execCommand('insertText')` en lugar de
+      `onChange` directo. Está probado que conserva el deshacer.
+- [ ] Comprobar que react-hook-form se entera: `execCommand` dispara un `input` nativo y
+      React lo escucha, pero eso hay que verlo, no darlo por hecho.
+- [ ] Si `execCommand` devuelve `false` —está marcado como obsoleto y algún día se irá—,
+      se cae al camino de ahora. Peor el deshacer que perder el botón.
+- [ ] Prueba: escribir, aplicar negrita, Ctrl+Z, y que vuelva el texto de partida. Y lo
+      mismo con un botón de línea, que toca más texto.
+
+**Riesgo:** medio. `execCommand` es API obsoleta; por eso va con salida de emergencia. Hay
+que rehacer las diez pruebas del editor sobre el camino nuevo.
+
+---
+
+## Fase 5 — La fecha de un evento no puede cambiar según quién mire
+
+**El fallo.** La misma página `/events`, el mismo evento publicado:
+
+| Desde | 2026 Festival | 2025 Festival |
+|---|---|---|
+| Sydney | 15–16 December | 10–11 December |
+| Madrid / Lima | **14**–16 December | 10–11 December |
+| Honolulu | 14–15 December | **9**–10 December |
+
+`startsAt` se guarda como instante absoluto tomado del huso **del que escribe**, y
+`event-format.ts:18` lo pinta con el huso **del que lee**. Un seminario anunciado para el
+15 sale como el 14 a media Europa.
+
+Y hay un segundo fallo escondido dentro: **la hora que se teclea no se enseña en ninguna
+parte del sitio público**. Se pide con precisión de minutos, se guarda, y solo se pinta el
+día.
+
+- [ ] `/api/public/site` entrega el `timezone` que ya está guardado.
+- [ ] Las fechas del sitio se escriben en ese huso, no en el del visitante. Un solo sitio:
+      `event-format.ts`, que ya centraliza el idioma.
+- [ ] **Y el panel también.** Si él teclea 9:30 en Sydney y la web dice 9:30, pero abre el
+      mismo evento desde un portátil en Lima y ve 17:30 del día anterior, el fallo no se
+      ha arreglado, se ha movido. El editor de fecha y hora tiene que leer y escribir en
+      el huso del sitio.
+- [ ] Decir junto al campo en qué huso se está escribiendo. Sin eso, «9:30» es ambiguo.
+- [ ] Pruebas: la misma página desde cuatro husos —Sydney, Madrid, Lima, Honolulu— tiene
+      que dar la misma fecha. Es la prueba que destapó el fallo; sirve tal cual.
+- [ ] Repasar dónde más se pinta una fecha con el huso del que mira: el listado del panel,
+      las entradas del blog, el registro de auditoría.
+
+**Sobre enseñar la hora, mi recomendación:** enseñarla. Se captura, se guarda y no se ve;
+para una charla o un seminario la hora es la mitad del dato. Va en la ficha del evento y
+en la agenda, junto a la fecha. **Si prefieres que la web siga enseñando solo el día,
+dilo y hago solo la parte del huso** —es la mitad del trabajo de esta fase y arregla el
+fallo igual—.
+
+**Riesgo:** el más alto de las seis. Toca cómo se guarda y cómo se lee lo que ya está
+guardado. Las cinco fechas sembradas no se tocan: siguen siendo el mismo instante, solo
+cambia con qué reloj se leen.
+
+---
+
+## Fase 6 — El sitio necesita su propia página de «no existe»
+
+**El fallo.** Una dirección inexistente del sitio público enseña la pantalla índigo del
+panel —*«Oops! Page Not Found!»*, botón «Back to Home»— sin cabecera, sin pie y sin la
+tipografía del sitio. Y responde **HTTP 200**, así que un buscador la indexa como página
+buena.
+
+- [ ] Una pantalla de «no existe» con el marco del sitio: cabecera, pie, y el mismo tono
+      que usan «This work is not published.» y «This entry is not published.», que ya
+      existen y están bien resueltas.
+- [ ] El panel se queda con la suya.
+- [ ] Sobre el 200: **es lo normal en una aplicación de una sola página** y no se arregla
+      del todo sin renderizar en el servidor. Lo que sí se puede es una etiqueta
+      `<meta name="robots" content="noindex">` en esa pantalla, que es lo que de verdad
+      evita que la indexen. Se hace eso y se dice por qué no se hace más.
+
+**Riesgo:** ninguno. Es una pantalla.
+
+---
+
+## Cómo se comprueba
+
+- `corepack pnpm verify` en `web/` y las pruebas de `api/` al cerrar cada fase.
+- Cada prueba nueva se valida **rompiendo el código a posta** y viéndola caer. En la
+  cacería que encontró estos seis, cuatro pruebas mías pasaban con el código roto porque
+  seleccionaban justo desde el principio de una línea; no vuelve a pasar.
+- Barrido en navegador al cerrar cada fase, y los datos de prueba retirados. La base tiene
+  que volver a 5 eventos, 16 publicaciones y 5 entradas.
+- La fase 5 se cierra con la sonda de los cuatro husos horarios, que es la que lo destapó.
+
+## Lo que no entra
+
+Un riesgo latente que **no conseguí reproducir**: varias consultas paginadas ordenan por
+una clave que puede empatar sin desempate —`events` por `starts_at`, `media_assets` y
+`audit_log` por `created_at`—. Creé cuatro eventos a la misma hora exacta y Postgres
+mantuvo el orden estable en tres recorridos seguidos. Sin poder enseñarlo roto no se
+arregla: queda anotado aquí para cuando alguien lo vea de verdad.
