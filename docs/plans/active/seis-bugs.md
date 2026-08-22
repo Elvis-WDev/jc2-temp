@@ -61,34 +61,51 @@ sella una nueva. La base vuelve a 5 eventos, 16 publicaciones, 5 entradas y 3 cu
 
 31 ficheros de prueba, 331 pruebas.
 
-## Fase 2 — El resumen de una publicación se ve con el Markdown crudo
+## Fase 2 — El resumen de una publicación se ve con el Markdown crudo ✅
 
 **El fallo.** El campo dice *«Markdown works here»*, la barra de la fase 5 escribe `**`,
-y la tarjeta de `/research` enseña esto tal cual:
+y la tarjeta de `/research` enseñaba esto tal cual:
 
 ```
 We show **strong** revenue results, see [the appendix](https://ejemplo.invalid)
 and `theta_i`. ## Second heading - first bullet - second bullet
 ```
 
-`extractoDeMarkdown` (`api/src/shared/markdown/excerpt.ts:19`) quita etiquetas HTML pero
-nunca convierte el Markdown. No salta hoy porque los resúmenes sembrados son prosa plana;
-saltará con el primer resumen que use la barra de botones.
+- [x] El extracto pasa por `renderMarkdown` y **después** se le quitan las etiquetas.
+- [x] Y se decodifican las cinco entidades XML que dejaba el conversor.
+- [x] Pruebas con negrita, enlace, código, título, lista, vídeo, `&` y `<`.
+- [x] Corregido el comentario que afirmaba que decodificaba entidades.
 
-- [ ] El extracto pasa por `renderMarkdown` —el mismo de la web— y **después** se le
-      quitan las etiquetas. Así una dirección de vídeo suelta desaparece del extracto en
-      lugar de salir como URL, que es lo que pasa si solo se usa `marked`.
-- [ ] Y se decodifican las cinco entidades XML que deja el conversor —`&amp;`, `&lt;`,
-      `&gt;`, `&quot;`, `&#39;`—, que hoy se ven en crudo. «Auctions A & B» sale hoy como
-      «Auctions A &amp;amp; B».
-- [ ] Pruebas con negrita, enlace, código, título, lista, vídeo, `&` y `<`.
-- [ ] Corregir el comentario de `excerpt.ts`, que afirma que decodifica entidades y no es
-      verdad.
+**Hecha.** Se convierte primero y se desnuda después. El mismo resumen sale ahora así:
 
-**Riesgo:** bajo. `renderMarkdown` es puro y ya tiene sus propias pruebas. Hay que mirar
-que el corte por palabras siga cayendo donde debe con el texto ya convertido.
+```
+We show strong revenue results for A & B when x > y, see the appendix and
+theta_i. Second heading first bullet second bullet
+```
 
----
+**Se convierte con `renderMarkdown` y no con `marked` a secas**, y eso importa: una
+dirección de vídeo suelta en su línea se vuelve reproductor y desaparece del extracto, en
+lugar de quedarse como una URL de sesenta caracteres en medio de la frase. Lo mismo con
+una imagen intercalada.
+
+**Las entidades iban de propina y hacían falta.** «Auctions A & B con x > y» salía como
+«Auctions A &amp;amp; B con x &amp;gt; y». Se decodifican las cinco en **una sola pasada**:
+de una en una, `&amp;amp;lt;` —que es como se escribe un `&amp;lt;` literal— acabaría
+convertido en `<`, dos escapes por el precio de uno.
+
+**Once pruebas donde no había ninguna.** Con el código de antes caen siete de las once; las
+cuatro que sobreviven son las del recorte, que no dependen de esto. Y una de ellas dice
+algo que no era obvio: **el límite se cuenta sobre el texto ya convertido**, así que un
+resumen con mucha sintaxis ahora enseña más contenido en el mismo espacio.
+
+**El coste, medido y no supuesto:** 0,48 ms por extracto sobre un resumen de 1.539
+caracteres; 9,6 ms para una página de veinte publicaciones. El listado real de dieciséis
+son 7,7 ms.
+
+Comprobado en marcha: los dieciséis resúmenes sembrados siguen leyéndose igual, sin una
+sola marca a la vista.
+
+32 ficheros de prueba, 342 pruebas.
 
 ## Fase 3 — La vista previa se rompe por encima de 20.000 caracteres
 
