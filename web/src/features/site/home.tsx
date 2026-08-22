@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { getHome, getSite, type PublicHome, type PublicSite } from './api'
 import { PostCard } from './components/post-card'
 import { PostCarousel } from './components/post-carousel'
+import { RichText } from './components/rich-text'
 import { SectionBackground } from './components/section-background'
 import { SiteButton, SiteButtonLink } from './components/site-button'
 import { SectionHeading, SiteSection } from './components/site-section'
@@ -119,6 +120,9 @@ export function SiteHome() {
   // dejarle su turno de color descuadraria las de debajo.
   const bandas = [
     seVe('image') && home.page?.heroUrl != null ? 'image' : null,
+    seVe('research_areas') && home.page?.secondaryHtml != null
+      ? 'research_areas'
+      : null,
     // Las noticias cierran la portada, y en carrusel: es lo ultimo que pasa y lo que
     // conviene que quede a la vista al final del recorrido.
     seVe('latest_news') && home.latestNews.length > 0 ? 'latest_news' : null,
@@ -136,6 +140,9 @@ export function SiteHome() {
       )}
       {bandas.includes('image') && (
         <Ilustracion home={home} tone={tono('image')} />
+      )}
+      {bandas.includes('research_areas') && (
+        <Dominios home={home} tone={tono('research_areas')} />
       )}
       {bandas.includes('latest_news') && (
         <GrupoDeEntradas
@@ -281,25 +288,16 @@ function Hero({
  * Research y Teaching pinta la ilustracion de la cabecera. Sin imagen elegida la banda
  * no existe, en lugar de una franja de color vacia.
  *
- * El rotulo es opcional y va encima; si el titular no escribe ninguno queda solo la
- * imagen, que es para lo que se pidio la banda.
+ * **Sin rotulo, y a proposito.** Es la banda de la imagen y nada mas; la que lleva
+ * titulo y texto es la de las lineas de investigacion, que va justo debajo y es otra.
+ * Mientras esta admitio rotulo, el panel ofrecia el campo con «Research lines» de
+ * ejemplo y parecia que las dos fueran la misma cosa.
  */
 function Ilustracion({ home, tone }: { home: PublicHome; tone: Tono }) {
-  const invertido = useBandaInvertida('home.image', tone)
-  const rotulo = useSectionHeading('home.image', { title: '' })
-
   if (home.page?.heroUrl == null) return null
 
   return (
     <SiteSection tone={tone} backgroundKey='home.image'>
-      {rotulo.title !== '' && (
-        <SectionHeading
-          title={rotulo.title}
-          aside={rotulo.aside}
-          dark={invertido}
-        />
-      )}
-
       <div className='flex justify-center'>
         <img
           src={home.page.heroUrl}
@@ -357,6 +355,59 @@ function RedesAcademicas({ links }: { links: PublicHome['profile']['links'] }) {
         )
       })}
     </ul>
+  )
+}
+
+/**
+ * Las lineas de investigacion, que se escriben en Contenido de paginas → Portada.
+ *
+ * La plantilla dibuja tres columnas con un filete a la izquierda. Aqui el contenido es
+ * Markdown libre, asi que se reparte en columnas de texto en lugar de en tres cajas
+ * fijas: si escribe tres apartados sale igual que la plantilla, y si escribe dos o
+ * cuatro tambien funciona en vez de romperse.
+ */
+function Dominios({ home, tone }: { home: PublicHome; tone: Tono }) {
+  const invertido = useBandaInvertida('home.research_areas', tone)
+  // El titular puede renombrar la banda desde Contenido de paginas; si no lo hace,
+  // queda el rotulo de la plantilla.
+  // Sin rotulo a la derecha por defecto: el titulo se basta. El titular puede escribir
+  // uno desde Contenido de paginas si algun dia quiere.
+  const rotulo = useSectionHeading('home.research_areas', {
+    title: 'Research lines',
+  })
+
+  // Vacia cuando el titular oculta la portada en Contenido de paginas.
+  if (home.page === null || home.page.secondaryHtml === null) return null
+
+  return (
+    <SiteSection tone={tone} backgroundKey='home.research_areas'>
+      <SectionHeading
+        title={rotulo.title}
+        aside={rotulo.aside}
+        dark={invertido}
+      />
+      <RichText
+        html={home.page.secondaryHtml}
+        className={[
+          'gap-12 md:columns-2 lg:columns-3',
+          '[&_h1]:font-site-display [&_h2]:font-site-display [&_h3]:font-site-display',
+          '[&_h1]:text-site-headline-sm [&_h2]:text-site-headline-sm [&_h3]:text-site-headline-sm',
+          invertido
+            ? '[&_h1]:text-site-on-primary [&_h2]:text-site-on-primary [&_h3]:text-site-on-primary'
+            : '[&_h1]:text-site-primary [&_h2]:text-site-primary [&_h3]:text-site-primary',
+          '[&_h1]:mb-3 [&_h2]:mb-3 [&_h3]:mb-3',
+          // Un titulo nunca se queda solo al final de una columna, separado del
+          // parrafo que explica.
+          '[&_h1]:break-after-avoid [&_h2]:break-after-avoid [&_h3]:break-after-avoid',
+          '[&_p]:mb-6 [&_p]:break-inside-avoid',
+          invertido
+            ? '[&_p]:text-site-on-primary/85'
+            : '[&_p]:text-site-on-surface-variant',
+          '[&_ul]:mb-6 [&_ul]:list-disc [&_ul]:break-inside-avoid [&_ul]:ps-5',
+          '[&_a]:underline [&_a]:decoration-site-on-tertiary-container',
+        ].join(' ')}
+      />
+    </SiteSection>
   )
 }
 

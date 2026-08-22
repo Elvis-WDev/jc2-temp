@@ -57,7 +57,11 @@ export class GetHomePage {
       this.profile.execute(),
       // `findPublishedPage`, no `getPage`: con `getPage` el interruptor "visible en la
       // web" de la portada no hacia nada, y sus textos se servian igual estando oculta.
-      seVe('hero') || seVe('research_areas')
+      // Las tres bandas que salen de la ficha de la portada: el hero, la ilustracion
+      // —que usa su imagen— y las lineas de investigacion —que usan su texto
+      // secundario—. `image` faltaba aqui: con el hero apagado y la ilustracion
+      // encendida, la ficha no se pedia y la banda desaparecia sin motivo.
+      seVe('hero') || seVe('image') || seVe('research_areas')
         ? this.siteContent.findPublishedPage('home')
         : Promise.resolve(null),
       // Solo su interruptor de banda: las noticias no tienen listado propio, asi que no

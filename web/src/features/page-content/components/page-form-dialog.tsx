@@ -111,6 +111,50 @@ function Campos({ onOpenChange, page }: Omit<Props, 'open'>) {
     onError: (error) => applyApiFieldErrors(form, error),
   })
 
+  /**
+   * El selector de la imagen de la ficha.
+   *
+   * En Research y Teaching va con los textos de la pagina, que es donde se dibuja: al
+   * lado del titulo de la cabecera. En la portada **no**: alli es una banda propia, y
+   * elegirla arriba mientras la banda de abajo decia «la eliges en el campo Imagen de
+   * esta pagina» era contar una sola cosa en dos sitios.
+   *
+   * No se confunde con el fondo de una seccion, que ocupa la banda entera por detras del
+   * texto: esta va delante, como una ilustracion mas.
+   */
+  const imagen = (
+    <div className='grid gap-2'>
+      <Label>{esPortada ? 'Image' : 'Header image'}</Label>
+      <p className='text-sm text-muted-foreground'>
+        {esPortada
+          ? 'Goes centred on this band. Without one, the band does not appear.'
+          : 'Goes beside the title, on the right.'}{' '}
+        It has to be marked visible on the site.
+      </p>
+      <ImagePicker value={heroMediaId} onChange={setHeroMediaId} />
+
+      {heroMediaId !== null && (
+        <FormField
+          control={form.control}
+          name='heroAlt'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Image description</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormDescription>
+                What it shows, for whoever cannot see it. Leave it empty if it
+                is only decorative.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
+    </div>
+  )
+
   return (
     <Form {...form}>
       <form
@@ -183,10 +227,7 @@ function Campos({ onOpenChange, page }: Omit<Props, 'open'>) {
               </FormControl>
               <FormDescription>
                 {esPortada
-                  ? // Llenaba la banda de «Research lines», que se retiro de la
-                    // portada. El campo se queda —el texto escrito es del titular y no
-                    // se tira— pero decir que sigue saliendo seria mentir.
-                    'Not shown on the home page at the moment: the band that used it was removed. What is written here is kept.'
+                  ? 'Fills the Research lines band, laid out in columns. Markdown is allowed.'
                   : 'Markdown is allowed.'}
               </FormDescription>
               <FormMessage />
@@ -194,48 +235,8 @@ function Campos({ onOpenChange, page }: Omit<Props, 'open'>) {
           )}
         />
 
-        {/* Este campo estuvo un tiempo en todas las páginas sin que ninguna lo
-            pintara: se guardaba la imagen y no aparecía nunca. Ahora solo sale donde
-            la cabecera la dibuja. No se confunde con el fondo de la sección `header`,
-            que está más abajo y ocupa la banda entera por detrás del texto: esta va
-            al lado, como una ilustración más. */}
-        {admiteImagen && (
-          <div className='grid gap-2 border-t pt-4'>
-            {/* La misma columna, en dos sitios distintos: en Research y Teaching va
-                al lado del titulo, y en la portada centrada en su propia banda. El
-                rotulo tiene que decir cual de las dos, o quien la sube la busca donde
-                no esta. */}
-            <Label>
-              {esPortada ? 'Image of the second band' : 'Header image'}
-            </Label>
-            <p className='text-sm text-muted-foreground'>
-              {esPortada
-                ? 'Goes centred on its own band, the one with the solid colour, below the introduction. Without one, that band does not appear.'
-                : 'Goes beside the title, on the right.'}{' '}
-              It has to be marked visible on the site.
-            </p>
-            <ImagePicker value={heroMediaId} onChange={setHeroMediaId} />
-
-            {heroMediaId !== null && (
-              <FormField
-                control={form.control}
-                name='heroAlt'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Image description</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      What it shows, for whoever cannot see it. Leave it empty
-                      if it is only decorative.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-          </div>
+        {admiteImagen && !esPortada && (
+          <div className='border-t pt-4'>{imagen}</div>
         )}
 
         <FormField
@@ -273,7 +274,12 @@ function Campos({ onOpenChange, page }: Omit<Props, 'open'>) {
           <p className='text-sm text-muted-foreground'>
             Each block is switched on and off on its own, and saves right away.
           </p>
-          <SectionsSection pageKey={page.pageKey} />
+          <SectionsSection
+            pageKey={page.pageKey}
+            {...(admiteImagen && esPortada
+              ? { extras: { image: imagen } }
+              : {})}
+          />
         </div>
 
         <DialogFooter>

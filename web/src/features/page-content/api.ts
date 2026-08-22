@@ -72,6 +72,14 @@ export const NOMBRE_DE_SECCION: Record<
      * escribirlo obligaria a decidir cual de los dos gana.
      */
     admiteTitulo?: boolean
+    /**
+     * El rotulo que pone el sitio cuando el titular no escribe ninguno.
+     *
+     * Sale como texto de ejemplo en el campo, para que diga la verdad. Estuvo escrito a
+     * mano —«Research lines»— y salia igual en todas las bandas, incluida la de la
+     * imagen, que no tiene rotulo ni lo quiere.
+     */
+    rotuloPorDefecto?: string
   }
 > = {
   'home.hero': {
@@ -81,15 +89,24 @@ export const NOMBRE_DE_SECCION: Record<
   },
   'home.image': {
     titulo: 'Image',
-    que: 'A picture on its own band, centred. You choose it in the Image field of this page.',
+    // Sin rotulo: es la banda de la imagen y nada mas. La que lleva titulo y texto es
+    // Research lines, que va justo debajo y es otra.
+    que: 'A picture on its own band, centred, with no heading.',
     admiteFondo: false,
+  },
+  'home.research_areas': {
+    titulo: 'Research lines',
+    que: 'What you write in Secondary text, laid out in columns.',
+    admiteFondo: true,
     admiteTitulo: true,
+    rotuloPorDefecto: 'Research lines',
   },
   'home.latest_news': {
     titulo: 'Latest news',
     que: 'The three most recent news items, in a carousel that closes the page. It does not appear if News is switched off.',
     admiteFondo: true,
     admiteTitulo: true,
+    rotuloPorDefecto: 'News',
   },
   'research.header': {
     titulo: 'Header',

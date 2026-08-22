@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
 import { queryKeys } from '@/lib/api/query-keys'
@@ -25,7 +25,20 @@ import {
  * No se crean ni se borran: las secciones las define el código y aquí solo se decide
  * cómo se ven.
  */
-export function SectionsSection({ pageKey }: { pageKey: PageKey }) {
+export function SectionsSection({
+  pageKey,
+  extras,
+}: {
+  pageKey: PageKey
+  /**
+   * Controles propios de una banda concreta, por clave de seccion.
+   *
+   * La imagen de la portada se elegia arriba del todo, entre los textos de la pagina, y
+   * la banda de aqui abajo se limitaba a decir «la eliges en el campo Imagen de esta
+   * pagina». Una sola cosa contada en dos sitios: ahora se elige donde vive la banda.
+   */
+  extras?: Partial<Record<string, ReactNode>>
+}) {
   const queryClient = useQueryClient()
 
   const { data: secciones, isLoading } = useQuery({
@@ -77,6 +90,7 @@ export function SectionsSection({ pageKey }: { pageKey: PageKey }) {
           key={seccion.id}
           seccion={seccion}
           pendiente={cambiar.isPending}
+          extra={extras?.[seccion.sectionKey]}
           onChange={(cambio) => {
             cambiar.mutate({ id: seccion.id, ...cambio })
           }}
@@ -89,10 +103,12 @@ export function SectionsSection({ pageKey }: { pageKey: PageKey }) {
 function Bloque({
   seccion,
   pendiente,
+  extra,
   onChange,
 }: {
   seccion: PageSection
   pendiente: boolean
+  extra?: ReactNode
   onChange: (cambio: {
     isVisible?: boolean
     heading?: string | null
@@ -130,8 +146,14 @@ function Bloque({
         />
       </div>
 
+      {extra !== undefined && <div className='border-t pt-3'>{extra}</div>}
+
       {nombre.admiteTitulo === true && (
-        <Rotulo seccion={seccion} onChange={onChange} />
+        <Rotulo
+          seccion={seccion}
+          ejemplo={nombre.rotuloPorDefecto ?? ''}
+          onChange={onChange}
+        />
       )}
 
       {/* Los filtros son una barra de controles: una foto detrás sólo estorbaría, así
@@ -146,8 +168,8 @@ function Bloque({
 /**
  * El encabezado de la banda: el título y el texto pequeño de su derecha.
  *
- * Se guarda al salir del campo, no en cada tecla: escribiendo «Research lines» saldrían
- * catorce peticiones y trece avisos de guardado. Y sólo si ha cambiado algo, para que
+ * Se guarda al salir del campo, no en cada tecla: escribiendo un rótulo de catorce
+ * letras saldrían catorce peticiones y trece avisos de guardado. Y sólo si ha cambiado algo, para que
  * pasar de largo con el tabulador no dispare nada.
  *
  * Estos dos campos no se bloquean mientras hay un guardado en curso, al revés que el
@@ -156,9 +178,12 @@ function Bloque({
  */
 function Rotulo({
   seccion,
+  ejemplo,
   onChange,
 }: {
   seccion: PageSection
+  /** El que pone el sitio si no se escribe ninguno. */
+  ejemplo: string
   onChange: (cambio: {
     heading?: string | null
     headingAside?: string | null
@@ -186,14 +211,14 @@ function Rotulo({
           id={`rotulo-${seccion.id}`}
           defaultValue={seccion.heading ?? ''}
           maxLength={120}
-          placeholder='Research lines'
+          placeholder={ejemplo}
           onBlur={guardarSiCambia('heading')}
         />
         <Input
           aria-label='Small text on the right'
           defaultValue={seccion.headingAside ?? ''}
           maxLength={120}
-          placeholder='Main areas'
+          placeholder='Small text on the right'
           onBlur={guardarSiCambia('headingAside')}
         />
       </div>

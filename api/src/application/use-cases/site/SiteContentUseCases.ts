@@ -94,9 +94,16 @@ export class SiteContentUseCases {
    */
   async listSections(pageKey: PageKey | null): Promise<PageSectionRecord[]> {
     const secciones = await this.repo.listSections(pageKey)
-    return secciones.filter((seccion) =>
-      (SECCIONES[seccion.pageKey] ?? []).includes(seccion.sectionKey),
-    )
+    const orden = (seccion: PageSectionRecord) =>
+      (SECCIONES[seccion.pageKey] ?? []).indexOf(seccion.sectionKey)
+
+    return secciones
+      .filter((seccion) => orden(seccion) !== -1)
+      // Por el orden de `SECCIONES` y no por `sort_order`: esta lista es la de verdad
+      // —lo dice `PageRules`— y es la que decide en que orden se pintan las bandas. En
+      // la base, cuatro secciones de la portada comparten `sort_order = 1`, asi que
+      // ordenar por el dejaba al panel ensenandolas en un orden que no era el del sitio.
+      .sort((a, b) => orden(a) - orden(b))
   }
 
   updateSection(id: string, input: PageSectionInput): Promise<PageSectionRecord> {

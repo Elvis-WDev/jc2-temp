@@ -254,10 +254,14 @@ describe('portada publica', () => {
     expect(banda?.querySelector('h2')).toBeNull()
   })
 
-  it('si el titular escribe un rotulo, sale encima', async () => {
+  it('la banda de la imagen no lleva rotulo ni aunque haya uno guardado', async () => {
+    // Es la banda de la imagen y nada mas. La que lleva titulo y texto es Research
+    // lines, que va justo debajo y es otra; mientras esta admitio rotulo, el panel
+    // ofrecia el campo con «Research lines» de ejemplo y parecian la misma cosa.
     getHome.mockResolvedValue(CON_IMAGEN)
     getSite.mockResolvedValue({
       siteName: 'Sitio',
+      timezone: 'Australia/Sydney',
       meta: { title: null, description: null, ogImageUrl: null },
       pages: { research: true, teaching: true, events: false, blog: true },
       sections: {},
@@ -267,8 +271,55 @@ describe('portada publica', () => {
       },
     })
     const screen = await pintar()
+    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
 
-    await expect.element(screen.getByText('En el laboratorio')).toBeVisible()
+    expect(screen.getByText('En el laboratorio').query()).toBeNull()
+  })
+
+  it('las lineas de investigacion salen del texto secundario', async () => {
+    getHome.mockResolvedValue({
+      ...HOME,
+      page: {
+        ...PAGINA,
+        secondaryHtml: '<h3>Mechanism design</h3><p>Subastas.</p>',
+      },
+    })
+    const screen = await pintar()
+
+    await expect.element(screen.getByText('Mechanism design')).toBeVisible()
+    await expect.element(screen.getByText('Subastas.')).toBeVisible()
+    // Sin rotulo escrito queda el de la plantilla.
+    await expect.element(screen.getByText('Research lines')).toBeVisible()
+  })
+
+  it('y el titular puede renombrar esa banda', async () => {
+    getHome.mockResolvedValue({
+      ...HOME,
+      page: { ...PAGINA, secondaryHtml: '<p>Subastas.</p>' },
+    })
+    getSite.mockResolvedValue({
+      siteName: 'Sitio',
+      timezone: 'Australia/Sydney',
+      meta: { title: null, description: null, ogImageUrl: null },
+      pages: { research: true, teaching: true, events: false, blog: true },
+      sections: {},
+      sectionBackgrounds: {},
+      sectionHeadings: {
+        'home.research_areas': { title: 'Lo que investigo', aside: null },
+      },
+    })
+    const screen = await pintar()
+
+    await expect.element(screen.getByText('Lo que investigo')).toBeVisible()
+    expect(screen.getByText('Research lines').query()).toBeNull()
+  })
+
+  it('sin texto secundario esa banda no se dibuja', async () => {
+    getHome.mockResolvedValue(HOME)
+    const screen = await pintar()
+    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
+
+    expect(screen.getByText('Research lines').query()).toBeNull()
   })
 
   it('con los textos de la portada ocultos, el resto sigue en pie', async () => {
