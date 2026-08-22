@@ -168,3 +168,21 @@ export function resumirHtml(html: string | null, limite = 200): string | null {
 export function titulo(pagina: string, siteName: string | undefined): string {
   return siteName === undefined ? pagina : `${pagina} · ${siteName}`
 }
+
+/**
+ * Metadatos de una ficha que no se puede ensenar.
+ *
+ * Sin esto la pantalla se quedaba con el titulo y la descripcion de la pagina anterior,
+ * y un buscador podia indexar «This work is not published.» como si fuera contenido. La
+ * direccion responde 200 —en una aplicacion de una sola pagina no hay otra— asi que lo
+ * que la mantiene fuera es `noindex`.
+ */
+export function metadatosDeNoDisponible(titulo: string): SiteMeta {
+  return {
+    title: titulo,
+    description: null,
+    path: window.location.pathname,
+    imageUrl: null,
+    extraMeta: [{ name: 'robots', content: 'noindex' }],
+  }
+}

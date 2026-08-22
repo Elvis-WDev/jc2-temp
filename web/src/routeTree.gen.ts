@@ -13,6 +13,8 @@ import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as PublicRouteRouteImport } from './routes/_public/route'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
+import { Route as AdminSplatRouteImport } from './routes/admin/$'
+import { Route as PublicSplatRouteImport } from './routes/_public/$'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as errors500RouteImport } from './routes/(errors)/500'
 import { Route as errors404RouteImport } from './routes/(errors)/404'
@@ -75,6 +77,16 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const PublicIndexRoute = PublicIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
+const AdminSplatRoute = AdminSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const PublicSplatRoute = PublicSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
   getParentRoute: () => PublicRouteRoute,
 } as any)
 const errors503Route = errors503RouteImport.update({
@@ -309,6 +321,8 @@ export interface FileRoutesByFullPath {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
+  '/$': typeof PublicSplatRoute
+  '/admin/$': typeof AdminSplatRoute
   '/admin/': typeof AdminIndexRoute
   '/blog/$slug': typeof PublicBlogSlugRoute
   '/events/$slug': typeof PublicEventsSlugRoute
@@ -356,6 +370,8 @@ export interface FileRoutesByTo {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
+  '/$': typeof PublicSplatRoute
+  '/admin/$': typeof AdminSplatRoute
   '/': typeof PublicIndexRoute
   '/admin': typeof AdminIndexRoute
   '/blog/$slug': typeof PublicBlogSlugRoute
@@ -407,6 +423,8 @@ export interface FileRoutesById {
   '/(errors)/404': typeof errors404Route
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
+  '/_public/$': typeof PublicSplatRoute
+  '/admin/$': typeof AdminSplatRoute
   '/_public/': typeof PublicIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/_public/blog/$slug': typeof PublicBlogSlugRoute
@@ -459,6 +477,8 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
+    | '/$'
+    | '/admin/$'
     | '/admin/'
     | '/blog/$slug'
     | '/events/$slug'
@@ -506,6 +526,8 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
+    | '/$'
+    | '/admin/$'
     | '/'
     | '/admin'
     | '/blog/$slug'
@@ -556,6 +578,8 @@ export interface FileRouteTypes {
     | '/(errors)/404'
     | '/(errors)/500'
     | '/(errors)/503'
+    | '/_public/$'
+    | '/admin/$'
     | '/_public/'
     | '/admin/'
     | '/_public/blog/$slug'
@@ -637,6 +661,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof PublicIndexRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
+    '/admin/$': {
+      id: '/admin/$'
+      path: '/$'
+      fullPath: '/admin/$'
+      preLoaderRoute: typeof AdminSplatRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/_public/$': {
+      id: '/_public/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof PublicSplatRouteImport
       parentRoute: typeof PublicRouteRoute
     }
     '/(errors)/503': {
@@ -951,6 +989,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface PublicRouteRouteChildren {
+  PublicSplatRoute: typeof PublicSplatRoute
   PublicIndexRoute: typeof PublicIndexRoute
   PublicBlogSlugRoute: typeof PublicBlogSlugRoute
   PublicEventsSlugRoute: typeof PublicEventsSlugRoute
@@ -964,6 +1003,7 @@ interface PublicRouteRouteChildren {
 }
 
 const PublicRouteRouteChildren: PublicRouteRouteChildren = {
+  PublicSplatRoute: PublicSplatRoute,
   PublicIndexRoute: PublicIndexRoute,
   PublicBlogSlugRoute: PublicBlogSlugRoute,
   PublicEventsSlugRoute: PublicEventsSlugRoute,
@@ -981,6 +1021,7 @@ const PublicRouteRouteWithChildren = PublicRouteRoute._addFileChildren(
 )
 
 interface AdminRouteRouteChildren {
+  AdminSplatRoute: typeof AdminSplatRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminCoursesCourseIdRoute: typeof AdminCoursesCourseIdRoute
   AdminCoursesNewRoute: typeof AdminCoursesNewRoute
@@ -1014,6 +1055,7 @@ interface AdminRouteRouteChildren {
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminSplatRoute: AdminSplatRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminCoursesCourseIdRoute: AdminCoursesCourseIdRoute,
   AdminCoursesNewRoute: AdminCoursesNewRoute,

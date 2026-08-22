@@ -10,7 +10,11 @@ import { SectionBackground } from './components/section-background'
 import { SiteButton } from './components/site-button'
 import { SiteChip } from './components/site-card'
 import { tonoDeBanda, useSectionBackground } from './use-section-background'
-import { resumirHtml, useSiteMeta } from './use-site-meta'
+import {
+  metadatosDeNoDisponible,
+  resumirHtml,
+  useSiteMeta,
+} from './use-site-meta'
 import { coautores } from './work-format'
 
 /**
@@ -44,7 +48,13 @@ export function SiteResearchDetail() {
     staleTime: 5 * 60_000,
   })
 
-  useSiteMeta(work === undefined ? null : metadatosDeTrabajo(work, site))
+  useSiteMeta(
+    work === undefined
+      ? error === null
+        ? null
+        : metadatosDeNoDisponible('Work not available')
+      : metadatosDeTrabajo(work, site)
+  )
 
   if (isPending) {
     return (

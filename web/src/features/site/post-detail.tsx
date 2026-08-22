@@ -10,7 +10,11 @@ import { SectionBackground } from './components/section-background'
 import { fechaLarga } from './post-format'
 import { type PaginaDeEntradas } from './post-pages'
 import { useSectionBackground } from './use-section-background'
-import { resumirHtml, useSiteMeta } from './use-site-meta'
+import {
+  metadatosDeNoDisponible,
+  resumirHtml,
+  useSiteMeta,
+} from './use-site-meta'
 
 /**
  * La ficha de una entrada, igual para noticias y para blog.
@@ -48,7 +52,11 @@ export function SitePostDetail({ pagina }: { pagina: PaginaDeEntradas }) {
   })
 
   useSiteMeta(
-    entrada === undefined ? null : metadatosDeEntrada(entrada, pagina, site)
+    entrada === undefined
+      ? error === null
+        ? null
+        : metadatosDeNoDisponible('Not available')
+      : metadatosDeEntrada(entrada, pagina, site)
   )
 
   if (isPending) {

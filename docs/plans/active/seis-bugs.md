@@ -242,25 +242,48 @@ desde Lima; y guardarlo desde Lima no lo mueve de sitio.
 
 API 32 ficheros / 344 pruebas. Web 37 / 261.
 
-## Fase 6 — El sitio necesita su propia página de «no existe»
+## Fase 6 — El sitio necesita su propia página de «no existe» ✅
 
-**El fallo.** Una dirección inexistente del sitio público enseña la pantalla índigo del
-panel —*«Oops! Page Not Found!»*, botón «Back to Home»— sin cabecera, sin pie y sin la
+**El fallo.** Una dirección inexistente del sitio enseñaba la pantalla índigo del panel
+—*«Oops! Page Not Found!»*, botón «Back to Home»— sin cabecera, sin pie y sin la
 tipografía del sitio. Y responde **HTTP 200**, así que un buscador la indexa como página
 buena.
 
-- [ ] Una pantalla de «no existe» con el marco del sitio: cabecera, pie, y el mismo tono
-      que usan «This work is not published.» y «This entry is not published.», que ya
-      existen y están bien resueltas.
-- [ ] El panel se queda con la suya.
-- [ ] Sobre el 200: **es lo normal en una aplicación de una sola página** y no se arregla
-      del todo sin renderizar en el servidor. Lo que sí se puede es una etiqueta
-      `<meta name="robots" content="noindex">` en esa pantalla, que es lo que de verdad
-      evita que la indexen. Se hace eso y se dice por qué no se hace más.
+- [x] Una pantalla de «no existe» con el marco del sitio.
+- [x] El panel se queda con la suya.
+- [x] `noindex`, y explicado por qué no se puede hacer más.
 
-**Riesgo:** ninguno. Es una pantalla.
+**Hecha.** La pantalla nueva se parece a las de «no publicado» que ya había: mismo
+encabezado, mismo enlace de vuelta, dentro de la cabecera y el pie del sitio.
 
----
+**Y el `noindex` fue más ancho de lo previsto.** Las tres pantallas de «no disponible»
+—publicación, entrada, evento— tenían el mismo problema y encima **ni siquiera ponían
+título**: se quedaban con el de la página anterior, así que un buscador podía indexar
+«This work is not published.» bajo el título de otra cosa. Ahora las cuatro llevan título
+propio y `noindex`.
+
+**Sobre el 200:** en una aplicación de una sola página el servidor entrega el mismo
+`index.html` para cualquier dirección, y quien decide que no existe es el navegador,
+cuando el código de estado ya se ha enviado. Salir de ahí pediría renderizar en el
+servidor. Lo que sí mantiene la página fuera del buscador es `noindex`, y es lo que se
+pone.
+
+**Un comentario mío era falso y lo cazó el barrido.** Escribí en la ruta comodín que lo
+que hay bajo `/admin` no llegaría hasta ella «porque ese prefijo casa con su propio árbol
+de rutas». No es verdad: `_public` no tiene ruta propia, así que su comodín se tragaba
+también `/admin/lo-que-sea` y equivocarse de dirección dentro del panel sacaba la pantalla
+del sitio. El panel lleva ahora el suyo.
+
+Comprobado en marcha: cuatro direcciones inventadas del sitio salen con cabecera, pie y
+`noindex`; las tres fichas no disponibles también, y con título propio; las páginas de
+verdad **no** se quedan con el `noindex` de la anterior; y bajo `/admin`, con sesión,
+sigue saliendo la del panel.
+
+37 ficheros de prueba, 261 pruebas.
+
+**Un aviso:** en una de las pasadas cayó una prueba del formulario de acceso que no toca
+nada de esto. Sola pasa, y tres pasadas completas seguidas pasan. Queda anotada como
+intermitente, no como consecuencia de esta fase.
 
 ## Cómo se comprueba
 

@@ -10,7 +10,11 @@ import { RichText } from './components/rich-text'
 import { SectionBackground } from './components/section-background'
 import { rangoDeFechas } from './event-format'
 import { tonoDeBanda, useSectionBackground } from './use-section-background'
-import { resumirHtml, useSiteMeta } from './use-site-meta'
+import {
+  metadatosDeNoDisponible,
+  resumirHtml,
+  useSiteMeta,
+} from './use-site-meta'
 
 /** Ficha publica de un evento. */
 
@@ -40,7 +44,13 @@ export function SiteEventDetail() {
     staleTime: 5 * 60_000,
   })
 
-  useSiteMeta(evento === undefined ? null : metadatosDeEvento(evento, site))
+  useSiteMeta(
+    evento === undefined
+      ? error === null
+        ? null
+        : metadatosDeNoDisponible('Event not available')
+      : metadatosDeEvento(evento, site)
+  )
 
   if (isPending) {
     return (
