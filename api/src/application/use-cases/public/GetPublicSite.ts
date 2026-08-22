@@ -17,6 +17,15 @@ import type { GetPublicProfile } from './GetPublicProfile.js'
  */
 export interface PublicSite {
   siteName: string
+  /**
+   * El huso horario del sitio, para escribir las fechas con el reloj del sitio y no con
+   * el de quien mira.
+   *
+   * Lleva anos guardado en `site_settings` y editandose en el panel sin que nadie lo
+   * leyera: la agenda pintaba las fechas con el huso del visitante, y el mismo festival
+   * salia el 15 de diciembre en Sydney, el 14 en Madrid y el 14 en Honolulu.
+   */
+  timezone: string
   footerText: string | null
   contactEmail: string | null
   logoMediaId: string | null
@@ -88,6 +97,7 @@ export class GetPublicSite {
 
     return {
       siteName: settings.siteName,
+      timezone: settings.timezone,
       footerText: settings.footerText,
       contactEmail: settings.contactEmail,
       logoMediaId: settings.logoMediaId,

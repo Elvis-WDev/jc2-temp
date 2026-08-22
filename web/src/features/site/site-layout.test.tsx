@@ -34,6 +34,7 @@ vi.mock('@tanstack/react-router', () => ({
 
 const SITIO: PublicSite = {
   siteName: 'Juana Castro',
+  timezone: 'Australia/Sydney',
   footerText: '© 2026 Juana Castro.',
   contactEmail: null,
   logoUrl: null,

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet } from '@tanstack/react-router'
 import { FileText } from 'lucide-react'
 import { queryKeys } from '@/lib/api/query-keys'
+import { fijarHusoDelSitio } from '@/lib/huso'
 import { cn } from '@/lib/utils'
 import { useSiteIcon } from '@/hooks/use-site-icon'
 import { getSite, type PublicSite } from './api'
@@ -49,6 +50,10 @@ export function SiteLayout() {
 
   // El emblema hace tambien de favicon. Va aqui y no en cada pagina porque es del sitio
   // entero, no de la pantalla que se este viendo.
+  // Antes de pintar una sola fecha: la agenda y las entradas se escriben con el reloj
+  // del sitio, no con el del visitante.
+  fijarHusoDelSitio(site?.timezone)
+
   useSiteIcon(site?.logoUrl ?? null)
 
   return (

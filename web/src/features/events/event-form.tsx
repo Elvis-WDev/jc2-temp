@@ -7,6 +7,11 @@ import { useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, Loader2, Save, X } from 'lucide-react'
 import { applyApiFieldErrors } from '@/lib/api/form-errors'
 import { queryKeys } from '@/lib/api/query-keys'
+import {
+  aHoraDelSitio,
+  desdeHoraDelSitio,
+  husoDelSitioActual,
+} from '@/lib/huso'
 import { conValorActual, useCatalogTerms } from '@/hooks/use-catalog-terms'
 import { useToastMutation } from '@/hooks/use-toast-mutation'
 import { Button } from '@/components/ui/button'
@@ -84,14 +89,6 @@ type FormValues = z.infer<typeof formSchema>
 
 type Props = { eventId?: string }
 
-/** Instante ISO a lo que espera `datetime-local`, en hora local. */
-function aLocal(iso: string | null): string {
-  if (iso === null) return ''
-  const fecha = new Date(iso)
-  const dos = (n: number) => String(n).padStart(2, '0')
-  return `${String(fecha.getFullYear())}-${dos(fecha.getMonth() + 1)}-${dos(fecha.getDate())}T${dos(fecha.getHours())}:${dos(fecha.getMinutes())}`
-}
-
 export function EventForm({ eventId }: Props) {
   const esEdicion = eventId !== undefined
 
@@ -139,8 +136,8 @@ function Campos({ event }: { event: EventItem | undefined }) {
       eventType: event?.eventType ?? SIN_TIPO,
       summary: event?.summary ?? '',
       contentMarkdown: event?.contentMarkdown ?? '',
-      startsAt: aLocal(event?.startsAt ?? null),
-      endsAt: aLocal(event?.endsAt ?? null),
+      startsAt: aHoraDelSitio(event?.startsAt ?? null),
+      endsAt: aHoraDelSitio(event?.endsAt ?? null),
       location: event?.location ?? '',
       organizer: event?.organizer ?? '',
       imageAlt: event?.imageAlt ?? '',
@@ -159,9 +156,13 @@ function Campos({ event }: { event: EventItem | undefined }) {
         summary: vacioANull(values.summary),
         contentMarkdown: vacioANull(values.contentMarkdown),
         // El campo entrega hora local; la API guarda instantes en UTC.
-        startsAt: new Date(values.startsAt).toISOString(),
+        // Con el reloj del sitio y no con el del navegador: lo que se teclea aqui es la
+        // hora a la que ocurre el evento donde ocurre, no donde este quien lo escribe.
+        startsAt: desdeHoraDelSitio(values.startsAt).toISOString(),
         endsAt:
-          values.endsAt === '' ? null : new Date(values.endsAt).toISOString(),
+          values.endsAt === ''
+            ? null
+            : desdeHoraDelSitio(values.endsAt).toISOString(),
         location: vacioANull(values.location),
         organizer: vacioANull(values.organizer),
         imageMediaId,
@@ -331,6 +332,12 @@ function Campos({ event }: { event: EventItem | undefined }) {
                       <FormControl>
                         <Input type='datetime-local' {...field} />
                       </FormControl>
+                      {/* Sin decir de que reloj es, «9:30» no significa nada: quien lo
+                          escriba desde otro sitio no sabria si es la hora de alli o la
+                          del evento. Se cambia en Site settings. */}
+                      <FormDescription>
+                        Site time ({husoDelSitioActual()}).
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

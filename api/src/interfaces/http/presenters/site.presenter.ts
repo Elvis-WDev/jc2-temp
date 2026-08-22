@@ -36,6 +36,7 @@ function fondosDeSeccion(
 export function toPublicSiteDto(site: PublicSite, baseUrl: string) {
   return {
     siteName: site.siteName,
+    timezone: site.timezone,
     footerText: site.footerText,
     contactEmail: site.contactEmail,
     logoUrl: mediaUrl(baseUrl, site.logoMediaId),

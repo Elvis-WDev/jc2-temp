@@ -229,6 +229,8 @@ export interface PublicHome {
  */
 export interface PublicSite {
   siteName: string
+  /** Con que reloj se escriben las fechas del sitio. Sale de los ajustes. */
+  timezone: string
   footerText: string | null
   contactEmail: string | null
   logoUrl: string | null

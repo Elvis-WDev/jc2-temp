@@ -4,6 +4,7 @@ import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { type ColumnDef } from '@tanstack/react-table'
 import { Archive, Pencil, Plus, Send, Trash2 } from 'lucide-react'
 import { queryKeys } from '@/lib/api/query-keys'
+import { husoDelSitioActual } from '@/lib/huso'
 import { LOCALE } from '@/lib/locale'
 import { useToastMutation } from '@/hooks/use-toast-mutation'
 import { Button } from '@/components/ui/button'
@@ -48,7 +49,12 @@ const ESTADO: Record<EditorialStatus, { texto: string; tono: StatusTone }> = {
   archived: { texto: 'Archived', tono: 'neutral' },
 }
 
-const FECHA = new Intl.DateTimeFormat(LOCALE, { dateStyle: 'medium' })
+/** Con el reloj del sitio, igual que la fecha que se ensena en la web. */
+const fecha = (iso: string) =>
+  new Intl.DateTimeFormat(LOCALE, {
+    dateStyle: 'medium',
+    timeZone: husoDelSitioActual(),
+  }).format(new Date(iso))
 
 export function Posts() {
   const { kind: segmento } = route.useParams()
@@ -159,9 +165,7 @@ function Listado({ tipo }: { tipo: PostKind }) {
           row.original.publishedAt === null ? (
             <span className='text-muted-foreground'>—</span>
           ) : (
-            <span className='text-sm'>
-              {FECHA.format(new Date(row.original.publishedAt))}
-            </span>
+            <span className='text-sm'>{fecha(row.original.publishedAt)}</span>
           ),
       },
       ...(tipo.conCuerpo

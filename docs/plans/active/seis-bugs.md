@@ -182,7 +182,7 @@ puso el botón.
 
 36 ficheros de prueba, 245 pruebas.
 
-## Fase 5 — La fecha de un evento no puede cambiar según quién mire
+## Fase 5 — La fecha de un evento no puede cambiar según quién mire ✅
 
 **El fallo.** La misma página `/events`, el mismo evento publicado:
 
@@ -192,38 +192,55 @@ puso el botón.
 | Madrid / Lima | **14**–16 December | 10–11 December |
 | Honolulu | 14–15 December | **9**–10 December |
 
-`startsAt` se guarda como instante absoluto tomado del huso **del que escribe**, y
-`event-format.ts:18` lo pinta con el huso **del que lee**. Un seminario anunciado para el
-15 sale como el 14 a media Europa.
+- [x] `/api/public/site` entrega el `timezone` que ya estaba guardado.
+- [x] Las fechas del sitio se escriben con ese reloj.
+- [x] Y el panel también: leer y escribir.
+- [x] El campo dice en qué huso se está escribiendo.
+- [x] Prueba desde cuatro husos.
+- [x] Repasadas las demás fechas.
 
-Y hay un segundo fallo escondido dentro: **la hora que se teclea no se enseña en ninguna
-parte del sitio público**. Se pide con precisión de minutos, se guarda, y solo se pinta el
-día.
+**Hecha, y con la hora dentro.** Las cuatro ciudades ven ahora `15 December 2026 — 16
+December 2026`, y un seminario de una tarde sale como **«5 November 2026, 4:00 pm AEDT»**
+desde Sydney, Madrid y Honolulu por igual. La hora se pedía al minuto, se guardaba y no
+aparecía en ninguna parte del sitio.
 
-- [ ] `/api/public/site` entrega el `timezone` que ya está guardado.
-- [ ] Las fechas del sitio se escriben en ese huso, no en el del visitante. Un solo sitio:
-      `event-format.ts`, que ya centraliza el idioma.
-- [ ] **Y el panel también.** Si él teclea 9:30 en Sydney y la web dice 9:30, pero abre el
-      mismo evento desde un portátil en Lima y ve 17:30 del día anterior, el fallo no se
-      ha arreglado, se ha movido. El editor de fecha y hora tiene que leer y escribir en
-      el huso del sitio.
-- [ ] Decir junto al campo en qué huso se está escribiendo. Sin eso, «9:30» es ambiguo.
-- [ ] Pruebas: la misma página desde cuatro husos —Sydney, Madrid, Lima, Honolulu— tiene
-      que dar la misma fecha. Es la prueba que destapó el fallo; sirve tal cual.
-- [ ] Repasar dónde más se pinta una fecha con el huso del que mira: el listado del panel,
-      las entradas del blog, el registro de auditoría.
+**El nombre del huso detrás de la hora no es decoración:** «4:00 pm» a secas no le sirve
+de nada a quien se conecta desde otro continente, que es medio público de un seminario.
 
-**Sobre enseñar la hora, mi recomendación:** enseñarla. Se captura, se guarda y no se ve;
-para una charla o un seminario la hora es la mitad del dato. Va en la ficha del evento y
-en la agenda, junto a la fecha. **Si prefieres que la web siga enseñando solo el día,
-dilo y hago solo la parte del huso** —es la mitad del trabajo de esta fase y arregla el
-fallo igual—.
+**El reloj vive en un módulo, no en una prop.** Se leen fechas en seis sitios del sitio
+público y en dos del panel; pasarlo a mano por todos significa que basta olvidarse en uno
+para que el fallo siga vivo justo ahí. Se fija una vez al cargar los ajustes —el sitio en
+`site-layout`, el panel en `useSiteIdentity`, que ya hacía esa misma consulta— y no vuelve
+a cambiar. Por defecto Sydney: con `undefined` se usaría el del navegador, que es el fallo,
+y durante el primer instante de cada carga se vería la fecha equivocada.
 
-**Riesgo:** el más alto de las seis. Toca cómo se guarda y cómo se lee lo que ya está
-guardado. Las cinco fechas sembradas no se tocan: siguen siendo el mismo instante, solo
-cambia con qué reloj se leen.
+**La vuelta —de «9:30 en Sydney» al instante— no es directa** y hubo que medirla: se
+interpreta el texto como si fuera UTC, se mira qué hora marca ese instante en el huso del
+sitio, y la diferencia es el desfase. **Se repite una vez, y esa segunda vuelta es
+necesaria de verdad**: quitándola caen las dos pruebas de los saltos de horario, la de
+octubre y la de abril.
 
----
+**Una prueba que ya existía cayó, y tenía razón en caer.** Usaba un evento de las 10:00 a
+las 18:00 UTC como ejemplo de «un solo día»; en Sydney eso son las 21:00 del 12 y las
+05:00 del 13. Con el reloj del sitio ese evento **sí** ocupa dos días. El fichero entero
+cambió de asunto: antes daba por bueno que la fecha se escribiera con el reloj del lector
+y solo comprobaba la forma.
+
+**Y otra prueba mía no valía nada:** un bucle sobre cuatro husos que no cambiaba nada, con
+un `expect(zona).toBeTruthy()` de relleno. Lo que quería demostrar —que el huso del
+navegador no influye— no se puede probar en una prueba unitaria; eso lo comprueba el
+barrido, abriendo la misma página desde cuatro ciudades. La quité y lo dejé escrito.
+
+**Lo que se dejó a propósito con el reloj de quien mira:** el registro de auditoría, la
+biblioteca de archivos y el «última actualización» del panel. Son de la actividad del
+propio operador, no del contenido publicado; ahí la hora local es defendible y es otra
+discusión.
+
+Comprobado en marcha: las cuatro ciudades ven lo mismo en `/events` y en `/blog`; el campo
+dice «Site time (Australia/Sydney)»; lo tecleado desde Sydney se ve idéntico al abrirlo
+desde Lima; y guardarlo desde Lima no lo mueve de sitio.
+
+API 32 ficheros / 344 pruebas. Web 37 / 261.
 
 ## Fase 6 — El sitio necesita su propia página de «no existe»
 

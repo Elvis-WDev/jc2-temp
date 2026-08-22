@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { get } from '@/lib/api/client'
 import { queryKeys } from '@/lib/api/query-keys'
+import { fijarHusoDelSitio } from '@/lib/huso'
 
 /**
  * El nombre y el emblema del sitio, para que el panel se presente con ellos.
@@ -15,6 +16,7 @@ import { queryKeys } from '@/lib/api/query-keys'
 type SitioPublico = {
   siteName: string
   logoUrl: string | null
+  timezone: string
 }
 
 export function useSiteIdentity(): {
@@ -30,6 +32,11 @@ export function useSiteIdentity(): {
     // el nombre por defecto basta para entrar.
     retry: false,
   })
+
+  // De paso, el reloj con el que el panel escribe y lee las fechas de contenido. Es la
+  // misma consulta que ya se hacia; sin esto, el titular teclearia 9:30 en Sydney y veria
+  // 17:30 del dia anterior al abrir el mismo evento desde otro sitio.
+  fijarHusoDelSitio(data?.timezone)
 
   return {
     nombre: data?.siteName ?? null,

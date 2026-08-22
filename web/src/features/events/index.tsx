@@ -4,6 +4,7 @@ import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { type ColumnDef } from '@tanstack/react-table'
 import { Archive, Pencil, Plus, Send, Trash2 } from 'lucide-react'
 import { queryKeys } from '@/lib/api/query-keys'
+import { husoDelSitioActual } from '@/lib/huso'
 import { LOCALE } from '@/lib/locale'
 import { useCatalogTerms } from '@/hooks/use-catalog-terms'
 import { useToastMutation } from '@/hooks/use-toast-mutation'
@@ -40,10 +41,18 @@ const ESTADO: Record<EditorialStatus, { texto: string; tono: StatusTone }> = {
   archived: { texto: 'Archived', tono: 'neutral' },
 }
 
-const FECHA = new Intl.DateTimeFormat(LOCALE, {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-})
+/**
+ * Con el reloj del sitio, igual que la agenda publica.
+ *
+ * Se construye por llamada y no una vez al importar: el huso se fija al cargar los
+ * ajustes, despues de que este fichero se lea.
+ */
+const fecha = (iso: string) =>
+  new Intl.DateTimeFormat(LOCALE, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: husoDelSitioActual(),
+  }).format(new Date(iso))
 
 export function Events() {
   const search = route.useSearch()
@@ -135,9 +144,7 @@ export function Events() {
           <DataTableColumnHeader column={column} title='When' />
         ),
         cell: ({ row }) => (
-          <span className='text-sm'>
-            {FECHA.format(new Date(row.original.startsAt))}
-          </span>
+          <span className='text-sm'>{fecha(row.original.startsAt)}</span>
         ),
       },
       {
