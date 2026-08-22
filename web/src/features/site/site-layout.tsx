@@ -165,7 +165,10 @@ function SiteFooter({ site }: { site: PublicSite }) {
                 // Decorativa: lo que dice ya esta escrito al lado, y el nombre del
                 // archivo no le aporta nada a quien usa un lector de pantalla.
                 alt=''
-                className='w-full max-w-56 rounded-site'
+                // 16rem en lugar de 14: la ilustracion se veia pequena al lado de las
+                // dos columnas de texto. Se queda en la escala de Tailwind, que son
+                // 1,6px menos del 15% justo y no se distinguen.
+                className='w-full max-w-64 rounded-site'
               />
             </div>
           ) : (
