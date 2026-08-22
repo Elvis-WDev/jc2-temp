@@ -26,23 +26,40 @@ El orden de las fases va por lo que cuesta perder, no por lo que cuesta arreglar
 
 ---
 
-## Fase 1 — Archivar un evento no puede borrarle la fecha
+## Fase 1 — Archivar un evento no puede borrarle la fecha ✅
 
-**El fallo.** `EventUseCases.archive` (`api/.../events/EventUseCases.ts:141`) tiene un
-comentario que dice *«Se conserva `published_at`»* y debajo pasa `null`. Las entradas lo
-hacen bien: `PostUseCases.ts:141` pasa `actual.publishedAt`. Probado en marcha: un evento
-con `2026-08-19T14:57:40.044Z` volvió con `null`. Volver a publicarlo escribe la fecha de
-hoy, así que **la original no se recupera**.
+**El fallo.** `EventUseCases.archive` (`api/.../events/EventUseCases.ts:141`) tenía un
+comentario que decía *«Se conserva `published_at`»* y debajo pasaba `null`. Las entradas
+lo hacían bien: `PostUseCases.ts:141` pasa `actual.publishedAt`. Probado en marcha: un
+evento con `2026-08-19T14:57:40.044Z` volvía con `null`. Volver a publicarlo escribe la
+fecha de hoy, así que **la original no se recuperaba**.
 
-- [ ] `archive` pasa la fecha que ya tenía, como hace `PostUseCases`.
-- [ ] Prueba de caso de uso: publicar, archivar y comprobar que la fecha sigue ahí. Se
-      valida rompiéndola a posta.
-- [ ] Mirar los otros dos caminos de archivado —works y courses— y dejar constancia en la
-      prueba de que ellos ya lo hacían bien, para que nadie lo «arregle» al revés.
+- [x] `archive` pasa la fecha que ya tenía, como hace `PostUseCases`.
+- [x] Prueba de caso de uso, validada rompiéndola a posta.
+- [x] Constancia en works y courses de que ellos ya lo hacían bien.
 
-**Riesgo:** ninguno. Un argumento.
+**Hecha.** Un argumento: `null` pasa a ser `actual.publishedAt`. El comentario dice ahora
+lo que hace el código, y además por qué importaba.
 
----
+**Cuatro pruebas nuevas para los eventos**, no una: publicar sella la fecha del reloj
+inyectado; archivar la conserva; archivar un borrador la deja vacía en lugar de inventarse
+una; y archivar y volver a publicar la sustituye —que es lo correcto, y justamente la
+razón por la que perderla al archivar era irreversible—. Con el fallo reintroducido caen
+dos de las cuatro; la del borrador sigue pasando, como debe, porque ahí `null` y
+`actual.publishedAt` son lo mismo.
+
+**Y una prueba en works y otra en courses que no existían.** Los tres archivan de forma
+distinta: los eventos pasan la fecha que ya tenían, works y courses **omiten el campo** y
+así el `UPDATE` no toca la columna. Las tres formas son correctas y ninguna estaba
+escrita; sin dejarlo por escrito, el siguiente que pase a «unificarlas» tiene bastantes
+papeletas de unificarlas hacia el lado malo. Las dos se validaron añadiéndoles
+`publishedAt: null` y viéndolas caer.
+
+Comprobado también en marcha, contra el Docker local: los cuatro tipos de contenido
+—evento, publicación, entrada y curso— publican, archivan y conservan su fecha; republicar
+sella una nueva. La base vuelve a 5 eventos, 16 publicaciones, 5 entradas y 3 cursos.
+
+31 ficheros de prueba, 331 pruebas.
 
 ## Fase 2 — El resumen de una publicación se ve con el Markdown crudo
 

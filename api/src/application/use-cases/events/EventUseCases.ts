@@ -137,9 +137,11 @@ export class EventUseCases {
   }
 
   async archive(id: string, actor: EventActor): Promise<EventRecord> {
-    await this.get(id)
-    // Se conserva `published_at`: es cuando salio a la web, no cuando se retiro.
-    const archivado = await this.repo.setEditorialStatus(id, 'archived', null)
+    const actual = await this.get(id)
+    // Se conserva `published_at`: es cuando salio a la web, no cuando se retiro. Aqui
+    // decia esto mismo y pasaba `null`, que la borraba: el evento perdia para siempre
+    // la fecha en que salio, porque volver a publicarlo sella la de ese momento.
+    const archivado = await this.repo.setEditorialStatus(id, 'archived', actual.publishedAt)
 
     await this.audit.record({
       userId: actor.userId,

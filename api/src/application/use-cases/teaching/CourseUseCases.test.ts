@@ -67,6 +67,7 @@ function construir(opciones: { curso?: CourseRecord; edicion?: CourseOfferingRec
   const edicionActual = opciones.edicion ?? edicion()
   const cursosCreados: unknown[] = []
   const edicionesActualizadas: Array<Record<string, unknown>> = []
+  const estadosDeCurso: Array<{ status: string; extra: Record<string, unknown> }> = []
   const materiales = new Map([['m1', { id: 'm1', mediaId: 'media-1', externalUrl: null } as never]])
 
   const repo = {
@@ -84,6 +85,10 @@ function construir(opciones: { curso?: CourseRecord; edicion?: CourseOfferingRec
     },
     setOfferingEditorialStatus: (_id: string, status: string) =>
       Promise.resolve({ ...edicionActual, editorialStatus: status }),
+    setEditorialStatus: (_id: string, status: string, extra: Record<string, unknown>) => {
+      estadosDeCurso.push({ status, extra })
+      return Promise.resolve({ ...cursoActual, editorialStatus: status })
+    },
     updateMaterial: (_id: string, input: unknown) => Promise.resolve(input as never),
   } as unknown as CourseRepository
 
@@ -100,8 +105,24 @@ function construir(opciones: { curso?: CourseRecord; edicion?: CourseOfferingRec
     casos: new CourseUseCases(repo, instituciones, audit),
     cursosCreados,
     edicionesActualizadas,
+    estadosDeCurso,
   }
 }
+
+describe('archivar un curso', () => {
+  it('no menciona la fecha de publicacion, y por eso no la borra', async () => {
+    // Un curso archiva OMITIENDO el campo: lo que no va en `extra` no llega al UPDATE y
+    // la columna se queda como estaba. Los eventos archivan de otra forma —pasan la
+    // fecha que ya tenian— y durante un tiempo pasaron `null`, que la borraba. Las dos
+    // formas son correctas; lo que no vale es mezclarlas.
+    const { casos, estadosDeCurso } = construir({ curso: curso({ editorialStatus: 'published' }) })
+
+    await casos.archive('c1', { userId: 'u1', ipAddress: null })
+
+    expect(estadosDeCurso[0]?.status).toBe('archived')
+    expect(Object.keys(estadosDeCurso[0]?.extra ?? {})).not.toContain('publishedAt')
+  })
+})
 
 describe('ERS §2.4: la edicion cambia de institucion sin duplicar el curso', () => {
   it('mover una edicion a otra institucion es una edicion normal', async () => {

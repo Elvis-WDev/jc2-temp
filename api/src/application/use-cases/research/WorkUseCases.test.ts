@@ -202,4 +202,18 @@ describe('RN-003: destacados', () => {
     // Dejar is_featured en true sobre algo archivado dejaria RN-003 rota en silencio.
     expect(estados[0]?.extra).toMatchObject({ isFeatured: false, featuredOrder: null })
   })
+
+  it('archivar no menciona la fecha de publicacion, y por eso no la borra', async () => {
+    // Un trabajo archiva OMITIENDO el campo: lo que no va en `extra` no llega al UPDATE
+    // y la columna se queda como estaba. Los eventos archivan de otra forma —pasan la
+    // fecha que ya tenian— y durante un tiempo pasaron `null`, que la borraba. Las dos
+    // formas son correctas; lo que no vale es mezclarlas.
+    const { casos, estados } = construir({
+      actual: trabajo({ editorialStatus: 'published' }),
+    })
+
+    await casos.archive('w1', ACTOR)
+
+    expect(Object.keys(estados[0]?.extra as object)).not.toContain('publishedAt')
+  })
 })
