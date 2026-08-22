@@ -96,6 +96,23 @@ export function PersonLinks() {
         ),
       },
       {
+        id: 'logo',
+        meta: { className: 'w-44' },
+        header: ({ column }) => (
+          <DataTableColumnHeader column={column} title='Home page' />
+        ),
+        // De un vistazo y sin abrir cada fila: un enlace sin logotipo no sale en la
+        // portada, y antes no habia forma de saberlo mas que echandolo en falta alli.
+        cell: ({ row }) =>
+          row.original.iconMediaId === null ? (
+            <span className='text-xs text-muted-foreground'>
+              No logo: footer only
+            </span>
+          ) : (
+            <StatusBadge tone='success'>With logo</StatusBadge>
+          ),
+      },
+      {
         accessorKey: 'isPublic',
         meta: { className: 'w-40' },
         filterFn: (row, id, valor) => String(row.getValue(id)) === valor,
@@ -171,7 +188,9 @@ export function PersonLinks() {
           <div>
             <h2 className='text-2xl font-bold tracking-tight'>Links</h2>
             <p className='text-muted-foreground'>
-              Your academic profiles and pages, as they appear on the site.
+              The logos under the buttons of your home page.{' '}
+              <strong>Only the ones with a logo appear there</strong>; the rest
+              are listed by name in the footer.
             </p>
           </div>
           <Button onClick={abrirAlta} disabled={personId === undefined}>
@@ -199,7 +218,7 @@ export function PersonLinks() {
             isLoading ? null : (
               <EmptyState
                 title='No links yet'
-                description='Add your ORCID, your Google Scholar or your website. They appear next to your name.'
+                description='Your ORCID, your Google Scholar, your website. Upload a logo for each one you want under the buttons of your home page.'
                 action={{ label: 'New link', onClick: abrirAlta }}
               />
             )

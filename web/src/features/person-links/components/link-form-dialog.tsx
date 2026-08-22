@@ -186,11 +186,17 @@ function Campos({ onOpenChange, personId, link }: Omit<Props, 'open'>) {
         <FormItem>
           <FormLabel>Logo</FormLabel>
           <ImagePicker value={iconMediaId} onChange={setIconMediaId} />
+          {/* Decia «sin logotipo el enlace aparece con su nombre», y no es verdad: sin
+              logotipo no sale en la portada, solo en el pie. Es lo que hacia pensar que
+              anadir un enlace bastaba. */}
           <FormDescription>
-            The mark of the service, shown next to the link on your home page.
-            Without one, the link appears with its name. It has to be uploaded
-            here: an image hosted elsewhere would tell that server the address
-            of every visitor, and the site blocks it.
+            The mark of the service.{' '}
+            <strong>
+              Without a logo the link does not appear on your home page
+            </strong>
+            , only in the footer, written by name. It has to be uploaded here:
+            an image hosted elsewhere would tell that server the address of
+            every visitor, and the site blocks it.
           </FormDescription>
         </FormItem>
 

@@ -318,12 +318,21 @@ function ProfileFields({ profile }: { profile: Profile }) {
                 <CardTitle>Academic profiles</CardTitle>
               </CardHeader>
               <CardContent className='grid gap-4 sm:grid-cols-2'>
+                {/* Sin esta linea, esta tarjeta y la pantalla de Links se presentaban
+                    con casi las mismas palabras y ninguna decia donde acababa lo que se
+                    escribia en ella. */}
+                <p className='text-sm text-muted-foreground sm:col-span-2'>
+                  These go in the footer of your site, written out by name. The
+                  logos under the buttons of your home page are not these: those
+                  are in <strong>Links</strong>, where each one carries its own
+                  logo.
+                </p>
                 {campo('orcid', 'ORCID')}
                 {campo('googleScholarUrl', 'Google Scholar')}
                 {campo('scopusUrl', 'Scopus')}
                 {campo('ssrnUrl', 'SSRN')}
                 {campo('repecUrl', 'RePEc')}
-                {campo('websiteUrl', 'Web personal')}
+                {campo('websiteUrl', 'Personal website')}
               </CardContent>
             </Card>
 
