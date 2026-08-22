@@ -305,7 +305,10 @@ function Ilustracion({ home, tone }: { home: PublicHome; tone: Tono }) {
           // Tope en alto y no en ancho: una ilustracion apaisada llenaria la banda de
           // lado a lado y una vertical la estiraria hasta empujar el resto de la portada
           // fuera de la pantalla. Con el tope en alto, las dos caben igual de bien.
-          className='max-h-[28rem] w-auto max-w-full rounded-site'
+          //
+          // 14rem, la mitad de los 28 que tenia: a ese tamano la imagen se comia la
+          // banda entera y habia que bajar para ver que venia despues.
+          className='max-h-[14rem] w-auto max-w-full rounded-site'
         />
       </div>
     </SiteSection>
