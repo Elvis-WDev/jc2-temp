@@ -148,6 +148,80 @@ describe('los botones del editor', () => {
   })
 })
 
+describe('el deshacer del navegador', () => {
+  it('Ctrl+Z devuelve el texto a como estaba antes del boton', async () => {
+    const { getByRole, container } = await render(<Campo inicial='' />)
+    const campo = container.querySelector('textarea') as HTMLTextAreaElement
+
+    // Escrito a mano, que es como se llena de verdad: lo que hay que deshacer es el
+    // boton, no el texto.
+    campo.focus()
+    await userEvent.fill(campo, 'hola mundo')
+
+    await seleccionar(campo, 5, 10)
+    await userEvent.click(getByRole('button', { name: 'Bold' }))
+    expect(campo.value).toBe('hola **mundo**')
+
+    campo.focus()
+    await userEvent.keyboard('{Control>}z{/Control}')
+
+    expect(campo.value).toBe('hola mundo')
+  })
+
+  it('y tambien con un boton de linea, que toca mas texto', async () => {
+    const { getByRole, container } = await render(<Campo inicial='' />)
+    const campo = container.querySelector('textarea') as HTMLTextAreaElement
+
+    campo.focus()
+    await userEvent.fill(campo, 'uno\ndos')
+
+    await seleccionar(campo, 1, 5)
+    await userEvent.click(getByRole('button', { name: 'Bulleted list' }))
+    expect(campo.value).toBe('- uno\n- dos')
+
+    campo.focus()
+    await userEvent.keyboard('{Control>}z{/Control}')
+
+    expect(campo.value).toBe('uno\ndos')
+  })
+
+  it('si el navegador no admite execCommand, el boton sigue escribiendo', async () => {
+    // Esta marcada como obsoleta y algun dia dejara de estar. Cuando llegue ese dia se
+    // pierde el deshacer, pero no el boton.
+    const original = document.execCommand.bind(document)
+    document.execCommand = () => false
+    try {
+      const { getByRole, container } = await render(
+        <Campo inicial='hola mundo' />
+      )
+      const campo = container.querySelector('textarea') as HTMLTextAreaElement
+
+      await seleccionar(campo, 5, 10)
+      await userEvent.click(getByRole('button', { name: 'Bold' }))
+
+      expect(campo.value).toBe('hola **mundo**')
+    } finally {
+      document.execCommand = original
+    }
+  })
+
+  it('lo que ve el formulario es lo que hay en el campo', async () => {
+    // `execCommand` cambia el DOM por su cuenta; si React no se enterase, el formulario
+    // guardaria el texto de antes.
+    const { getByRole, container } = await render(
+      <Campo inicial='hola mundo' />
+    )
+    const campo = container.querySelector('textarea') as HTMLTextAreaElement
+
+    await seleccionar(campo, 5, 10)
+    await userEvent.click(getByRole('button', { name: 'Bold' }))
+
+    await expect
+      .element(container.querySelector('output') as HTMLElement)
+      .toHaveTextContent('hola **mundo**')
+  })
+})
+
 describe('la vista previa', () => {
   it('esconde el textarea y desactiva los botones de escribir', async () => {
     const { getByRole, container } = await render(<Campo inicial='hola' />)

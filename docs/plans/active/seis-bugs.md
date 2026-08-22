@@ -149,24 +149,38 @@ colgarse, y los 100.000 se siguen guardando.
 
 32 ficheros de prueba, 344 pruebas.
 
-## Fase 4 — Ctrl+Z debe deshacer lo que ponen los botones
+## Fase 4 — Ctrl+Z debe deshacer lo que ponen los botones ✅
 
-**Mío, de la fase 5.** Poner negrita y pulsar Ctrl+Z deja `hola **mundo**`. Escribir el
+**Mío, de la fase 5.** Poner negrita y pulsar Ctrl+Z dejaba `hola **mundo**`. Escribir el
 valor desde React vacía la pila de deshacer nativa del `textarea`.
 
-- [ ] Los botones escriben con `document.execCommand('insertText')` en lugar de
-      `onChange` directo. Está probado que conserva el deshacer.
-- [ ] Comprobar que react-hook-form se entera: `execCommand` dispara un `input` nativo y
-      React lo escucha, pero eso hay que verlo, no darlo por hecho.
-- [ ] Si `execCommand` devuelve `false` —está marcado como obsoleto y algún día se irá—,
-      se cae al camino de ahora. Peor el deshacer que perder el botón.
-- [ ] Prueba: escribir, aplicar negrita, Ctrl+Z, y que vuelva el texto de partida. Y lo
-      mismo con un botón de línea, que toca más texto.
+- [x] Los botones escriben con `document.execCommand('insertText')`.
+- [x] Comprobado que react-hook-form se entera del cambio.
+- [x] Salida de emergencia si `execCommand` devuelve `false`.
+- [x] Pruebas del deshacer, con un botón de envoltura y con uno de línea.
 
-**Riesgo:** medio. `execCommand` es API obsoleta; por eso va con salida de emergencia. Hay
-que rehacer las diez pruebas del editor sobre el camino nuevo.
+**Hecha.** Los siete botones dejan de construir el texto entero y pasar por `onChange`:
+ahora seleccionan el trozo que van a cambiar y lo escriben con `execCommand('insertText')`,
+que es lo único que conserva el deshacer del navegador. El texto que producen es el mismo
+—las diez pruebas de la fase 5 pasan sin tocarlas—, lo que cambia es cómo llega.
 
----
+**Cuatro pruebas nuevas, y cada una guarda algo distinto:**
+
+- Ctrl+Z devuelve el texto de antes. Cae si se vuelve al camino de React.
+- Lo mismo con un botón de línea, que toca más texto de una vez.
+- **Lo que ve el formulario es lo que hay en el campo.** `execCommand` cambia el DOM por
+  su cuenta; si React no se enterase, se guardaría el texto de antes. Se validó
+  sustituyendo la escritura por `elemento.value = …`, que es el error clásico: caen cinco.
+- **Si `execCommand` devuelve `false`, el botón sigue escribiendo.** Está marcada como
+  obsoleta y algún día dejará de estar; ese día se pierde el deshacer, no el botón. Se
+  validó quitando la salida de emergencia.
+
+Comprobado en marcha, y con más de lo que pedían las pruebas: Ctrl+Y vuelve a ponerlo, dos
+botones seguidos se deshacen **uno a uno** —no de golpe—, el enlace sigue dejando
+seleccionada la dirección para escribirla encima, y lo que se guarda es exactamente lo que
+puso el botón.
+
+36 ficheros de prueba, 245 pruebas.
 
 ## Fase 5 — La fecha de un evento no puede cambiar según quién mire
 

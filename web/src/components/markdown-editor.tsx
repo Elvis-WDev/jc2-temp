@@ -96,12 +96,35 @@ export function MarkdownEditor({
     staleTime: Infinity,
   })
 
-  /** Deja el texto como queda y devuelve el cursor donde toca. */
-  const aplicar = (texto: string, desde: number, hasta: number) => {
-    onChange(texto)
+  /**
+   * Sustituye un trozo del texto y deja la seleccion donde toca.
+   *
+   * Escribe con `execCommand` y no con `onChange` porque **es lo unico que conserva el
+   * deshacer del navegador**. Poniendo el valor desde React se vaciaba la pila: aplicar
+   * negrita y pulsar Ctrl+Z dejaba el texto con los asteriscos puestos.
+   *
+   * `execCommand` esta marcada como obsoleta y algun dia dejara de estar. Por eso, si
+   * devuelve `false`, se escribe por el camino de antes: antes perder el deshacer que
+   * perder el boton.
+   */
+  const reemplazar = (
+    desde: number,
+    hasta: number,
+    texto: string,
+    seleccion: [number, number]
+  ) => {
+    const elemento = campo.current
+    if (elemento === null) return
+
+    elemento.focus()
+    elemento.setSelectionRange(desde, hasta)
+    if (!document.execCommand('insertText', false, texto)) {
+      onChange(value.slice(0, desde) + texto + value.slice(hasta))
+    }
+
+    // Despues del repintado: React devuelve el cursor al final del texto al re-renderizar.
     requestAnimationFrame(() => {
-      campo.current?.focus()
-      campo.current?.setSelectionRange(desde, hasta)
+      campo.current?.setSelectionRange(seleccion[0], seleccion[1])
     })
   }
 
@@ -119,22 +142,16 @@ export function MarkdownEditor({
         value.slice(inicio - marca, inicio) === envoltura &&
         value.slice(fin, fin + marca) === envoltura
       if (yaEstaba) {
-        aplicar(
-          value.slice(0, inicio - marca) + dentro + value.slice(fin + marca),
+        reemplazar(inicio - marca, fin + marca, dentro, [
           inicio - marca,
-          fin - marca
-        )
+          fin - marca,
+        ])
         return
       }
-      aplicar(
-        value.slice(0, inicio) +
-          envoltura +
-          dentro +
-          envoltura +
-          value.slice(fin),
+      reemplazar(inicio, fin, `${envoltura}${dentro}${envoltura}`, [
         inicio + marca,
-        fin + marca
-      )
+        fin + marca,
+      ])
       return
     }
 
@@ -151,11 +168,7 @@ export function MarkdownEditor({
         todasLoTienen ? linea.slice(prefijo.length) : prefijo + linea
       )
       .join('\n')
-    aplicar(
-      value.slice(0, arranque) + nuevas + value.slice(remate),
-      arranque,
-      arranque + nuevas.length
-    )
+    reemplazar(arranque, remate, nuevas, [arranque, arranque + nuevas.length])
   }
 
   const enlazar = () => {
@@ -164,29 +177,23 @@ export function MarkdownEditor({
     const { selectionStart: inicio, selectionEnd: fin } = elemento
     const texto =
       value.slice(inicio, fin) === '' ? 'text' : value.slice(inicio, fin)
-    const fragmento = `[${texto}](https://)`
     // El cursor queda dentro de los parentesis: la direccion es lo unico que falta.
     const posicion = inicio + texto.length + 3
-    aplicar(
-      value.slice(0, inicio) + fragmento + value.slice(fin),
+    reemplazar(inicio, fin, `[${texto}](https://)`, [
       posicion,
-      posicion + 'https://'.length
-    )
+      posicion + 'https://'.length,
+    ])
   }
 
   /** Mete un bloque —una imagen— en su propio parrafo, donde este el cursor. */
   const insertarBloque = (fragmento: string) => {
     const posicion = campo.current?.selectionStart ?? value.length
-    const antes = value.slice(0, posicion)
-    const despues = value.slice(posicion)
     // Pegado al texto anterior, Markdown lo trataria como parte de esa linea.
+    const antes = value.slice(0, posicion)
     const separador = antes === '' || antes.endsWith('\n') ? '' : '\n\n'
-    const texto = `${antes}${separador}${fragmento}\n\n${despues}`
-    aplicar(
-      texto,
-      (antes + separador + fragmento).length,
-      (antes + separador + fragmento).length
-    )
+    const escrito = `${separador}${fragmento}\n\n`
+    const final = posicion + escrito.length
+    reemplazar(posicion, posicion, escrito, [final, final])
   }
 
   return (
