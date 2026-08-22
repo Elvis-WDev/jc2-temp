@@ -276,6 +276,42 @@ describe('portada publica', () => {
     expect(screen.getByText('En el laboratorio').query()).toBeNull()
   })
 
+  it('las bandas van en su orden y con su color', async () => {
+    // El titular los eligio uno a uno: el claro del hero para lo que investiga, el
+    // solido de la cabecera para la ilustracion, y blanco para las noticias. Antes se
+    // turnaban solos y el orden decidia el color, asi que mover una banda repintaba
+    // las de debajo.
+    getHome.mockResolvedValue({
+      ...HOME,
+      page: {
+        ...PAGINA,
+        secondaryHtml: '<p>Subastas.</p>',
+        heroUrl: '/api/public/media/ilustracion',
+      },
+      latestNews: HOME_LLENO.latestNews,
+    })
+    const screen = await pintar()
+    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
+
+    const bandas = [...document.querySelectorAll('section')].map((s) => ({
+      clase:
+        [...s.classList].find((c) => c.startsWith('bg-site-')) ?? '(sin fondo)',
+      texto: (s.textContent ?? '').slice(0, 40),
+    }))
+
+    expect(bandas.map((b) => b.clase)).toEqual([
+      // El hero.
+      'bg-site-surface',
+      // Research lines, del mismo claro que el hero.
+      'bg-site-surface',
+      // La ilustracion, sobre el solido de la cabecera.
+      'bg-site-primary-container',
+      // Y las noticias, en blanco, cerrando.
+      'bg-site-surface-container-lowest',
+    ])
+    expect(bandas[1]?.texto).toContain('Research lines')
+  })
+
   it('las lineas de investigacion salen del texto secundario', async () => {
     getHome.mockResolvedValue({
       ...HOME,
@@ -367,65 +403,66 @@ describe('lo ultimo', () => {
   })
 })
 
-/** Con las tres bandas visibles: es donde el turno se puede comprobar entero. */
+/** Con las cuatro bandas visibles: es donde el orden se puede comprobar entero. */
 const HOME_LLENO: PublicHome = {
   ...HOME,
-  page: { ...PAGINA, heroUrl: '/api/public/media/ilustracion' },
+  page: {
+    ...PAGINA,
+    heroUrl: '/api/public/media/ilustracion',
+    secondaryHtml: '<p>Subastas.</p>',
+  },
 }
 
-describe('el turno de colores de las bandas', () => {
-  // Por la clase y no por el color calculado: en este entorno la hoja del sitio no se
-  // carga, asi que `getComputedStyle` devolvia transparente para todas y la comprobacion
-  // se cumplia sin comprobar nada. Lo que se fija aqui es el turno; que ese solido se
-  // vea como se espera es cosa del barrido en el navegador.
+/**
+ * El color de las bandas de la portada.
+ *
+ * Este bloque comprobaba un **turno**: las bandas alternaban solas el solido de la
+ * cabecera y el fondo de la pagina, y ninguna podia repetir el color de la de arriba.
+ * El titular eligio despues un orden concreto para las cuatro, y una de sus decisiones
+ * —las lineas de investigacion con el mismo claro del hero— contradice esa regla a
+ * proposito. Las pruebas del turno se retiraron: guardaban una regla que ya no rige, y
+ * la que decia «ninguna repite» solo seguia pasando porque su fixture se dejaba fuera
+ * la banda nueva. Lo que se comprueba ahora es el orden y el color, uno a uno, en «las
+ * bandas van en su orden y con su color».
+ *
+ * Lo que si sigue valiendo de aquel bloque es esto: una banda vacia no se dibuja.
+ */
+describe('las bandas que no tienen nada que ensenar', () => {
   const bandas = () =>
-    [...document.querySelectorAll('section')].map((seccion) => {
-      if (seccion.className.includes('bg-site-primary-container'))
-        return 'solido'
-      // El carrusel de noticias va sobre blanco y fuera del turno: no es el hueso del
-      // fondo de la pagina, asi que cuenta como un tercer tono.
-      if (seccion.className.includes('bg-site-surface-container-lowest'))
-        return 'blanco'
-      return 'fondo'
-    })
+    [...document.querySelectorAll('section')].map(
+      (seccion) =>
+        [...seccion.classList].find((c) => c.startsWith('bg-site-')) ??
+        '(sin fondo)'
+    )
 
-  it('ninguna banda repite el color de la de arriba', async () => {
-    getHome.mockResolvedValue(HOME_LLENO)
-    const screen = await pintar()
-    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
-
-    const turno = bandas()
-    const repetida = turno.findIndex((c, i) => i > 0 && c === turno[i - 1])
-
-    expect(turno).toHaveLength(3)
-    expect({ repetida, turno }).toEqual({ repetida: -1, turno })
-  })
-
-  it('el hero se queda con el fondo y la banda de debajo lleva el solido', async () => {
-    // Es lo que se pidio. Que la ultima caiga tambien en solido —y toque el pie, que
-    // lleva el mismo— lo resuelve el filete del pie, no el color.
-    getHome.mockResolvedValue(HOME_LLENO)
-    const screen = await pintar()
-    await expect.element(screen.getByText('Juana Castro')).toBeVisible()
-
-    expect(bandas().slice(0, 3)).toEqual(['fondo', 'solido', 'blanco'])
-  })
-
-  it('una banda que no se pinta no gasta su turno', async () => {
-    // Sin imagen elegida, esa banda desaparece: las de debajo corren el turno en lugar
-    // de quedarse dos seguidas del mismo color.
+  it('sin imagen elegida, esa banda no existe', async () => {
     getHome.mockResolvedValue({
       ...HOME_LLENO,
-      page: { ...PAGINA, heroUrl: null },
+      page: { ...HOME_LLENO.page!, heroUrl: null },
     })
     const screen = await pintar()
     await expect.element(screen.getByText('News')).toBeVisible()
 
-    const turno = bandas()
-    const repetida = turno.findIndex((c, i) => i > 0 && c === turno[i - 1])
+    expect(bandas()).toEqual([
+      'bg-site-surface',
+      'bg-site-surface',
+      'bg-site-surface-container-lowest',
+    ])
+  })
 
-    expect(turno).toHaveLength(2)
-    expect({ repetida, turno }).toEqual({ repetida: -1, turno })
+  it('y sin texto secundario tampoco la de las lineas de investigacion', async () => {
+    getHome.mockResolvedValue({
+      ...HOME_LLENO,
+      page: { ...HOME_LLENO.page!, secondaryHtml: null },
+    })
+    const screen = await pintar()
+    await expect.element(screen.getByText('News')).toBeVisible()
+
+    expect(bandas()).toEqual([
+      'bg-site-surface',
+      'bg-site-primary-container',
+      'bg-site-surface-container-lowest',
+    ])
   })
 })
 

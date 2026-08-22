@@ -17,43 +17,25 @@ import {
 } from './use-section-background'
 import { useSiteMeta } from './use-site-meta'
 
-type Tono = 'brand' | 'default' | 'blank'
+type Tono = 'brand' | 'default' | 'surface' | 'blank'
 
 /**
- * El turno de colores de las bandas.
+ * El color de cada banda de la portada, dicho una por una.
  *
- * El hero se queda con el fondo de la pagina; a partir de ahi se alternan el solido del
- * encabezado y ese mismo fondo. Sobre el solido el texto oscuro no se lee, asi que la
- * banda que lo lleva se invierte entera, igual que ya hacia la que tiene una foto detras.
+ * Antes se turnaban solas: el hero se quedaba con el fondo de la pagina y las de debajo
+ * alternaban el solido del encabezado y ese mismo fondo, contando solo las que de verdad
+ * se pintaban. Se retiro cuando el titular eligio un orden concreto para las cuatro —el
+ * mismo claro del hero para las lineas de investigacion, el solido para la ilustracion y
+ * blanco para las noticias—: con los cuatro colores decididos, un turno que nunca gira
+ * es una explicacion de algo que no ocurre.
  *
- * Se calcula sobre las bandas que **de verdad se pintan**, no sobre una lista fija: una
- * banda se puede apagar desde el panel y otra desaparece sola cuando no tiene nada que
- * ensenar. Con los colores escritos banda a banda, ocultar una dejaba dos seguidas del
- * mismo color sin que nadie lo notase hasta verlo.
- *
- * El pie lleva ese mismo solido, asi que cuando el numero de bandas hace que la ultima
- * caiga en solido, las dos se tocan. No se resuelve con el color —empezar en claro para
- * acabar en oscuro dejaria el hero y la primera banda iguales— sino con el filete que
- * lleva el pie en su borde superior.
+ * `surface` es exactamente el fondo del hero, no el de la pagina: se parecen mucho
+ * —#f7fafd contra #f6f6f9— pero no son el mismo, y pedirlos iguales es lo que se pidio.
  */
-/**
- * Las bandas que no entran en el turno, con el color que llevan siempre.
- *
- * El carrusel de noticias va sobre blanco: se decidio asi para que la portada y la
- * imagen se lean sobre un fondo limpio, sin el hueso del resto de la pagina. Al quedar
- * fuera del turno, las demas siguen alternando entre ellas sin contarla.
- */
-const TONO_FIJO: Partial<Record<string, Tono>> = {
+const TONO: Partial<Record<string, Tono>> = {
+  research_areas: 'surface',
   image: 'brand',
   latest_news: 'blank',
-}
-
-function turnoDeColores(cuantas: number): Tono[] {
-  // Desde arriba: el hero se queda con el fondo de la pagina, asi que la primera banda
-  // que viene detras es la del solido.
-  return Array.from({ length: cuantas }, (_, indice) =>
-    indice % 2 === 0 ? 'brand' : 'default'
-  )
 }
 
 /** Si la banda va invertida: por su color solido, o por la foto que tenga detras. */
@@ -116,33 +98,30 @@ export function SiteHome() {
   // Sin fila, visible: anadir una seccion no obliga a tocar la base de datos.
   const seVe = (seccion: string) => home.sections[seccion] !== false
 
-  // Que bandas se pintan, en orden. Una encendida pero vacia no cuenta: no se dibuja, y
-  // dejarle su turno de color descuadraria las de debajo.
+  // Que bandas se pintan, y en este orden: lo que investiga, la ilustracion, y las
+  // noticias al final. Una encendida pero vacia no cuenta: no se dibuja.
   const bandas = [
-    seVe('image') && home.page?.heroUrl != null ? 'image' : null,
     seVe('research_areas') && home.page?.secondaryHtml != null
       ? 'research_areas'
       : null,
+    seVe('image') && home.page?.heroUrl != null ? 'image' : null,
     // Las noticias cierran la portada, y en carrusel: es lo ultimo que pasa y lo que
     // conviene que quede a la vista al final del recorrido.
     seVe('latest_news') && home.latestNews.length > 0 ? 'latest_news' : null,
   ].filter((banda): banda is string => banda !== null)
 
-  const alternan = bandas.filter((banda) => TONO_FIJO[banda] === undefined)
-  const turno = turnoDeColores(alternan.length)
-  const tono = (banda: string): Tono =>
-    TONO_FIJO[banda] ?? turno[alternan.indexOf(banda)] ?? 'default'
+  const tono = (banda: string): Tono => TONO[banda] ?? 'default'
 
   return (
     <>
       {seVe('hero') && (
         <Hero home={home} researchVisible={site?.pages.research === true} />
       )}
-      {bandas.includes('image') && (
-        <Ilustracion home={home} tone={tono('image')} />
-      )}
       {bandas.includes('research_areas') && (
         <Dominios home={home} tone={tono('research_areas')} />
+      )}
+      {bandas.includes('image') && (
+        <Ilustracion home={home} tone={tono('image')} />
       )}
       {bandas.includes('latest_news') && (
         <GrupoDeEntradas
